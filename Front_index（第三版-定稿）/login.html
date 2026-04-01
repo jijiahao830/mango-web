@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>芒果超跑 · 专属认证</title>
+  <link rel="stylesheet" href="./login_car.css">
+  <script src="./members.js"></script>
+</head>
+<body>
+  <div class="login-container">
+    <!-- 背景光效与颗粒感 -->
+    <div class="bg-fx"></div>
+    <div class="bg-noise"></div>
+    
+    <div class="login-card animate-in">
+      <div class="brand-header">
+        <img src="./logo/logo2-1.png" alt="芒果超跑" class="login-logo">
+        <h2 class="login-title">DRIVER IDENTIFICATION</h2>
+        <p class="login-subtitle">请输入您的尊贵姓名，启动超跑之旅</p>
+      </div>
+      
+      <form class="login-form" id="loginForm">
+        <div class="input-group">
+          <input type="text" id="driverName" name="name" required autocomplete="off" placeholder=" ">
+          <label for="driverName">会员姓名</label>
+          <div class="input-glow"></div>
+        </div>
+        
+        <button type="submit" class="btn-engine-start">
+          <span class="btn-text">ENGINE START</span>
+          <span class="btn-fx"></span>
+        </button>
+      </form>
+    </div>
+    
+    <!-- 认证成功后的信息卡片 -->
+    <div class="welcome-cards" id="welcomeCards" style="display: none;">
+      
+      <!-- 第二个卡片 (叠在下面) -->
+      <div class="welcome-card empty-card" id="card2">
+        <div class="empty-placeholder"></div>
+        <p style="color: rgba(255,255,255,0.5); margin-top: 20px;">敬请期待更多专属权益</p>
+        <!-- 暂时在这个卡片里放个进入首页的按钮，或者等几秒自动跳转 -->
+        <button class="btn-enter-garage" id="enterGarageBtn" style="margin-top: 30px; display: none;">进入专属车库</button>
+      </div>
+
+      <!-- 第一个卡片 (叠在上面) -->
+      <div class="welcome-card active-card" id="card1">
+        <div class="welcome-icon">👑</div>
+        <div class="welcome-content" id="welcomeMessage">
+          <!-- 内容将通过 JS 动态生成 -->
+        </div>
+        <!-- 点击进入下一张卡片的箭头 -->
+        <div class="next-card-btn" id="nextCardBtn">
+          <svg viewBox="0 0 24 24" width="32" height="32" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="9 18 15 12 9 6"></polyline>
+          </svg>
+        </div>
+      </div>
+      
+    </div>
+  </div>
+
+  <script>
+    document.getElementById('loginForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const nameInput = document.getElementById('driverName').value.trim();
+      
+      if(nameInput) {
+        // 从 members.js 里的 membersData 匹配会员等级，默认为普通会员
+        let memberLevel = "普通";
+        let levelClass = "";
+        
+        if (typeof membersData !== 'undefined' && membersData[nameInput]) {
+          memberLevel = membersData[nameInput];
+        }
+        
+        // 根据等级分配不同的样式类
+        if (memberLevel.includes('黑')) {
+          levelClass = 'level-black';
+        } else if (memberLevel.includes('金')) {
+          levelClass = 'level-gold';
+        } else if (memberLevel.includes('银')) {
+          levelClass = 'level-silver';
+        } else if (memberLevel.includes('芒果')) {
+          levelClass = 'level-mango';
+        }
+        
+        sessionStorage.setItem('mango_driver_name', nameInput);
+        sessionStorage.setItem('mango_driver_level', memberLevel);
+        /* 新登录后选车页各标签默认「全部」：清除上一用户遗留的筛选记忆 */
+        sessionStorage.removeItem('mangoCarFilterState');
+        sessionStorage.removeItem('mango_filter_saved_for_driver');
+        
+        // 将等级样式应用到卡片上
+        const card1 = document.getElementById('card1');
+        const card2 = document.getElementById('card2');
+        card1.className = `welcome-card active-card ${levelClass}`;
+        // card2 可以等翻转时再赋予，或者保持空卡片样式
+        
+        // 按钮动画
+        const btn = document.querySelector('.btn-engine-start');
+        btn.classList.add('igniting');
+        btn.querySelector('.btn-text').textContent = 'IGNITING...';
+        
+        // 生成欢迎语
+        const welcomeMessage = `尊贵的${memberLevel}会员，${nameInput}先生，<br>感谢您选择芒果超跑，<br>即将为您开启您的专属车库。`;
+        document.getElementById('welcomeMessage').innerHTML = `<p>${welcomeMessage}</p>`;
+        
+        setTimeout(() => {
+          // 隐藏登录框，显示欢迎卡片容器
+          document.querySelector('.login-card').style.display = 'none';
+          const cardsContainer = document.getElementById('welcomeCards');
+          cardsContainer.style.display = 'block'; // 叠层不需要 flex
+
+          // 给卡片容器加个进场动画
+          cardsContainer.classList.add('animate-in');
+        }, 800);
+      }
+    });
+
+    // 卡片切换逻辑
+    document.getElementById('nextCardBtn').addEventListener('click', function() {
+      const card1 = document.getElementById('card1');
+      const card2 = document.getElementById('card2');
+      const enterBtn = document.getElementById('enterGarageBtn');
+      
+      // 卡片1滑出
+      card1.style.transform = 'translateX(-120%) rotateY(-20deg)';
+      card1.style.opacity = '0';
+      
+      // 卡片2滑入并成为 active
+      setTimeout(() => {
+        // 保持原有的 levelClass
+        const currentLevelClass = card1.className.match(/level-[a-z]+/);
+        card2.className = `welcome-card active-card ${currentLevelClass ? currentLevelClass[0] : ''}`;
+        enterBtn.style.display = 'block';
+      }, 300);
+    });
+
+    // 点击按钮跳转
+    document.getElementById('enterGarageBtn').addEventListener('click', function() {
+      window.location.href = 'car.html#carSection';
+    });
+  </script>
+</body>
+</html>

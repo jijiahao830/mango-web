@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>芒果超跑 · 尊享服务</title>
+  <link rel="stylesheet" href="./car.css">
+  <style>
+    .page-header {
+      padding: 160px 20px 80px;
+      text-align: center;
+      background: radial-gradient(ellipse at top, rgba(255, 107, 53, 0.15) 0%, transparent 70%);
+    }
+    .page-title {
+      font-size: clamp(36px, 5vw, 56px);
+      font-weight: 800;
+      margin-bottom: 20px;
+      font-family: 'Oswald', 'Impact', 'Arial Narrow', sans-serif;
+      letter-spacing: 2px;
+      color: #fff;
+    }
+    .page-subtitle {
+      font-size: 18px;
+      color: var(--text-muted);
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    .services-container {
+      max-width: 1200px;
+      margin: 0 auto 100px;
+      padding: 0 20px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 30px;
+    }
+    .service-item {
+      background: var(--surface);
+      border-radius: 16px;
+      padding: 40px;
+      text-align: center;
+      transition: transform 0.3s ease, border-color 0.3s ease;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .service-item:hover {
+      transform: translateY(-10px);
+      border-color: var(--brand);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+    .service-icon {
+      font-size: 48px;
+      margin-bottom: 24px;
+    }
+    .service-name {
+      font-size: 24px;
+      font-weight: 600;
+      margin-bottom: 16px;
+      color: #fff;
+    }
+    .service-desc {
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="site-header">
+    <div class="header-left">
+      <div class="brand">
+        <a href="car.html"><img src="./logo/logo2-1.png" alt="芒果超跑" class="brand-logo"></a>
+      </div>
+    </div>
+    <div class="header-center">
+      <nav class="header-nav">
+        <a href="car.html">车辆</a>
+        <a href="services.html" style="color: var(--brand);">服务</a>
+        <a href="about.html">关于我们</a>
+      </nav>
+      <img src="./logo/logo2.png" alt="芒果超跑标志" class="brand-logo-center">
+    </div>
+    <div class="header-right">
+      <img src="./logo/logo2.png" alt="芒果超跑标志" class="brand-logo-right">
+      <button class="mobile-filter-btn" aria-label="展开菜单">
+        <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="3" y1="12" x2="21" y2="12"></line>
+          <line x1="3" y1="6" x2="21" y2="6"></line>
+          <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <div class="page-header">
+    <h1 class="page-title">EXECUTIVE SERVICES</h1>
+    <p class="page-subtitle">不仅是驾驶，更是一种生活方式。我们为您提供全方位的超跑管家服务。</p>
+  </div>
+
+  <div class="services-container">
+    <div class="service-item">
+      <div class="service-icon">🏎️</div>
+      <h3 class="service-name">自驾体验</h3>
+      <p class="service-desc">无论是日常代步还是周末兜风，海量顶级超跑任您挑选，享受极致的驾驶乐趣与道路焦点。</p>
+    </div>
+    <div class="service-item">
+      <div class="service-icon">🎩</div>
+      <h3 class="service-name">商务接待</h3>
+      <p class="service-desc">配备专业司机的豪车接送服务，彰显企业实力，为您的高端商务洽谈保驾护航。</p>
+    </div>
+    <div class="service-item">
+      <div class="service-icon">📸</div>
+      <h3 class="service-name">影视拍摄</h3>
+      <p class="service-desc">提供各类稀有跑车用于影视剧、广告MV及高端婚纱摄影，满足您对视觉冲击的极致追求。</p>
+    </div>
+    <div class="service-item">
+      <div class="service-icon">🔧</div>
+      <h3 class="service-name">代办业务</h3>
+      <p class="service-desc">专业的超跑维保代办、年检代办及个性化改装咨询服务，让您省心省力。</p>
+    </div>
+  </div>
+
+  <footer class="site-footer" style="text-align: center; padding: 40px; color: var(--text-muted); border-top: 1px solid rgba(255,255,255,0.05);">
+    <p>© 2024 芒果超跑. All Rights Reserved.</p>
+  </footer>
+
+</body>
+</html>

@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>芒果超跑 · 极速出行</title>
+  <link rel="stylesheet" href="./index.css">
+  <style>
+    /* 移除内联样式，因为已经移入独立文件 */
+  </style>
+</head>
+<body>
+  <!-- Hero Banner -->
+  <section class="hero">
+    <div class="hero-video-wrapper">
+      <video class="hero-video" src="./carvideo.mp4" autoplay loop playsinline></video>
+      <div class="hero-video-overlay"></div>
+      <div class="hero-noise"></div>
+    </div>
+    <div class="hero-content">
+      <div class="hero-header">
+        <div class="hero-eyebrow animate-in" style="--delay: 0.1s">
+          RACING COMFORTABLE SINCE 2016 FROM<span class="hero-eyebrow-highlight">芒果超跑&nbsp;</span>
+        </div>
+        <h1 class="hero-title animate-in" style="--delay: 0.3s">MANGO SUPERCAR</h1>
+      </div>
+      <div class="hero-actions animate-in" style="--delay: 0.5s">
+        <!-- 按钮修改跳转链接到 login 页面 -->
+        <a href="login.html" class="btn-primary btn-lg hero-choose-btn">立即选车</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- 触发视频暂停的 1px 黑框 -->
+  <div id="scroll-trigger" style="height: 1px; background-color: #000; width: 100%;"></div>
+
+  <script src="./index.js"></script>
+</body>
+</html>

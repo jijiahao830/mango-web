@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>芒果超跑 · 关于我们</title>
+  <link rel="stylesheet" href="./car.css">
+  <style>
+    .page-header {
+      padding: 160px 20px 80px;
+      text-align: center;
+      background: radial-gradient(ellipse at top, rgba(255, 107, 53, 0.15) 0%, transparent 70%);
+    }
+    .page-title {
+      font-size: clamp(36px, 5vw, 56px);
+      font-weight: 800;
+      margin-bottom: 20px;
+      font-family: 'Oswald', 'Impact', 'Arial Narrow', sans-serif;
+      letter-spacing: 2px;
+      color: #fff;
+    }
+    .page-subtitle {
+      font-size: 18px;
+      color: var(--text-muted);
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    .about-container {
+      max-width: 1000px;
+      margin: 0 auto 100px;
+      padding: 0 20px;
+    }
+    .about-card {
+      background: var(--surface);
+      border-radius: 20px;
+      padding: 60px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      position: relative;
+      overflow: hidden;
+    }
+    .about-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 4px;
+      background: linear-gradient(90deg, var(--brand), transparent);
+    }
+    .about-text {
+      font-size: 18px;
+      line-height: 2;
+      color: var(--text-muted);
+      margin-bottom: 24px;
+    }
+    .about-text strong {
+      color: #fff;
+    }
+    .stats-row {
+      display: flex;
+      justify-content: space-around;
+      margin-top: 60px;
+      flex-wrap: wrap;
+      gap: 30px;
+    }
+    .stat-item {
+      text-align: center;
+    }
+    .stat-num {
+      font-family: 'Oswald', sans-serif;
+      font-size: 48px;
+      color: var(--brand);
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .stat-label {
+      color: #fff;
+      font-size: 16px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="site-header">
+    <div class="header-left">
+      <div class="brand">
+        <a href="car.html"><img src="./logo/logo2-1.png" alt="芒果超跑" class="brand-logo"></a>
+      </div>
+    </div>
+    <div class="header-center">
+      <nav class="header-nav">
+        <a href="car.html">车辆</a>
+        <a href="services.html">服务</a>
+        <a href="about.html" style="color: var(--brand);">关于我们</a>
+      </nav>
+      <img src="./logo/logo2.png" alt="芒果超跑标志" class="brand-logo-center">
+    </div>
+    <div class="header-right">
+      <img src="./logo/logo2.png" alt="芒果超跑标志" class="brand-logo-right">
+      <button class="mobile-filter-btn" aria-label="展开菜单">
+        <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="3" y1="12" x2="21" y2="12"></line>
+          <line x1="3" y1="6" x2="21" y2="6"></line>
+          <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <div class="page-header">
+    <h1 class="page-title">ABOUT MANGO</h1>
+    <p class="page-subtitle">创立于2016年，致力于为您提供最纯粹的超跑文化与出行体验。</p>
+  </div>
+
+  <div class="about-container">
+    <div class="about-card">
+      <p class="about-text">
+        <strong>芒果超跑（MANGO SUPERCAR）</strong> 成立于 2016 年，是一家专注于高端跑车租赁、商务接待、影视拍摄及豪车托管的综合性超跑俱乐部。
+      </p>
+      <p class="about-text">
+        我们始终秉持 <strong>"RACING COMFORTABLE"</strong> 的品牌理念，打破传统租车行业的壁垒，将顶级跑车的驾驶乐趣与管家式的尊贵服务完美结合。在这里，您不仅能体验到兰博基尼、法拉利、保时捷等世界顶级超跑的极致性能，更能感受到我们对每一处细节的极致追求。
+      </p>
+      
+      <div class="stats-row">
+        <div class="stat-item">
+          <div class="stat-num">2016</div>
+          <div class="stat-label">创立年份</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-num">50+</div>
+          <div class="stat-label">顶级超跑</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-num">1000+</div>
+          <div class="stat-label">尊贵会员</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="site-footer" style="text-align: center; padding: 40px; color: var(--text-muted); border-top: 1px solid rgba(255,255,255,0.05);">
+    <p>© 2024 芒果超跑. All Rights Reserved.</p>
+  </footer>
+
+</body>
+</html>

@@ -1,0 +1,412 @@
+/* login_car.css */
+:root {
+  --brand: #ff6b35;
+  --brand-light: #ff8c42;
+  --bg: #0a0b0f;
+  --surface: #171a21;
+  --text: #ffffff;
+  --text-muted: #8b93a7;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
+  background-color: var(--bg);
+  color: var(--text);
+  overflow: hidden;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 动态背景 */
+.login-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(ellipse 1200px 800px at 50% 50%, #1a1d29 0%, var(--bg) 100%);
+}
+
+.bg-fx {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100vw;
+  height: 100vh;
+  background: radial-gradient(circle at 50% 50%, rgba(255, 107, 53, 0.05) 0%, transparent 60%);
+  animation: pulseBg 4s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+
+@keyframes pulseBg {
+  0% { transform: translate(-50%, -50%) scale(1); opacity: 0.5; }
+  100% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
+}
+
+.bg-noise {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+  opacity: 0.03;
+  mix-blend-mode: overlay;
+  pointer-events: none;
+}
+
+/* 登录卡片 */
+.login-card {
+  position: relative;
+  z-index: 10;
+  background: rgba(23, 26, 33, 0.6);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 24px;
+  padding: 60px 40px;
+  width: 100%;
+  max-width: 480px;
+  text-align: center;
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.brand-header {
+  margin-bottom: 40px;
+}
+
+.login-logo {
+  height: 48px;
+  margin-bottom: 24px;
+}
+
+.login-title {
+  font-family: 'Oswald', 'Impact', 'Arial Narrow', sans-serif;
+  font-size: 24px;
+  letter-spacing: 0.1em;
+  font-weight: 500;
+  color: #fff;
+  margin-bottom: 8px;
+  background: linear-gradient(90deg, #fff, #aaa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.login-subtitle {
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+/* 输入框组合 */
+.input-group {
+  position: relative;
+  margin-bottom: 40px;
+  text-align: left;
+}
+
+.input-group input {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.2);
+  border: none;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+  padding: 24px 16px 12px;
+  font-size: 18px;
+  color: #fff;
+  font-family: inherit;
+  outline: none;
+  transition: all 0.3s ease;
+  border-radius: 8px 8px 0 0;
+}
+
+.input-group label {
+  position: absolute;
+  left: 16px;
+  top: 18px;
+  font-size: 16px;
+  color: var(--text-muted);
+  pointer-events: none;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.input-group input:focus,
+.input-group input:not(:placeholder-shown) {
+  background: rgba(255, 107, 53, 0.05);
+  border-bottom-color: var(--brand);
+}
+
+.input-group input:focus + label,
+.input-group input:not(:placeholder-shown) + label {
+  top: 4px;
+  font-size: 12px;
+  color: var(--brand);
+}
+
+.input-glow {
+  position: absolute;
+  bottom: -2px;
+  left: 50%;
+  width: 0;
+  height: 2px;
+  background: var(--brand);
+  box-shadow: 0 0 10px var(--brand);
+  transition: all 0.4s ease;
+  transform: translateX(-50%);
+}
+
+.input-group input:focus ~ .input-glow {
+  width: 100%;
+}
+
+/* 引擎启动按钮 */
+.btn-engine-start {
+  position: relative;
+  width: 100%;
+  appearance: none;
+  border: none;
+  background: linear-gradient(135deg, #ff3b00, #ff6b35);
+  padding: 20px;
+  border-radius: 12px;
+  cursor: pointer;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 8px 20px rgba(255, 59, 0, 0.3);
+}
+
+.btn-engine-start::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(0,0,0,0.1) 10px, rgba(0,0,0,0.1) 20px);
+  opacity: 0.5;
+}
+
+.btn-engine-start::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.4) 50%, rgba(255,255,255,0) 100%);
+  transform: skewX(-25deg);
+  transition: none;
+}
+
+.btn-engine-start:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px rgba(255, 59, 0, 0.5);
+}
+
+.btn-engine-start:hover::after {
+  animation: sweepLight 0.8s ease-in-out;
+}
+
+.btn-engine-start:active {
+  transform: translateY(2px);
+  box-shadow: 0 4px 10px rgba(255, 59, 0, 0.4);
+}
+
+.btn-text {
+  position: relative;
+  z-index: 2;
+  color: #fff;
+  font-family: 'Oswald', 'Impact', 'Arial Narrow', sans-serif;
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+/* 点火状态 */
+.btn-engine-start.igniting {
+  background: #fff;
+  pointer-events: none;
+  box-shadow: 0 0 40px #fff, 0 0 80px var(--brand);
+}
+
+.btn-engine-start.igniting .btn-text {
+  color: var(--brand);
+  text-shadow: none;
+}
+
+/* 入场动画 */
+.animate-in {
+  animation: scaleUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes scaleUp {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* 欢迎卡片容器 - 改为叠层 */
+.welcome-cards {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  max-width: 500px; /* 缩小容器适应单卡片 */
+  height: 350px;
+  perspective: 1000px; /* 开启 3D 空间 */
+}
+
+/* 欢迎卡片样式 - 绝对定位重叠 */
+.welcome-card {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(23, 26, 33, 0.7);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+  border: 1px solid rgba(255, 107, 53, 0.2);
+  border-top: 1px solid rgba(255, 107, 53, 0.5);
+  border-radius: 20px;
+  padding: 40px;
+  text-align: center;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), inset 0 1px 20px rgba(255, 107, 53, 0.05);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 根据不同等级的专属边框/阴影样式 */
+.welcome-card.level-mango {
+  border: 1px solid rgba(255, 107, 53, 0.3);
+  border-top: 1px solid rgba(255, 107, 53, 0.8);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), inset 0 1px 20px rgba(255, 107, 53, 0.1);
+}
+
+.welcome-card.level-silver {
+  border: 1px solid rgba(192, 192, 192, 0.3);
+  border-top: 1px solid rgba(192, 192, 192, 0.8);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), inset 0 1px 20px rgba(192, 192, 192, 0.15);
+}
+
+.welcome-card.level-gold {
+  border: 1px solid rgba(255, 215, 0, 0.3);
+  border-top: 1px solid rgba(255, 215, 0, 0.8);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), inset 0 1px 30px rgba(255, 215, 0, 0.2);
+}
+
+.welcome-card.level-black {
+  background: rgba(10, 10, 10, 0.85);
+  border: 1px solid rgba(50, 50, 50, 0.8);
+  border-top: 1px solid rgba(100, 100, 100, 0.8);
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.9), inset 0 1px 40px rgba(255, 255, 255, 0.05);
+}
+
+/* 顶层活跃卡片 */
+.active-card {
+  transform: translateZ(0) translateY(0);
+  opacity: 1;
+  z-index: 2;
+}
+
+/* 底层空卡片 */
+.empty-card {
+  transform: translateZ(-50px) translateY(20px);
+  opacity: 0.6;
+  z-index: 1;
+  background: rgba(23, 26, 33, 0.4);
+  border: 1px dashed rgba(255, 255, 255, 0.1);
+  box-shadow: none;
+}
+
+.welcome-icon {
+  font-size: 48px;
+  margin-bottom: 20px;
+  filter: drop-shadow(0 0 10px rgba(255, 107, 53, 0.5));
+}
+
+/* 根据不同等级的 Icon 发光样式 */
+.welcome-card.level-silver .welcome-icon {
+  filter: drop-shadow(0 0 10px rgba(192, 192, 192, 0.6));
+}
+
+.welcome-card.level-gold .welcome-icon {
+  filter: drop-shadow(0 0 15px rgba(255, 215, 0, 0.8));
+}
+
+.welcome-card.level-black .welcome-icon {
+  filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.3));
+}
+
+.welcome-content p {
+  font-size: 18px;
+  line-height: 1.8;
+  color: #fff;
+  font-weight: 300;
+  letter-spacing: 1px;
+}
+
+.empty-placeholder {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+/* 右侧箭头按钮 */
+.next-card-btn {
+  position: absolute;
+  right: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(255, 107, 53, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--brand);
+  transition: all 0.3s ease;
+  border: 1px solid rgba(255, 107, 53, 0.2);
+}
+
+.next-card-btn:hover {
+  background: var(--brand);
+  color: #fff;
+  transform: translateY(-50%) translateX(5px);
+  box-shadow: 0 0 20px rgba(255, 107, 53, 0.4);
+}
+
+.btn-enter-garage {
+  background: transparent;
+  color: var(--brand);
+  border: 1px solid var(--brand);
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-enter-garage:hover {
+  background: var(--brand);
+  color: #fff;
+  box-shadow: 0 0 15px rgba(255, 107, 53, 0.3);
+}

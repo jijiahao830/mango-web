@@ -1,0 +1,1807 @@
+:root {
+  /* 与固定顶栏对齐，供筛选侧栏 sticky 使用（略大于 logo+padding，避免被挡） */
+  --header-sticky-offset: calc(72px + env(safe-area-inset-top));
+  /* 筛选侧栏可视高度：顶栏下沿至屏幕底，无额外缩进留白 */
+  --sidebar-filter-fill-height: calc(100vh - var(--header-sticky-offset));
+  --bg: #0a0b0f;
+  --bg-secondary: #0f1115;
+  --panel: #171a21;
+  --muted: #8b93a7;
+  --text: #e8ecf8;
+  --brand: #ff6b35;
+  --brand-light: #ff8c69;
+  --accent: #3b82f6;
+  --accent-light: #60a5fa;
+  --card: #1d2129;
+  --border: #2a2f3a;
+  --gold-start: #f7a614;
+  --gold-end: #ffcc6a;
+  --purple: #1c2140;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --sticky-offset: 280px;
+}
+
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html {
+  scroll-behavior: smooth;
+  min-height: 100%;
+  overflow-y: auto;
+  /* clip 不建立横向滚动条，且不会像 hidden 那样把 overflow-y 算成 auto，避免 sticky 失效 */
+  overflow-x: clip;
+}
+
+html, body {
+  min-height: 100%;
+  background-color: var(--bg);
+  background-image: radial-gradient(ellipse 1400px 800px at 50% 0%, #1a1d29 0%, var(--bg) 50%);
+  color: var(--text);
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
+  margin: 0;
+  overflow-x: clip;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  -webkit-text-size-adjust: 100%;
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  display: none;
+}
+
+/* Header */
+.site-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: calc(16px + env(safe-area-inset-top)) clamp(20px, 8vw, 120px) 16px;
+  background: rgba(10, 11, 15, 0.8);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  flex: 1;
+}
+
+.header-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex: 1;
+}
+
+.brand-logo-center {
+  height: 36px;
+  width: auto;
+  object-fit: contain;
+  display: none;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex: 1;
+}
+
+.mobile-filter-btn {
+  display: none;
+  background: none;
+  border: none;
+  color: var(--text);
+  padding: 8px;
+  cursor: pointer;
+}
+
+.close-filter-btn {
+  display: none;
+  background: none;
+  border: none;
+  color: var(--text);
+  padding: 8px;
+  cursor: pointer;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.brand-logo {
+  height: 32px;
+  width: auto;
+  display: block;
+}
+
+.brand-logo-right {
+  height: 32px;
+  width: auto;
+  display: block; /* 恢复显示 */
+}
+
+.brand-text {
+  font-size: clamp(18px, 3vw, 24px);
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  background: linear-gradient(135deg, var(--brand), var(--brand-light));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.header-nav {
+  display: flex;
+  gap: 32px;
+}
+
+.header-nav a {
+  color: var(--muted);
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+.header-nav a:hover {
+  color: var(--text);
+}
+
+.header-cta {
+  font-size: 14px;
+  padding: 8px 16px;
+}
+
+/* Hero Section */
+/* Hero section has been moved to index.html */
+/* Keep these if needed by index but we already separated them, 
+   so we can safely leave them or remove them. We'll just leave them for safety 
+   but they won't be used in index.html anymore */
+.hero {
+  position: relative;
+  height: 100vh;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-start;
+  overflow: hidden;
+}
+
+.hero-video-wrapper {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+.hero-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.hero-video-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: 
+    linear-gradient(to top, rgba(10, 11, 15, 1) 0%, rgba(10, 11, 15, 0.4) 30%, transparent 70%),
+    linear-gradient(to right, rgba(10, 11, 15, 0.8) 0%, transparent 50%);
+  z-index: 2;
+}
+
+/* 电影级颗粒感滤镜 */
+.hero-noise {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+  opacity: 0.05;
+  mix-blend-mode: overlay;
+  z-index: 3;
+  pointer-events: none;
+}
+
+.hero-content {
+  position: relative;
+  z-index: 4;
+  text-align: left;
+  max-width: 1200px;
+  width: 100%;
+  padding: 0 clamp(20px, 8vw, 120px) 12vh;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 40px;
+  margin-left: 5vw; /* 向右移动整个内容区域 */
+}
+
+.hero-header {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.hero-eyebrow {
+  font-family: 'Oswald', 'Impact', 'Arial Narrow', sans-serif;
+  font-size: clamp(14px, 2vw, 24px);
+  font-weight: 500; /* 变细 */
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: #fff;
+  padding: 0;
+  border: none;
+  background: none;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+  backdrop-filter: none;
+  margin-bottom: 0;
+  transform: none;
+  display: inline-flex;
+  align-items: baseline;
+}
+
+.hero-eyebrow-highlight {
+  font-size: clamp(24px, 4vw, 42px); /* 比 racing 大，比下面 mango(40-90px) 小 */
+  font-weight: 800;
+  margin-left: 16px; /* 往右一点 */
+  font-style: italic; /* 字体倾斜 */
+  font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+  
+  /* 流光渐变样式 */
+  background: linear-gradient(90deg, #ff6b35, #ffcc6a, #ff6b35, #ffcc6a);
+  background-size: 300% 100%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: textShine 4s linear infinite;
+  
+  /* 发光阴影效果（由于文字透明度，阴影需加在伪元素或使用 filter） */
+  filter: drop-shadow(0 2px 8px rgba(255, 107, 53, 0.5));
+  
+  transform: scaleX(1) scaleY(1); /* 重置父级的缩放影响（如果有的话） */
+}
+
+@keyframes textShine {
+  0% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: -200% 50%;
+  }
+}
+
+.hero-title {
+  font-family: 'Oswald', 'Impact', 'Arial Narrow', sans-serif;
+  font-size: clamp(40px, 8vw, 90px);
+  font-weight: 500; /* 变细 */
+  line-height: 1;
+  margin: 0;
+  letter-spacing: -1px;
+  text-shadow: 0 4px 10px rgba(0,0,0,0.4);
+  white-space: nowrap;
+  font-style: normal;
+  color: #fff;
+  transform: scaleX(0.7) scaleY(1.3);
+  transform-origin: left;
+}
+
+.hero-actions {
+  display: flex;
+  gap: 20px;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+}
+
+.btn-lg {
+  padding: 18px 40px;
+  font-size: 18px;
+  border-radius: 50px;
+}
+
+.btn-ghost {
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+}
+
+.btn-ghost:hover {
+  border-color: white;
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+
+
+/* 进场动画 */
+.animate-in {
+  opacity: 0;
+  transform: translateY(30px);
+  animation: fadeUpIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation-delay: var(--delay, 0s);
+}
+
+@keyframes fadeUpIn {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 滚动提示指示器 */
+.hero-scroll-indicator {
+  position: absolute;
+  bottom: 40px;
+  left: clamp(20px, 8vw, 120px);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  z-index: 4;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 12px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.mouse {
+  width: 24px;
+  height: 36px;
+  border: 2px solid rgba(255, 255, 255, 0.6);
+  border-radius: 12px;
+  position: relative;
+}
+
+.wheel {
+  width: 4px;
+  height: 6px;
+  background: var(--brand);
+  border-radius: 2px;
+  position: absolute;
+  top: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+  animation: scrollWheel 2s infinite;
+}
+
+@keyframes scrollWheel {
+  0% { transform: translate(-50%, 0); opacity: 1; }
+  100% { transform: translate(-50%, 12px); opacity: 0; }
+}
+
+/* Buttons */
+.btn-primary {
+  appearance: none;
+  border: none;
+  background: linear-gradient(135deg, var(--brand), #ff3b00);
+  color: white;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-primary::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.4) 50%, rgba(255,255,255,0) 100%);
+  transform: skewX(-25deg);
+  transition: none;
+}
+
+.btn-primary:hover::after {
+  animation: sweepLight 0.8s ease-in-out;
+}
+
+@keyframes sweepLight {
+  0% { left: -100%; }
+  100% { left: 200%; }
+}
+
+.btn-primary:hover {
+  opacity: 0.95;
+}
+
+.btn-ghost {
+  appearance: none;
+  border: 2px solid var(--border);
+  background: transparent;
+  color: var(--text);
+  padding: 10px 24px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-ghost:hover {
+  border-color: var(--brand);
+  color: var(--brand);
+  transform: translateY(-2px);
+}
+
+.btn-lg {
+  padding: 16px 32px;
+  font-size: 16px;
+}
+
+a.btn-primary {
+  display: inline-block;
+  text-decoration: none;
+  text-align: center;
+}
+
+/* Content Layout */
+.content-wrapper {
+  display: flex;
+  min-height: 100vh;
+  padding: 0 clamp(20px, 8vw, 120px);
+  margin-top: 64px; /* header 是 16px padding + 32px logo + 16px padding = 64px */
+  overflow: visible;
+}
+
+/* Sidebar Filter：基础样式；进入选车区后 body.car-section-active 时吸顶（见下方媒体查询） */
+.sidebar-filter {
+  width: 280px;
+  background: transparent;
+  border-right: 1px solid var(--border);
+  padding: 10px 14px 12px;
+  align-self: flex-start;
+  flex-shrink: 0;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  /* 筛选芯片行高：分类/品牌网格用固定行高，避免切换筛选时上下抖动 */
+  --filter-chip-row: 40px;
+  /* 侧栏标签网格行列间距（略宽，在 280px 内均匀铺开） */
+  --filter-chip-gap: 10px;
+}
+
+/* 桌面端：仅当 body.car-section-active（已进入选车区，由 script2.js 根据滚动切换）时侧栏吸顶 */
+@media (min-width: 769px) {
+  body.car-section-active .sidebar-filter {
+    position: sticky;
+    top: var(--header-sticky-offset);
+    /* 与屏幕可视区等高（顶栏以下至屏幕底），不再额外减 16px 留白 */
+    height: var(--sidebar-filter-fill-height);
+    min-height: var(--sidebar-filter-fill-height);
+    max-height: var(--sidebar-filter-fill-height);
+    overflow-y: auto;
+    overflow-x: hidden;
+    box-sizing: border-box;
+    z-index: 48;
+    align-self: flex-start;
+  }
+}
+
+.sidebar-filter::-webkit-scrollbar {
+  display: none; /* Chrome, Safari and Opera 隐藏滚动条 */
+}
+
+.filter-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.filter-header h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  background: linear-gradient(135deg, #fff 0%, #a5b4fc 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.filter-result-count {
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 32px;
+}
+
+.filter-group {
+  margin-bottom: 22px;
+}
+
+/* 价格与重置之间再收一点，避免重置按钮贴底或被裁切 */
+.sidebar-filter .filter-group:last-of-type {
+  margin-bottom: 14px;
+}
+
+.filter-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--muted);
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.filter-buttons {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  align-items: start;
+}
+
+/* 侧栏：场景 / 分类 / 品牌芯片统一高度与内边距，避免点一侧筛选后另一侧「突然变高」或三块高度不一致 */
+.sidebar-filter .filter-buttons {
+  align-items: stretch;
+  gap: var(--filter-chip-gap, 10px);
+}
+
+/* :not(.hidden-brand) 必须保留，否则 display:inline-flex 会盖过 .hidden-brand{display:none}，折叠时多余品牌会全部露出来 */
+.sidebar-filter .filter-buttons .filter-btn:not(.hidden-brand) {
+  box-sizing: border-box;
+  min-height: var(--filter-chip-row, 40px);
+  height: var(--filter-chip-row, 40px);
+  max-height: var(--filter-chip-row, 40px);
+  padding: 0 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1.2;
+}
+
+.filter-btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 8px 0;
+  text-align: center;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  position: relative;
+}
+
+.filter-btn:hover {
+  border-color: var(--brand);
+  color: var(--brand);
+}
+
+.filter-btn.active {
+  background: transparent;
+  color: white;
+  border-color: white;
+}
+
+.filter-btn.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 0;
+  height: 0;
+  border-bottom: 18px solid white;
+  border-left: 18px solid transparent;
+}
+
+.filter-btn.active::before {
+  content: '';
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  width: 4px;
+  height: 8px;
+  border: solid black;
+  border-width: 0 1.5px 1.5px 0;
+  transform: rotate(45deg);
+  z-index: 1;
+}
+
+/* 品牌展开按钮逻辑 */
+.hidden-brand {
+  display: none;
+}
+
+/* 需高于 .sidebar-filter .filter-buttons .filter-btn:not(.hidden-brand) 的 display，否则展开后仍被盖住 */
+#brandFilterButtons.brand-expanded .filter-btn.hidden-brand {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--filter-chip-row, 40px);
+  height: var(--filter-chip-row, 40px);
+  max-height: var(--filter-chip-row, 40px);
+  padding: 0 8px;
+  box-sizing: border-box;
+  line-height: 1.2;
+}
+
+/* 需带 #id，否则盖不过侧栏统一芯片的 display:inline-flex */
+#brandFilterButtons.brand-expanded .expand-btn {
+  display: none;
+}
+
+/* 选分类后：品牌区固定 4 行 × 3 列；「全部」+ 最多 10 个品牌占前 11 格，超过时第 12 格为「...」展开 */
+#brandFilterButtons.brand-filter--category-mode {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--filter-chip-gap, 10px);
+}
+
+/* 折叠：固定行高 + 容器 min-height，避免可选数量变化时仍有像素级上移 */
+#brandFilterButtons.brand-filter--category-mode:not(.brand-expanded) {
+  grid-template-rows: repeat(4, var(--filter-chip-row, 40px));
+  align-items: stretch;
+  min-height: calc(4 * var(--filter-chip-row, 40px) + 3 * var(--filter-chip-gap, 10px));
+  contain: layout;
+}
+
+#brandFilterButtons.brand-filter--category-mode.brand-expanded {
+  grid-template-rows: unset;
+  grid-auto-rows: minmax(var(--filter-chip-row, 40px), auto);
+  align-items: start;
+  min-height: 0;
+}
+
+#brandFilterButtons.brand-filter--category-mode .filter-btn.hidden-brand {
+  display: block;
+}
+
+#brandFilterButtons.brand-filter--category-mode:not(.brand-expanded) .filter-btn.is-overflow-hidden {
+  display: none !important;
+}
+
+#brandFilterButtons.brand-filter--category-mode.brand-expanded .filter-btn.is-overflow-hidden {
+  display: block !important;
+}
+
+/* 选品牌后：分类区固定 3 行 × 3 列（全部 + 8 个分类，无「...」） */
+#categoryFilterButtons.category-filter--brand-mode {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, var(--filter-chip-row, 40px));
+  gap: var(--filter-chip-gap, 10px);
+  align-items: stretch;
+  min-height: calc(3 * var(--filter-chip-row, 40px) + 2 * var(--filter-chip-gap, 10px));
+  contain: layout;
+}
+
+/* Price Slider */
+.price-range-labels {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.price-slider-container {
+  position: relative;
+  height: 20px;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+}
+
+.slider-track {
+  position: absolute;
+  height: 4px;
+  background: var(--border);
+  width: 100%;
+  border-radius: 2px;
+  z-index: 1;
+}
+
+.slider-track::before {
+  content: '';
+  position: absolute;
+  height: 100%;
+  background: white; /* 两个滑块之间的高亮颜色 */
+  left: var(--left, 0%);
+  right: var(--right, 0%);
+  border-radius: 2px;
+}
+
+.price-slider {
+  position: absolute;
+  width: 100%;
+  pointer-events: none;
+  appearance: none;
+  background: none;
+  height: 4px;
+  outline: none;
+  z-index: 2;
+  margin: 0;
+}
+
+.price-slider::-webkit-slider-thumb {
+  appearance: none;
+  pointer-events: auto;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: white;
+  cursor: pointer;
+  border: none; /* 移除边框，确保圆形完整 */
+  box-shadow: 0 0 0 2px var(--brand); /* 用阴影代替边框，避免被裁切 */
+  position: relative;
+}
+
+.price-slider::-moz-range-thumb {
+  pointer-events: auto;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: white;
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 0 0 2px var(--brand);
+}
+
+.price-range-limits {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.reset-btn {
+  width: 100%;
+  background: white;
+  color: black;
+  border: none;
+  padding: 10px 12px;
+  border-radius: 4px;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 12px;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+
+.reset-btn:hover {
+  background: #f0f0f0;
+}
+
+/* Main Content Area */
+.main-content {
+  flex: 1;
+  padding: 40px;
+  background: transparent;
+}
+
+#carGrid {
+  scroll-margin-top: calc(72px + env(safe-area-inset-top));
+}
+
+/* 返回选车区（悬浮；默认可见，仅首屏 Hero 时 .is-at-hero 隐藏） */
+.back-to-cars-btn {
+  position: fixed;
+  z-index: 500;
+  right: clamp(16px, 4vw, 32px);
+  bottom: calc(24px + env(safe-area-inset-bottom));
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 18px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: rgba(23, 26, 33, 0.96);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  box-shadow:
+    0 4px 24px rgba(0, 0, 0, 0.45),
+    0 0 0 1px rgba(255, 255, 255, 0.06) inset;
+  transition:
+    opacity 0.3s ease,
+    transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.25s ease,
+    border-color 0.25s ease,
+    visibility 0.3s ease;
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+  visibility: visible;
+}
+
+.back-to-cars-btn.is-at-hero {
+  opacity: 0;
+  pointer-events: none;
+  visibility: hidden;
+}
+
+.back-to-cars-btn:hover {
+  border-color: rgba(255, 107, 53, 0.55);
+  box-shadow:
+    0 6px 28px rgba(255, 107, 53, 0.2),
+    0 0 0 1px rgba(255, 107, 53, 0.15) inset;
+}
+
+.back-to-cars-btn:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 3px;
+}
+
+.back-to-cars-icon {
+  flex-shrink: 0;
+  color: var(--brand-light);
+  display: block;
+}
+
+.back-to-cars-label {
+  color: var(--gold-end);
+}
+
+.brand-section {
+  margin-bottom: 60px;
+}
+
+.brand-title {
+  font-size: 36px;
+  font-weight: 900;
+  margin-bottom: 24px;
+  letter-spacing: -1px;
+}
+
+.car-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 24px;
+  padding: 0;
+  margin: 0;
+}
+
+@media (min-width: 1025px) {
+  /* 确保桌面端导航栏水平居中 */
+  .header-nav {
+    display: flex;
+    gap: 32px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .brand-logo-center {
+    display: block;
+  }
+  .header-left .brand-logo {
+    display: block; /* 保持原样以防布局坍塌，或让左侧占位 */
+    opacity: 0;
+  }
+  .close-filter-btn {
+    display: flex;
+  }
+  .sidebar-filter {
+    width: 240px;
+    position: fixed;
+    top: 0;
+    right: -100%;
+    height: 100vh;
+    background: var(--bg-secondary);
+    z-index: 1000;
+    transition: right 0.3s ease;
+    padding: 24px;
+    border-left: 1px solid var(--border);
+    max-height: 100vh;
+  }
+  .sidebar-filter.active {
+    right: 0;
+  }
+  .header-nav {
+    display: none;
+  }
+  .mobile-filter-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 768px) {
+  .content-wrapper {
+    flex-direction: column;
+  }
+  .sidebar-filter {
+    width: 280px;
+    height: 100vh;
+    max-height: 100vh;
+    overflow-y: auto;
+    position: fixed;
+    top: 0;
+    right: -100%;
+    border-right: none;
+    border-left: 1px solid var(--border);
+    border-bottom: none;
+    background: var(--bg-secondary);
+    z-index: 1000;
+    transition: right 0.3s ease;
+    padding: 24px 16px;
+  }
+  .sidebar-filter.active {
+    right: 0;
+  }
+  /* 移动端不再需要吸顶筛选条的逻辑，因为改成了侧滑抽屉 */
+  body.car-section-active .sidebar-filter {
+    position: fixed;
+    top: 0;
+    max-height: 100vh;
+    z-index: 1000;
+  }
+  .main-content {
+    padding: 24px 16px;
+  }
+}
+
+/* Hero Section Padding */
+.hero {
+  margin-bottom: 0;
+}
+
+/* 车辆列表分页：Google 风格 + Mango（桌面 40 / 平板 20 / 手机 10 由 script.js 控制） */
+.car-pagination.mango-pagination {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: clamp(8px, 2vw, 20px);
+  padding: 16px clamp(12px, 4vw, 48px) 40px;
+  max-width: 1400px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.car-pagination.is-hidden {
+  display: none;
+}
+
+.mango-page-nav {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  padding: 4px 8px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  flex-shrink: 0;
+  color: var(--brand);
+  transition: color 0.2s ease, opacity 0.2s ease;
+}
+
+.mango-page-nav:hover:not(:disabled) {
+  color: var(--brand-light);
+}
+
+.mango-page-nav:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  color: var(--muted);
+}
+
+.mango-chevron {
+  font-size: clamp(2rem, 5vw, 3rem);
+  line-height: 1;
+  font-weight: 300;
+  color: inherit;
+}
+
+.mango-nav-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: inherit;
+}
+
+.mango-pagination-center {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  justify-content: center;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 4px;
+}
+
+.mango-matrix {
+  display: grid;
+  grid-template-rows: auto auto;
+  /* 与字母行共用列，数字与上方 a 严格对齐；字母列之间几乎无额外空隙 */
+  column-gap: 0;
+  row-gap: 6px;
+  justify-content: center;
+  align-items: end;
+  justify-items: center;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+  font-size: clamp(1.25rem, 3.5vw, 2.25rem);
+  font-weight: 400;
+  line-height: 1;
+}
+
+.mango-grid-cell {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  min-width: 0;
+  text-align: center;
+}
+
+.mango-grid-cell-letters {
+  font-weight: 400;
+}
+
+.mango-grid-cell-nums {
+  font-size: 0.58em;
+  font-weight: 500;
+  line-height: 1;
+  padding-top: 2px;
+}
+
+.mango-lit {
+  color: #ffffff;
+  user-select: none;
+}
+
+.mango-lit-ngo {
+  white-space: nowrap;
+}
+
+.mango-num-slot {
+  display: block;
+  min-height: 1.2em;
+}
+
+.mango-a-btn,
+.mango-num-btn {
+  padding: 0;
+  margin: 0;
+  border: none;
+  background: transparent;
+  font: inherit;
+  line-height: 1;
+  cursor: pointer;
+  border-radius: 2px;
+  transition: color 0.15s ease;
+}
+
+.mango-a-btn {
+  color: #ffffff;
+  margin: 0;
+}
+
+/* 分页字母 a 之间与「Mango」中 g 与 o 的视觉间距一致（PC / 平板 / 手机统一） */
+.mango-grid-cell:has(.mango-a-btn) + .mango-grid-cell:has(.mango-a-btn) {
+  padding-left: 0.08em;
+}
+
+.mango-a-btn.is-current {
+  color: var(--brand);
+}
+
+.mango-num-btn {
+  color: var(--brand);
+}
+
+.mango-num-btn.is-current {
+  color: #ffffff;
+}
+
+.mango-a-btn:focus-visible,
+.mango-num-btn:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+
+@media (max-width: 480px) {
+  .mango-page-nav {
+    padding: 4px 4px;
+  }
+
+  .mango-nav-label {
+    font-size: 12px;
+  }
+}
+
+.car-card {
+  position: relative;
+  background: linear-gradient(145deg, #1e2329, #181c24);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.car-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+  border-color: rgba(255, 107, 53, 0.5);
+}
+
+.car-card:hover::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(255, 107, 53, 0.1), rgba(59, 130, 246, 0.05));
+  pointer-events: none;
+  z-index: 1;
+}
+
+.car-card picture {
+  display: block;
+  width: 100%;
+  flex-shrink: 0;
+}
+
+.car-image {
+  position: relative;
+  height: 180px;
+  background-size: cover;
+  background-position: center;
+}
+
+.car-image-photo {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+  object-position: center;
+  background: linear-gradient(135deg, #1e2329, #181c24);
+}
+
+/* 分类标签：文字栏右侧，与车名同一行 */
+.car-badge {
+  position: static;
+  display: inline-block;
+  margin: 0;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.35;
+  backdrop-filter: blur(10px);
+}
+
+.car-badge-inline {
+  flex-shrink: 0;
+  text-align: center;
+  white-space: nowrap;
+}
+
+/* Category Badge Colors — 全部为双色线性渐变（色相与原先一致） */
+.car-badge {
+  background: linear-gradient(135deg, #ff6b35, #ff8c69);
+}
+
+.sedan-badge {
+  background: linear-gradient(135deg, #3b82f6, #60a5fa);
+}
+
+/* 车辆表分类：豪华轿车 */
+.luxsedan-badge {
+  background: linear-gradient(135deg, #f7a614, #ffcc6a);
+}
+
+.perf-badge {
+  /* 性能车：玫红/竞速红 */
+  background: linear-gradient(135deg, #be123c, #fb7185);
+}
+
+.biz-badge {
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+}
+
+.ev-badge {
+  /* 深翠→亮绿，避免同色双止点看起来像纯色 */
+  background: linear-gradient(135deg, #059669, #34d399);
+}
+
+.exec-badge {
+  background: linear-gradient(135deg, #f7a614, #ffcc6a);
+}
+
+.lux-badge,
+.luxsuv-badge {
+  background: linear-gradient(135deg, #ec4899, #f472b6);
+}
+
+.mpv-badge {
+  background: linear-gradient(135deg, #7c3aed, #a78bfa);
+}
+
+.suv-badge {
+  background: linear-gradient(135deg, #0ea5e9, #38bdf8);
+}
+
+.off-badge {
+  /* 越野SUV：浅灰纯色（略提亮）；深色字保证对比度 */
+  background: #a8b4c4;
+  color: #0f172a;
+}
+
+/* Category Background Images */
+.car-image.supercar {
+  background-image: 
+    radial-gradient(circle at 20% 20%, rgba(255, 107, 53, 0.3), transparent 60%),
+    linear-gradient(135deg, #2d2f3a, #1b1f29);
+}
+
+.car-image.sedan {
+  background-image: 
+    radial-gradient(circle at 80% 20%, rgba(59, 130, 246, 0.25), transparent 60%),
+    linear-gradient(135deg, #2a2e38, #181c24);
+}
+
+.car-image.luxsedan {
+  background-image: 
+    radial-gradient(circle at 50% 22%, rgba(247, 166, 20, 0.26), transparent 58%),
+    linear-gradient(135deg, #2d2a1e, #1e1c18);
+}
+
+.car-image.performance {
+  background-image: 
+    radial-gradient(circle at 50% 80%, rgba(190, 18, 60, 0.32), transparent 60%),
+    linear-gradient(135deg, #2a1f24, #1a1518);
+}
+
+.car-image.business {
+  background-image: 
+    radial-gradient(circle at 30% 30%, rgba(99, 102, 241, 0.25), transparent 60%),
+    linear-gradient(135deg, #252a38, #1a1e2c);
+}
+
+.car-image.newenergy {
+  background-image: 
+    radial-gradient(circle at 70% 30%, rgba(16, 185, 129, 0.3), transparent 60%),
+    linear-gradient(135deg, #1e2d2a, #181e24);
+}
+
+.car-image.executive {
+  background-image: 
+    radial-gradient(circle at 50% 20%, rgba(247, 166, 20, 0.3), transparent 60%),
+    linear-gradient(135deg, #2d2a1e, #1e1c18);
+}
+
+.car-image.mpv {
+  background-image: 
+    radial-gradient(circle at 30% 30%, rgba(124, 58, 237, 0.28), transparent 60%),
+    linear-gradient(135deg, #2a2438, #1a1824);
+}
+
+.car-image.suv {
+  background-image: 
+    radial-gradient(circle at 50% 78%, rgba(14, 165, 233, 0.32), transparent 55%),
+    linear-gradient(135deg, #1e2a34, #181c22);
+}
+
+.car-image.luxsuv {
+  background-image: 
+    radial-gradient(circle at 20% 70%, rgba(236, 72, 153, 0.25), transparent 60%),
+    linear-gradient(135deg, #2d1e2a, #1e1820);
+}
+
+.car-image.offroad {
+  background-image: 
+    radial-gradient(circle at 78% 58%, rgba(168, 180, 196, 0.38), transparent 58%),
+    linear-gradient(135deg, #252a32, #181c22);
+}
+
+.car-info {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-rows: auto auto auto;
+  align-items: start;
+  column-gap: 12px;
+  row-gap: 10px;
+  padding: 14px 16px 16px;
+}
+
+.car-info .car-name {
+  grid-column: 1 / -1;
+  grid-row: 1;
+  min-width: 0;
+}
+
+.car-info .car-price {
+  grid-column: 1;
+  grid-row: 2;
+  min-width: 0;
+  align-self: center;
+}
+
+.car-info .car-badge {
+  grid-column: 2;
+  grid-row: 2;
+  justify-self: end;
+  align-self: center;
+}
+
+.car-info .car-meta {
+  grid-column: 1 / -1;
+  grid-row: 3;
+}
+
+/* 无分类标签：车名与价格排版修正 */
+.car-card-no-category .car-info .car-name {
+  grid-column: 1 / -1;
+  grid-row: 1;
+}
+
+.car-card-no-category .car-info .car-price {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  text-align: left;
+  justify-self: start;
+}
+
+.car-card-no-category .car-info .car-meta {
+  grid-column: 1 / -1;
+  grid-row: 3;
+}
+
+.car-name {
+  font-weight: 800;
+  font-size: clamp(14px, 4vw, 18px);
+  line-height: 1.3;
+  color: var(--text);
+}
+
+.car-price {
+  font-size: 24px;
+  font-weight: 900;
+  color: var(--brand);
+  margin: 0;
+  line-height: 1.15;
+}
+
+.car-price-unit {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.car-meta {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.3;
+}
+
+.car-card-link {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+}
+
+/* Footer */
+.site-footer {
+  background: linear-gradient(135deg, var(--panel), var(--bg-secondary));
+  border-top: 1px solid var(--border);
+  padding: 40px clamp(20px, 8vw, 120px);
+  padding-bottom: calc(40px + env(safe-area-inset-bottom));
+}
+
+.footer-inner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.footer-brand {
+  font-size: 20px;
+  font-weight: 800;
+  background: linear-gradient(135deg, var(--brand), var(--brand-light));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.footer-copy {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+/* Responsive */
+@media (max-width: 1400px) {
+  .car-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@media (max-width: 1200px) {
+  .car-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 900px) {
+  .car-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  :root { 
+    --sticky-offset: 360px; 
+  }
+  .header-nav {
+    display: none;
+  }
+  .mobile-filter-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .category-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    padding: 16px clamp(12px, 5vw, 24px);
+    top: calc(56px + env(safe-area-inset-top));
+  }
+  
+  .category-buttons {
+    order: 2;
+  }
+  
+  /* 使用场景：单行横向滑动（与分类栏左右内边距对齐，滑动可延伸到屏幕边缘） */
+  .scenario-row {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 12px;
+    margin-bottom: 0;
+    margin-left: calc(-1 * clamp(12px, 5vw, 24px));
+    margin-right: calc(-1 * clamp(12px, 5vw, 24px));
+    padding-left: clamp(12px, 5vw, 24px);
+    padding-right: clamp(12px, 5vw, 24px);
+    padding-bottom: 2px;
+    overflow-x: auto;
+    overflow-y: visible;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x proximity;
+    scroll-padding-inline: clamp(12px, 5vw, 24px);
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .scenario-row::-webkit-scrollbar {
+    display: none;
+  }
+  
+  .scenario-card {
+    flex: 0 0 auto;
+    width: min(40vw, 148px);
+    min-width: 112px;
+    scroll-snap-align: start;
+    height: 50px;
+  }
+  
+  .scenario-card.expanded {
+    height: 200px;
+  }
+  
+  .scenario-image {
+    height: 100%;
+    margin-top: 0;
+    object-fit: cover;
+    object-position: center center;
+  }
+  
+  .scenario-card.expanded .scenario-image-wrapper {
+    height: 140px;
+  }
+  
+  .scenario-name {
+    font-size: 15px;
+    padding: 10px;
+  }
+  
+  .scenario-name-hover {
+    font-size: 15px;
+    padding: 10px;
+  }
+}
+
+/* Search Box */
+.search-box {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 30px;
+  padding: 4px;
+  min-width: 320px;
+  transition: all 0.3s ease;
+}
+
+.search-box:focus-within {
+  border-color: var(--brand);
+  box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1);
+}
+
+.search-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  padding: 8px 16px;
+  color: var(--text);
+  font-size: 15px;
+  outline: none;
+}
+
+.search-input::placeholder {
+  color: var(--muted);
+}
+
+.search-btn {
+  background: linear-gradient(135deg, var(--brand), var(--brand-light));
+  border: none;
+  border-radius: 26px;
+  padding: 8px 24px;
+  color: white;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+}
+
+.search-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
+}
+
+.car-icon {
+  width: 18px;
+  height: 18px;
+}
+
+.search-text {
+  display: inline-block;
+}
+
+@media (max-width: 768px) {
+  .category-row-top {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 15px;
+  }
+  
+  .search-box {
+    width: 100%;
+  }
+  
+  .search-input {
+    flex: 1;
+    width: auto;
+  }
+  
+  .header-cta {
+    font-size: 13px;
+    padding: 6px 12px;
+  }
+  
+  .hero-stats {
+    gap: 16px;
+  }
+  
+  .hero-stat-divider {
+    display: none;
+  }
+  
+  .hero-actions {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .car-grid {
+    grid-template-columns: repeat(2, 1fr);
+    padding: 24px clamp(12px, 5vw, 24px);
+    gap: 12px;
+    margin-top: 10px; /* Adjust margin for mobile */
+  }
+  
+  .car-image,
+  .car-image-photo {
+    height: 130px;
+    margin-bottom: -8px;
+    object-position: center calc(50% - 30px);
+    background-position: center calc(50% - 30px);
+  }
+  
+  .car-info {
+    padding: 10px 12px 10px;
+    column-gap: 8px;
+    row-gap: 6px;
+    grid-template-columns: 1fr auto;
+  }
+
+  .car-info .car-name {
+    grid-column: 1 / -1;
+    grid-row: 1;
+  }
+
+  .car-info .car-badge {
+    grid-column: 2;
+    grid-row: 2;
+    justify-self: end;
+    margin: 0;
+    align-self: center;
+  }
+  
+  .car-name {
+    font-size: clamp(12px, 3.5vw, 15px);
+  }
+  
+  .car-price {
+    font-size: 16px;
+    grid-column: 1;
+    grid-row: 2;
+    margin: 0;
+    text-align: left;
+    align-self: center;
+  }
+  
+  .car-price-unit {
+    font-size: 11px;
+  }
+  
+  .car-meta {
+    font-size: 11px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    grid-column: 1 / -1;
+    grid-row: 3;
+  }
+
+    .car-card-no-category .car-info .car-name {
+    grid-column: 1 / -1;
+    grid-row: 1;
+  }
+  .car-card-no-category .car-info .car-price {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    text-align: left;
+    justify-self: start;
+  }
+  .car-card-no-category .car-info .car-meta {
+    grid-column: 1 / -1;
+    grid-row: 3;
+  }
+  
+  .car-badge {
+    font-size: 10px;
+    padding: 2px 8px;
+  }
+  
+  .footer-inner {
+    flex-direction: column;
+    text-align: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .car-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+    padding: 20px 16px;
+    margin-top: 10px; /* Adjust margin for mobile */
+  }
+
+  .brand-logo {
+    height: 28px;
+  }
+
+  .brand-logo-center {
+    height: 28px;
+  }
+
+  .brand-text {
+    font-size: clamp(16px, 4vw, 20px);
+  }
+  
+  .search-input {
+    height: 40px;
+  }
+  
+  .search-btn {
+    height: 32px;
+  }
+  
+  .car-price {
+    font-size: 22px;
+  }
+}
+
+@media (min-width: 1200px) {
+  .car-image,
+  .car-image-photo {
+    height: 200px;
+  }
+}
+
+/* Animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.car-card {
+  animation: fadeInUp 0.6s ease forwards;
+}
+
+.car-card:nth-child(1) { animation-delay: 0.1s; }
+.car-card:nth-child(2) { animation-delay: 0.2s; }
+.car-card:nth-child(3) { animation-delay: 0.3s; }
+.car-card:nth-child(4) { animation-delay: 0.4s; }
+.car-card:nth-child(5) { animation-delay: 0.5s; }
+.car-card:nth-child(6) { animation-delay: 0.6s; }
+
+/* Glow Effects */
+.car-card:hover .car-price {
+  text-shadow: 0 0 20px rgba(255, 107, 53, 0.5);
+}
+
+.category-btn.active {
+  box-shadow: 
+    0 4px 12px rgba(255, 107, 53, 0.3),
+    0 0 30px rgba(255, 107, 53, 0.1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+.recommend-section-container {
+  margin-bottom: 40px;
+}

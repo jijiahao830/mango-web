@@ -1,0 +1,42 @@
+document.addEventListener('DOMContentLoaded', () => {
+  const video = document.querySelector('.hero-video');
+  const hero = document.querySelector('.hero');
+  
+  // 使用 IntersectionObserver 监听 Hero 区域
+  // 当 Hero 区域在视口中可见比例低于 10% 时暂停视频
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        // 如果 Hero 在视口中（进入 10% 以上）
+        if (entry.intersectionRatio > 0.1) {
+          video.play().catch(e => console.log("播放失败:", e));
+        }
+      } else {
+        // 如果 Hero 完全离开视口
+        video.pause();
+      }
+    });
+  }, {
+    threshold: [0, 0.1, 0.5, 1.0]
+  });
+
+  observer.observe(hero);
+
+  // 针对用户提到的 1px 框的特殊处理
+  const trigger = document.getElementById('scroll-trigger');
+  const triggerObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        // 当滚动到这个 1px 框（即它进入视口时）
+        video.pause();
+        console.log("已滚动到触发框，视频暂停");
+      }
+    });
+  }, {
+    threshold: 0.1
+  });
+
+  if (trigger) {
+    triggerObserver.observe(trigger);
+  }
+});
