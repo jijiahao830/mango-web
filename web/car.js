@@ -595,13 +595,11 @@ document.addEventListener('DOMContentLoaded', function() {
     // --- 联动逻辑结束 ---
 
     
-    // 今日推荐 / 即将上新：仅默认「全部」且无搜索词时展示
+    // 今日推荐 / 即将上新：仅当「使用场景」「分类」「品牌」三个标签均为「全部」时显示；任一改选非「全部」则隐藏（价格、搜索仍只过滤卡片，不隐藏这两块）
     const recommendSection = document.getElementById('recommendSection');
     const comingSoonSection = document.getElementById('comingSoonSection');
-    const searchInput = document.getElementById('carSearchInput');
-    const hasSearch = searchInput && searchInput.value.trim() !== '';
     const showSpotlightBlocks =
-      state.scenario === 'all' && state.category === 'all' && state.brand === 'all' && !hasSearch;
+      state.scenario === 'all' && state.category === 'all' && state.brand === 'all';
     if (recommendSection) {
       recommendSection.style.display = showSpotlightBlocks ? '' : 'none';
     }

@@ -22,6 +22,31 @@ body {
   /* overflow: hidden; 移除此行以允许滚动 */
 }
 
+/* 首页右上角固定 logo */
+.index-floating-logo {
+  position: fixed;
+  top: clamp(14px, 3.5vh, 32px);
+  right: clamp(16px, 4vw, 52px);
+  z-index: 50;
+  display: block;
+  line-height: 0;
+}
+
+.index-floating-logo img {
+  display: block;
+  height: clamp(30px, 4.8vw, 46px);
+  width: auto;
+  max-width: min(44vw, 200px);
+  object-fit: contain;
+  filter: drop-shadow(0 2px 10px rgba(0, 0, 0, 0.4));
+}
+
+.index-floating-logo:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+
 /* Header */
 .site-header {
   position: fixed;
@@ -260,6 +285,9 @@ body {
 @media (max-width: 768px) {
   .site-header { padding: 0 20px; height: 64px; }
   .brand-logo, .brand-logo-center { height: 32px; }
+  .index-floating-logo img {
+    height: clamp(26px, 9vw, 36px);
+  }
   .hero-content { padding-bottom: 60px; text-align: center; }
   .hero-eyebrow { justify-content: center; margin-bottom: 16px; }
   .hero-eyebrow::before { display: none; }
