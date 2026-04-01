@@ -476,22 +476,30 @@ a.btn-primary {
   -ms-overflow-style: none;
   /* 筛选芯片行高：分类/品牌网格用固定行高，避免切换筛选时上下抖动 */
   --filter-chip-row: 40px;
-  /* 侧栏标签网格行列间距（略宽，在 280px 内均匀铺开） */
-  --filter-chip-gap: 10px;
+  /* 侧栏标签网格行列间距（芯片之间留白） */
+  --filter-chip-gap: 9px;
 }
 
-/* 桌面端：仅当 body.car-section-active（已进入选车区，由 script2.js 根据滚动切换）时侧栏吸顶 */
+/* 桌面端：选车区侧栏高度与视口剩余高度一致；内容块竖直居中，略增上下内边距使视觉略下移 */
 @media (min-width: 769px) {
-  body.car-section-active .sidebar-filter {
-    position: sticky;
-    top: var(--header-sticky-offset);
-    /* 与屏幕可视区等高（顶栏以下至屏幕底），不再额外减 16px 留白 */
+  #carSection .sidebar-filter {
     height: var(--sidebar-filter-fill-height);
     min-height: var(--sidebar-filter-fill-height);
     max-height: var(--sidebar-filter-fill-height);
     overflow-y: auto;
     overflow-x: hidden;
     box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    justify-content: safe center;
+    align-items: stretch;
+    padding: clamp(10px, 2vh, 22px) 12px clamp(12px, 2.5vh, 26px);
+  }
+
+  body.car-section-active #carSection .sidebar-filter {
+    position: sticky;
+    top: var(--header-sticky-offset);
     z-index: 48;
     align-self: flex-start;
   }
@@ -505,7 +513,7 @@ a.btn-primary {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
 }
 
 .filter-header h2 {
@@ -524,19 +532,19 @@ a.btn-primary {
 }
 
 .filter-group {
-  margin-bottom: 22px;
+  margin-bottom: 16px;
 }
 
 /* 价格与重置之间再收一点，避免重置按钮贴底或被裁切 */
 .sidebar-filter .filter-group:last-of-type {
-  margin-bottom: 14px;
+  margin-bottom: 10px;
 }
 
 .filter-title {
   font-size: 14px;
   font-weight: 700;
   color: var(--muted);
-  margin-bottom: 10px;
+  margin-bottom: 7px;
   text-transform: uppercase;
   letter-spacing: 1px;
 }
@@ -551,7 +559,7 @@ a.btn-primary {
 /* 侧栏：场景 / 分类 / 品牌芯片统一高度与内边距，避免点一侧筛选后另一侧「突然变高」或三块高度不一致 */
 .sidebar-filter .filter-buttons {
   align-items: stretch;
-  gap: var(--filter-chip-gap, 10px);
+  gap: var(--filter-chip-gap, 9px);
 }
 
 /* :not(.hidden-brand) 必须保留，否则 display:inline-flex 会盖过 .hidden-brand{display:none}，折叠时多余品牌会全部露出来 */
@@ -646,14 +654,14 @@ a.btn-primary {
 #brandFilterButtons.brand-filter--category-mode {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: var(--filter-chip-gap, 10px);
+  gap: var(--filter-chip-gap, 9px);
 }
 
 /* 折叠：固定行高 + 容器 min-height，避免可选数量变化时仍有像素级上移 */
 #brandFilterButtons.brand-filter--category-mode:not(.brand-expanded) {
   grid-template-rows: repeat(4, var(--filter-chip-row, 40px));
   align-items: stretch;
-  min-height: calc(4 * var(--filter-chip-row, 40px) + 3 * var(--filter-chip-gap, 10px));
+  min-height: calc(4 * var(--filter-chip-row, 40px) + 3 * var(--filter-chip-gap, 9px));
   contain: layout;
 }
 
@@ -681,9 +689,9 @@ a.btn-primary {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   grid-template-rows: repeat(3, var(--filter-chip-row, 40px));
-  gap: var(--filter-chip-gap, 10px);
+  gap: var(--filter-chip-gap, 9px);
   align-items: stretch;
-  min-height: calc(3 * var(--filter-chip-row, 40px) + 2 * var(--filter-chip-gap, 10px));
+  min-height: calc(3 * var(--filter-chip-row, 40px) + 2 * var(--filter-chip-gap, 9px));
   contain: layout;
 }
 
@@ -691,7 +699,7 @@ a.btn-primary {
 .price-range-labels {
   font-size: 16px;
   font-weight: 700;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
 .price-slider-container {
@@ -781,6 +789,12 @@ a.btn-primary {
   margin-top: 12px;
   flex-shrink: 0;
   transition: all 0.2s ease;
+}
+
+.sidebar-filter .reset-btn {
+  padding: 13px 16px;
+  min-height: 48px;
+  margin-top: 10px;
 }
 
 .reset-btn:hover {
