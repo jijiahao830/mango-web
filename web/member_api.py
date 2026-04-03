@@ -367,6 +367,65 @@ def sync_last_login_from_register(name: str) -> None:
     raise ValueError(f"不支持的 database.type: {db_type}")
 
 
+def record_vehicle_click(member: str, brand: str, model: str) -> None:
+    """按会员+日期+品牌+车型累加 click_count（MySQL，依赖唯一索引）。"""
+    member = member.strip()
+    brand = brand.strip()
+    model = model.strip()
+    if not member or not brand or not model:
+        raise ValueError("member、brand、model 不能为空")
+
+    cfg = load_config()
+    db = cfg.get("database") or {}
+    if (db.get("type") or "mysql").strip().lower() != "mysql":
+        raise ValueError("vehicle_click 统计仅支持 MySQL")
+
+    try:
+        import pymysql
+        from pymysql.constants import CLIENT
+    except ImportError as e:
+        raise RuntimeError("请安装: pip install pymysql") from e
+
+    table = _sql_ident_mysql(str(db.get("vehicle_click_table") or "vehicle_click_stat"))
+    col_m = _sql_ident_mysql(str(db.get("vehicle_click_member_column") or "member"))
+    col_d = _sql_ident_mysql(str(db.get("vehicle_click_date_column") or "click_date"))
+    col_b = _sql_ident_mysql(str(db.get("vehicle_click_brand_column") or "brand"))
+    col_model = _sql_ident_mysql(str(db.get("vehicle_click_model_column") or "model"))
+    col_cnt = _sql_ident_mysql(str(db.get("vehicle_click_count_column") or "click_count"))
+
+    mq = db.get("mysql") or {}
+    host = str(mq.get("host") or "127.0.0.1")
+    port = int(mq.get("port") or 3306)
+    user = str(mq.get("user") or "root")
+    password = str(mq.get("password") or "")
+    database = str(mq.get("database") or "").strip()
+    if not database:
+        raise ValueError("请在 member_config.json 的 database.mysql.database 中填写库名")
+
+    conn = pymysql.connect(
+        host=host,
+        port=port,
+        user=user,
+        password=password,
+        database=database,
+        charset="utf8mb4",
+        cursorclass=pymysql.cursors.Cursor,
+        autocommit=False,
+        client_flag=CLIENT.FOUND_ROWS,
+    )
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                f"INSERT INTO `{table}` (`{col_m}`, `{col_d}`, `{col_b}`, `{col_model}`, `{col_cnt}`) "
+                f"VALUES (%s, CURDATE(), %s, %s, 1) "
+                f"ON DUPLICATE KEY UPDATE `{col_cnt}` = `{col_cnt}` + 1",
+                (member, brand, model),
+            )
+            conn.commit()
+    finally:
+        conn.close()
+
+
 app = Flask(__name__)
 
 
@@ -404,6 +463,26 @@ def api_member_lookup():
             jsonify(ok=False, error="db_error", detail=str(e)),
         ), HTTPStatus.SERVICE_UNAVAILABLE
     return _cors(jsonify(ok=True, name=req_name, level=level, created=created))
+
+
+@app.route("/api/vehicle-click", methods=["POST", "OPTIONS"])
+def api_vehicle_click():
+    if request.method == "OPTIONS":
+        return _cors(make_response("", HTTPStatus.NO_CONTENT))
+    payload = request.get_json(silent=True) or {}
+    member = (payload.get("member") or "").strip()
+    brand = (payload.get("brand") or "").strip()
+    model = (payload.get("model") or "").strip()
+    if not member or not brand or not model:
+        return _cors(jsonify(ok=False, error="missing_fields")), HTTPStatus.BAD_REQUEST
+    try:
+        record_vehicle_click(member, brand, model)
+    except Exception as e:
+        return (
+            _cors(jsonify(ok=False, error="db_error", detail=str(e))),
+            HTTPStatus.SERVICE_UNAVAILABLE,
+        )
+    return _cors(jsonify(ok=True))
 
 
 @app.get("/")
