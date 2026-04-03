@@ -12,6 +12,7 @@ import re
 import sqlite3
 import sys
 from datetime import datetime
+from decimal import Decimal
 from http import HTTPStatus
 from pathlib import Path
 from typing import Any
@@ -19,7 +20,7 @@ from typing import Any
 from flask import Flask, abort, jsonify, make_response, request, send_from_directory
 
 ROOT = Path(__file__).resolve().parent
-CONFIG_FILE = ROOT / "member_config.json"
+CONFIG_FILE = ROOT / "app_config.json"
 
 DEFAULT_LEVEL = "普通"
 DEFAULT_NEW_MEMBER_LEVEL = "芒果"
@@ -138,7 +139,7 @@ def lookup_or_create_member(name: str) -> tuple[str, bool]:
         password = str(mq.get("password") or "")
         database = str(mq.get("database") or "").strip()
         if not database:
-            raise ValueError("请在 member_config.json 的 database.mysql.database 中填写库名")
+            raise ValueError("请在 app_config.json 的 database.mysql.database 中填写库名")
 
         table = _sql_ident_mysql(str(db.get("table") or "member"))
         col_name = _sql_ident_mysql(str(db.get("name_column") or "name"))
@@ -198,7 +199,7 @@ def lookup_or_create_member(name: str) -> tuple[str, bool]:
 
 
 def touch_last_login(name: str) -> None:
-    """登录成功后写入最近登录时间（列名可配置，见 member_config.json）。"""
+    """登录成功后写入最近登录时间（列名可配置，见 app_config.json）。"""
     name = name.strip()
     if not name:
         return
@@ -249,7 +250,7 @@ def touch_last_login(name: str) -> None:
         password = str(mq.get("password") or "")
         database = str(mq.get("database") or "").strip()
         if not database:
-            raise ValueError("请在 member_config.json 的 database.mysql.database 中填写库名")
+            raise ValueError("请在 app_config.json 的 database.mysql.database 中填写库名")
 
         conn = pymysql.connect(
             host=host,
@@ -334,7 +335,7 @@ def sync_last_login_from_register(name: str) -> None:
         password = str(mq.get("password") or "")
         database = str(mq.get("database") or "").strip()
         if not database:
-            raise ValueError("请在 member_config.json 的 database.mysql.database 中填写库名")
+            raise ValueError("请在 app_config.json 的 database.mysql.database 中填写库名")
 
         table = _sql_ident_mysql(str(db.get("table") or "member"))
         col_name = _sql_ident_mysql(str(db.get("name_column") or "name"))
@@ -367,8 +368,19 @@ def sync_last_login_from_register(name: str) -> None:
     raise ValueError(f"不支持的 database.type: {db_type}")
 
 
-def record_vehicle_click(member: str, brand: str, model: str) -> None:
-    """按会员+日期+品牌+车型累加 click_count（MySQL，依赖唯一索引）。"""
+def _parse_vehicle_price(value: Any) -> Decimal:
+    """日租金等数值写入 DECIMAL；非法或缺省为 0。"""
+    if value is None or value == "":
+        return Decimal("0.00")
+    try:
+        d = Decimal(str(value))
+        return d.quantize(Decimal("0.01"))
+    except Exception:
+        return Decimal("0.00")
+
+
+def record_vehicle_click(member: str, brand: str, model: str, price: Decimal) -> None:
+    """按日期+品牌+车型（及唯一键定义）累加 click_count，并写入/更新 price（MySQL）。"""
     member = member.strip()
     brand = brand.strip()
     model = model.strip()
@@ -392,6 +404,7 @@ def record_vehicle_click(member: str, brand: str, model: str) -> None:
     col_b = _sql_ident_mysql(str(db.get("vehicle_click_brand_column") or "brand"))
     col_model = _sql_ident_mysql(str(db.get("vehicle_click_model_column") or "model"))
     col_cnt = _sql_ident_mysql(str(db.get("vehicle_click_count_column") or "click_count"))
+    col_price = _sql_ident_mysql(str(db.get("vehicle_click_price_column") or "price"))
 
     mq = db.get("mysql") or {}
     host = str(mq.get("host") or "127.0.0.1")
@@ -400,7 +413,7 @@ def record_vehicle_click(member: str, brand: str, model: str) -> None:
     password = str(mq.get("password") or "")
     database = str(mq.get("database") or "").strip()
     if not database:
-        raise ValueError("请在 member_config.json 的 database.mysql.database 中填写库名")
+        raise ValueError("请在 app_config.json 的 database.mysql.database 中填写库名")
 
     conn = pymysql.connect(
         host=host,
@@ -416,10 +429,10 @@ def record_vehicle_click(member: str, brand: str, model: str) -> None:
     try:
         with conn.cursor() as cur:
             cur.execute(
-                f"INSERT INTO `{table}` (`{col_m}`, `{col_d}`, `{col_b}`, `{col_model}`, `{col_cnt}`) "
-                f"VALUES (%s, CURDATE(), %s, %s, 1) "
-                f"ON DUPLICATE KEY UPDATE `{col_cnt}` = `{col_cnt}` + 1",
-                (member, brand, model),
+                f"INSERT INTO `{table}` (`{col_m}`, `{col_d}`, `{col_b}`, `{col_model}`, `{col_cnt}`, `{col_price}`) "
+                f"VALUES (%s, CURDATE(), %s, %s, 1, %s) "
+                f"ON DUPLICATE KEY UPDATE `{col_cnt}` = `{col_cnt}` + 1, `{col_price}` = VALUES(`{col_price}`)",
+                (member, brand, model, price),
             )
             conn.commit()
     finally:
@@ -475,8 +488,9 @@ def api_vehicle_click():
     model = (payload.get("model") or "").strip()
     if not member or not brand or not model:
         return _cors(jsonify(ok=False, error="missing_fields")), HTTPStatus.BAD_REQUEST
+    price = _parse_vehicle_price(payload.get("price"))
     try:
-        record_vehicle_click(member, brand, model)
+        record_vehicle_click(member, brand, model, price)
     except Exception as e:
         return (
             _cors(jsonify(ok=False, error="db_error", detail=str(e))),

@@ -45,11 +45,19 @@
     var bm = parseBrandModel(display);
     if (!bm.brand || !bm.model) return;
 
+    var rawPrice = document.body.getAttribute('data-daily-price');
+    var priceNum = 0;
+    if (rawPrice != null && String(rawPrice).trim() !== '') {
+      var p = parseFloat(String(rawPrice).trim());
+      if (!isNaN(p)) priceNum = p;
+    }
+
     var url = apiOrigin() + '/api/vehicle-click';
     var payload = JSON.stringify({
       member: String(member).trim(),
       brand: bm.brand,
-      model: bm.model
+      model: bm.model,
+      price: priceNum
     });
 
     if (typeof fetch !== 'undefined') {

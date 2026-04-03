@@ -9,15 +9,15 @@ set -euo pipefail
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$DIR"
 
-if [[ ! -f "member_config.json" ]]; then
-  echo "未找到 member_config.json，请先按仓库 README.md 创建并填写数据库配置。" >&2
+if [[ ! -f "app_config.json" ]]; then
+  echo "未找到 app_config.json，请先按仓库 README.md 创建并填写数据库配置。" >&2
   exit 1
 fi
 
 get_port() {
   python3 -c "
 import json
-with open('member_config.json', encoding='utf-8') as f:
+with open('app_config.json', encoding='utf-8') as f:
     print(int(json.load(f).get('api_port') or 8765))
 " 2>/dev/null || echo "8765"
 }
