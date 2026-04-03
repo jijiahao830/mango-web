@@ -1,0 +1,253 @@
+/* 详情页顶栏：兰博基尼同款「同品牌其他车型」下拉，供各车型 car.css 之后引入 */
+
+.detail-header {
+  width: 100%;
+}
+
+.header-left-btn {
+  flex: 1;
+  display: flex;
+  justify-content: flex-start;
+}
+
+.header-center-nav {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 40px;
+}
+
+.dropdown-container {
+  position: static;
+  display: flex;
+  align-items: center;
+  height: 100%;
+}
+
+.dropdown-trigger {
+  color: var(--text);
+  font-weight: 600;
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 16px;
+  transition: color 0.3s;
+  height: 100%;
+}
+
+.dropdown-trigger:hover {
+  color: var(--brand);
+}
+
+.dropdown-trigger svg {
+  transition: transform 0.3s;
+}
+
+.dropdown-trigger:hover svg,
+.dropdown-menu:hover ~ .dropdown-trigger svg,
+.dropdown-container:hover .dropdown-trigger svg {
+  transform: rotate(180deg);
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  background: rgba(10, 11, 15, 0.95);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+  border-top: none;
+  border-bottom: none;
+  padding: 30px clamp(16px, 6vw, 64px);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.95);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.dropdown-menu::before {
+  content: '';
+  position: absolute;
+  top: -20px;
+  left: 0;
+  width: 100%;
+  height: 20px;
+  background: transparent;
+}
+
+.dropdown-menu-inner {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.dropdown-menu-inner::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 6px;
+  transform: translateY(-100%);
+  background: linear-gradient(to top, color-mix(in srgb, var(--brand) 40%, transparent), transparent);
+  mask-image: linear-gradient(90deg, transparent, black 10%, black 90%, transparent);
+  -webkit-mask-image: linear-gradient(90deg, transparent, black 10%, black 90%, transparent);
+}
+
+.dropdown-menu-inner::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 6px;
+  transform: translateY(100%);
+  background: linear-gradient(to bottom, color-mix(in srgb, var(--brand) 40%, transparent), transparent);
+  mask-image: linear-gradient(90deg, transparent, black 10%, black 90%, transparent);
+  -webkit-mask-image: linear-gradient(90deg, transparent, black 10%, black 90%, transparent);
+}
+
+.dropdown-container:hover .dropdown-menu,
+.dropdown-trigger:hover + .dropdown-menu,
+.dropdown-menu:hover {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+.dropdown-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.dropdown-grid .car-card-link {
+  text-decoration: none;
+  display: block;
+}
+
+.dropdown-grid .car-card {
+  position: relative;
+  background: transparent;
+  border-radius: 16px;
+  overflow: hidden;
+  border: none;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.dropdown-grid .car-image {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  transition: transform 0.5s ease;
+}
+
+.dropdown-grid .car-card:hover .car-image {
+  transform: scale(1.05);
+}
+
+.dropdown-grid .card-badge-overlay {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 10;
+}
+
+.dropdown-grid .title-badge {
+  color: var(--text);
+  font-size: 16px;
+  font-weight: 600;
+  padding: 6px 12px;
+  background: transparent;
+  border: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  transition: transform 0.3s ease;
+}
+
+.header-right-logo {
+  flex: 1;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.header-right-logo-img {
+  height: 36px;
+  width: auto;
+  object-fit: contain;
+}
+
+/* 与兰博基尼详情页一致：顶栏返回按钮无描边 */
+.detail-header .back-btn {
+  border: none;
+}
+
+/* 右侧悬浮：立即预约 / 咨询客服（与兰博基尼 detail-fab-actions 一致） */
+.detail-fab-actions {
+  position: fixed;
+  right: max(16px, env(safe-area-inset-right));
+  top: 50%;
+  z-index: 90;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: stretch;
+  width: min(152px, calc(100vw - 32px));
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-50%) translateX(calc(100% + 24px));
+  transition: opacity 0.4s ease, visibility 0.4s ease, transform 0.4s ease;
+}
+
+.detail-fab-actions.is-visible {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateY(-50%) translateX(0);
+}
+
+.detail-fab-actions .detail-fab-btn {
+  width: 100%;
+  text-align: center;
+  white-space: nowrap;
+  box-sizing: border-box;
+  padding: 14px 12px;
+  font-size: 15px;
+}
+
+@media (max-width: 480px) {
+  .detail-fab-actions {
+    width: min(138px, calc(100vw - 28px));
+    gap: 10px;
+  }
+
+  .detail-fab-actions .btn-lg {
+    padding: 12px 10px;
+    font-size: 14px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .detail-fab-actions {
+    transition: opacity 0.2s ease, visibility 0.2s ease;
+    transform: translateY(-50%);
+  }
+
+  .detail-fab-actions.is-visible {
+    transform: translateY(-50%);
+  }
+}

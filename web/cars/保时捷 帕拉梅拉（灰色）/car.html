@@ -7,14 +7,61 @@
 
   <title>保时捷 Panamera（灰色）· 芒果超跑</title>
   <link rel="stylesheet" href="./car.css">
+  <link rel="stylesheet" href="../detail-other-models.css">
+  <link rel="stylesheet" href="../similar-price-cars.css">
+  <link rel="stylesheet" href="../scenario-showcase.css">
 </head>
-<body>
+<body data-daily-price="1799" data-car-display-name="保时捷 Panamera（灰色）">
 
-  <header class="detail-header">
-    <a href="../../car.html#carGrid" class="back-btn">← 返回车库</a>
-    <div class="header-logo"><img src="../../logo/logo2.png" alt="芒果超跑" class="header-logo-img"></div>
-    <button class="btn-reserve">立即预约</button>
+    <header class="detail-header">
+    <div class="header-left-btn">
+      <a href="../../car.html#carGrid" class="back-btn">← 返回车库</a>
+    </div>
+
+    <div class="header-center-nav">
+      <div class="dropdown-container">
+        <span class="dropdown-trigger">其他车型 <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><polyline points="6 9 12 15 18 9"></polyline></svg></span>
+        <div class="dropdown-menu">
+          <div class="dropdown-menu-inner"></div>
+          <div class="dropdown-grid">
+            <a href="../%E4%BF%9D%E6%97%B6%E6%8D%B7%20%E5%8D%A1%E5%AE%B4%EF%BC%88%E7%81%B0%E8%89%B2%EF%BC%89/car.html" class="car-card-link">
+              <div class="car-card" data-category="">
+                <picture>
+                  <source srcset="../%E4%BF%9D%E6%97%B6%E6%8D%B7%20%E5%8D%A1%E5%AE%B4%EF%BC%88%E7%81%B0%E8%89%B2%EF%BC%89/详情页-banner.webp" type="image/webp">
+                  <img class="car-image car-image-photo" src="../%E4%BF%9D%E6%97%B6%E6%8D%B7%20%E5%8D%A1%E5%AE%B4%EF%BC%88%E7%81%B0%E8%89%B2%EF%BC%89/封面.jpg" alt="保时捷 卡宴（灰色）">
+                </picture>
+                <div class="car-badge card-badge-overlay title-badge">保时捷 卡宴（灰色）</div>
+              </div>
+            </a>
+            <a href="../%E4%BF%9D%E6%97%B6%E6%8D%B7911%EF%BC%8826.3.9%EF%BC%89/car.html" class="car-card-link">
+              <div class="car-card" data-category="">
+                <picture>
+                  <source srcset="../%E4%BF%9D%E6%97%B6%E6%8D%B7911%EF%BC%8826.3.9%EF%BC%89/详情页-banner.webp" type="image/webp">
+                  <img class="car-image car-image-photo" src="../%E4%BF%9D%E6%97%B6%E6%8D%B7911%EF%BC%8826.3.9%EF%BC%89/封面.jpg" alt="保时捷 911">
+                </picture>
+                <div class="car-badge card-badge-overlay title-badge">保时捷 911</div>
+              </div>
+            </a>
+            <a href="../%E4%BF%9D%E6%97%B6%E6%8D%B7%20%E5%B8%95%E6%8B%89%E6%A2%85%E6%8B%89%EF%BC%8812.8%EF%BC%89/car.html" class="car-card-link">
+              <div class="car-card" data-category="">
+                <picture>
+                  <source srcset="../%E4%BF%9D%E6%97%B6%E6%8D%B7%20%E5%B8%95%E6%8B%89%E6%A2%85%E6%8B%89%EF%BC%8812.8%EF%BC%89/详情页-banner.webp" type="image/webp">
+                  <img class="car-image car-image-photo" src="../%E4%BF%9D%E6%97%B6%E6%8D%B7%20%E5%B8%95%E6%8B%89%E6%A2%85%E6%8B%89%EF%BC%8812.8%EF%BC%89/封面.jpg" alt="保时捷 Panamera">
+                </picture>
+                <div class="car-badge card-badge-overlay title-badge">保时捷 Panamera</div>
+              </div>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="header-right-logo">
+      <a href="../../car.html">
+        <img src="../../logo/logo2.png" alt="芒果超跑" class="header-right-logo-img">
+      </a>
+    </div>
   </header>
+
 
   <section class="hero-detail">
     <div class="hero-bg-overlay"></div>
@@ -266,16 +313,29 @@
           <p class="ignition-hint">点击点火，聆听引擎的咆哮</p>
         </div>
         <audio id="engine-audio" src="./engine.mp3" preload="auto"></audio>
-        <p class="cta-desc">立即预约试驾，感受四门保时捷的运动豪华</p>
-        <div class="cta-actions">
-          <button class="btn-primary btn-lg" type="button">立即预约 ¥1,799/天</button>
-          <button class="btn-ghost btn-lg" type="button">咨询客服</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 同价位其他车模块 -->
+  <section class="similar-cars-section" id="similarCarsSection">
+    <div class="container">
+      <h2 class="similar-cars-title">同价位其他车</h2>
+      <p class="similar-cars-subtitle">加载中…</p>
+      <div class="similar-cars-row-outer">
+        <div class="similar-cars-carousel" id="similarCarsGrid">
+          <!-- 车辆卡片将由 JS 动态加载 -->
         </div>
       </div>
     </div>
   </section>
 
-  <footer class="detail-footer">
+    <div class="detail-fab-actions" id="detailFabActions" aria-hidden="true">
+    <button type="button" class="btn-primary btn-lg detail-fab-btn">立即预约</button>
+    <button type="button" class="btn-ghost btn-lg detail-fab-btn">咨询客服</button>
+  </div>
+
+<footer class="detail-footer">
     <div class="container">
       <div class="footer-content">
         <div class="footer-brand">芒果超跑</div>
@@ -286,5 +346,7 @@
   </footer>
 
   <script src="./car.js"></script>
+  <script src="../detail-fab.js"></script>
+  <script src="../similar-price-cars.js"></script>
 </body>
 </html>

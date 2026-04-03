@@ -7,6 +7,8 @@
 
   <title>兰博基尼 Huracán 610-4 · 芒果超跑</title>
   <link rel="stylesheet" href="./car.css">
+  <link rel="stylesheet" href="../similar-price-cars.css">
+  <link rel="stylesheet" href="../scenario-showcase.css">
 </head>
 <body data-daily-price="3999" data-car-display-name="兰博基尼 Huracán 610-4 (浅蓝)">
 
@@ -26,7 +28,7 @@
               <div class="car-card" data-category="超级跑车">
                 <picture>
                   <source srcset="../兰博基尼%20570-4（橙色）/详情页-banner.webp" type="image/webp">
-                  <img class="car-image car-image-photo" src="../兰博基尼%20570-4（橙色）/详情页-banner.png" alt="兰博基尼 570-4">
+                  <img class="car-image car-image-photo" src="../兰博基尼%20570-4（橙色）/封面.jpg" alt="兰博基尼 570-4">
                 </picture>
                 <div class="car-badge card-badge-overlay title-badge">Huracán 570-4</div>
               </div>
@@ -35,7 +37,7 @@
               <div class="car-card" data-category="超级跑车">
                 <picture>
                   <source srcset="../兰博基尼%20580-2（紫色）/详情页-banner.webp" type="image/webp">
-                  <img class="car-image car-image-photo" src="../兰博基尼%20580-2（紫色）/详情页-banner.png" alt="兰博基尼 580-2">
+                  <img class="car-image car-image-photo" src="../兰博基尼%20580-2（紫色）/封面.jpg" alt="兰博基尼 580-2">
                 </picture>
                 <div class="car-badge card-badge-overlay title-badge">Huracán 580-2</div>
               </div>
@@ -44,7 +46,7 @@
               <div class="car-card" data-category="超级跑车">
                 <picture>
                   <source srcset="../兰博基尼750-4（黄色）/详情页-banner.webp" type="image/webp">
-                  <img class="car-image car-image-photo" src="../兰博基尼750-4（黄色）/详情页-banner.png" alt="兰博基尼 750-4">
+                  <img class="car-image car-image-photo" src="../兰博基尼750-4（黄色）/封面.jpg" alt="兰博基尼 750-4">
                 </picture>
                 <div class="car-badge card-badge-overlay title-badge">Aventador SV</div>
               </div>
@@ -407,261 +409,6 @@
   </section>
 
   <!-- 同价位其他车模块 -->
-  <style>
-    .similar-cars-section {
-      padding: 56px 0 72px;
-      background-color: #0a0b0f;
-      display: none; /* 默认隐藏，JS加载后显示 */
-    }
-    .similar-cars-title {
-      font-size: clamp(22px, 4vw, 28px);
-      margin-bottom: 10px;
-      text-align: center;
-      color: #fff;
-      font-weight: bold;
-      letter-spacing: 2px;
-    }
-    .similar-cars-subtitle {
-      text-align: center;
-      color: rgba(255, 255, 255, 0.45);
-      font-size: 13px;
-      font-weight: 400;
-      letter-spacing: 0.35px;
-      margin: 0 0 20px;
-      line-height: 1.65;
-    }
-    .similar-cars-subtitle strong {
-      color: #ff8c69;
-      font-weight: 700;
-    }
-    /* 单行轨道 + 车多横向滑动；不足一行时由 JS 加 .is-centered 居中 */
-    .similar-cars-row-outer {
-      position: relative;
-      padding: 8px 0 4px;
-    }
-    .similar-cars-row-outer::before {
-      content: '';
-      position: absolute;
-      left: 50%;
-      transform: translateX(-50%);
-      top: 0;
-      width: min(640px, 92%);
-      height: 2px;
-      border-radius: 2px;
-      background: linear-gradient(90deg, transparent, rgba(255, 107, 53, 0.85), rgba(255, 140, 105, 0.5), transparent);
-      box-shadow: 0 0 24px rgba(255, 107, 53, 0.35);
-    }
-    .similar-cars-carousel {
-      display: flex;
-      flex-direction: row;
-      flex-wrap: nowrap;
-      gap: 20px;
-      align-items: stretch;
-      width: 100%;
-      overflow-x: auto;
-      overflow-y: visible;
-      padding: 20px 4px 28px;
-      scroll-snap-type: x mandatory;
-      scroll-padding-inline: max(16px, env(safe-area-inset-left));
-      -webkit-overflow-scrolling: touch;
-      scrollbar-width: thin;
-      scrollbar-color: rgba(255, 107, 53, 0.55) rgba(255, 255, 255, 0.06);
-    }
-    .similar-cars-carousel:not(.is-centered) {
-      mask-image: linear-gradient(90deg, transparent 0, #000 40px, #000 calc(100% - 40px), transparent 100%);
-      -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 40px, #000 calc(100% - 40px), transparent 100%);
-    }
-    .similar-cars-carousel.is-centered {
-      justify-content: center;
-      overflow-x: visible;
-      mask-image: none;
-      -webkit-mask-image: none;
-    }
-    .similar-cars-carousel::-webkit-scrollbar {
-      height: 7px;
-    }
-    .similar-cars-carousel::-webkit-scrollbar-track {
-      background: rgba(255, 255, 255, 0.06);
-      border-radius: 999px;
-    }
-    .similar-cars-carousel::-webkit-scrollbar-thumb {
-      background: linear-gradient(90deg, #ff6b35, #ff8c69);
-      border-radius: 999px;
-      box-shadow: 0 0 12px rgba(255, 107, 53, 0.45);
-    }
-    .similar-cars-carousel > .car-card-link {
-      flex: 0 0 clamp(260px, 72vw, 300px);
-      width: clamp(260px, 72vw, 300px);
-      max-width: 300px;
-      min-width: 260px;
-      text-decoration: none;
-      display: block;
-      height: 100%;
-      scroll-snap-align: center;
-    }
-    /* 炫酷卡片：深色渐变 + 霓虹描边 + 悬停浮起 */
-    .similar-cars-carousel .car-card {
-      position: relative;
-      background: linear-gradient(165deg, rgba(32, 35, 48, 0.95) 0%, rgba(12, 14, 20, 0.98) 100%);
-      border: 1px solid rgba(255, 107, 53, 0.28);
-      border-radius: 18px;
-      overflow: hidden;
-      transition: transform 0.45s cubic-bezier(0.34, 1.45, 0.64, 1), box-shadow 0.45s ease, border-color 0.45s ease;
-      height: 100%;
-      display: flex;
-      flex-direction: column;
-      box-shadow:
-        0 10px 40px rgba(0, 0, 0, 0.5),
-        0 0 0 1px rgba(255, 255, 255, 0.05) inset,
-        0 0 36px rgba(255, 107, 53, 0.12);
-    }
-    .similar-cars-carousel .car-card:hover {
-      transform: translateY(-10px) scale(1.03);
-      border-color: rgba(255, 140, 105, 0.65);
-      box-shadow:
-        0 22px 56px rgba(0, 0, 0, 0.6),
-        0 0 52px rgba(255, 107, 53, 0.35),
-        0 0 80px rgba(255, 107, 53, 0.12),
-        inset 0 1px 0 rgba(255, 255, 255, 0.12);
-    }
-
-    .similar-cars-carousel .car-image {
-      width: 100%;
-      height: 200px;
-      object-fit: cover;
-      transition: transform 0.5s ease;
-      display: block;
-    }
-
-    .similar-cars-carousel .car-card:hover .car-image {
-      transform: scale(1.05);
-    }
-
-    /* 同价位分类标签：与根目录选车页 car.css 一致（详情页 car.css 无渐变变体，在此补齐） */
-    .similar-cars-carousel .car-badge-inline {
-      flex-shrink: 0;
-      text-align: center;
-      white-space: nowrap;
-    }
-
-    .similar-cars-carousel .car-info .car-badge {
-      grid-column: 2;
-      grid-row: 2;
-      justify-self: end;
-      align-self: center;
-      margin: 0;
-      position: static;
-      display: inline-block;
-      background: linear-gradient(135deg, #ff6b35, #ff8c69);
-      color: #fff;
-      padding: 3px 10px;
-      border-radius: 999px;
-      font-size: 11px;
-      font-weight: 600;
-      line-height: 1.35;
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      border: none;
-    }
-
-    .similar-cars-carousel .car-info .car-badge.sedan-badge {
-      background: linear-gradient(135deg, #3b82f6, #60a5fa);
-    }
-
-    .similar-cars-carousel .car-info .car-badge.luxsedan-badge {
-      background: linear-gradient(135deg, #f7a614, #ffcc6a);
-    }
-
-    .similar-cars-carousel .car-info .car-badge.perf-badge {
-      background: linear-gradient(135deg, #be123c, #fb7185);
-    }
-
-    .similar-cars-carousel .car-info .car-badge.biz-badge {
-      background: linear-gradient(135deg, #6366f1, #8b5cf6);
-    }
-
-    .similar-cars-carousel .car-info .car-badge.ev-badge {
-      background: linear-gradient(135deg, #059669, #34d399);
-    }
-
-    .similar-cars-carousel .car-info .car-badge.exec-badge {
-      background: linear-gradient(135deg, #f7a614, #ffcc6a);
-    }
-
-    .similar-cars-carousel .car-info .car-badge.lux-badge,
-    .similar-cars-carousel .car-info .car-badge.luxsuv-badge {
-      background: linear-gradient(135deg, #ec4899, #f472b6);
-    }
-
-    .similar-cars-carousel .car-info .car-badge.mpv-badge {
-      background: linear-gradient(135deg, #7c3aed, #a78bfa);
-    }
-
-    .similar-cars-carousel .car-info .car-badge.suv-badge {
-      background: linear-gradient(135deg, #0ea5e9, #38bdf8);
-    }
-
-    .similar-cars-carousel .car-info .car-badge.off-badge {
-      background: #a8b4c4;
-      color: #0f172a;
-    }
-
-    /* 与选车页一致：车名一行；第二行灰色说明左对齐、分类标签右对齐；不显示价格 */
-    .similar-cars-carousel .car-info {
-      flex-grow: 1;
-      display: grid;
-      grid-template-columns: 1fr auto;
-      grid-template-rows: auto auto;
-      align-items: center;
-      column-gap: 12px;
-      row-gap: 10px;
-      padding: 14px 16px 16px;
-      text-align: left;
-    }
-
-    .similar-cars-carousel .car-info .car-name {
-      grid-column: 1 / -1;
-      grid-row: 1;
-      min-width: 0;
-      font-size: clamp(14px, 4vw, 18px);
-      font-weight: 800;
-      line-height: 1.3;
-      color: var(--text, #e8ecf8);
-      margin: 0;
-      display: -webkit-box;
-      -webkit-box-orient: vertical;
-      -webkit-line-clamp: 2;
-      overflow: hidden;
-    }
-
-    .similar-cars-carousel .car-info .car-price,
-    .similar-cars-carousel .car-info .car-price-unit {
-      display: none !important;
-    }
-
-    .similar-cars-carousel .car-info .car-meta {
-      grid-column: 1;
-      grid-row: 2;
-      justify-self: start;
-      text-align: left;
-      align-self: center;
-      margin: 0;
-      min-width: 0;
-      font-size: 13px;
-      line-height: 1.35;
-      color: var(--muted, #8b93a7);
-      display: -webkit-box;
-      -webkit-box-orient: vertical;
-      -webkit-line-clamp: 2;
-      overflow: hidden;
-    }
-    
-    .similar-cars-carousel picture {
-      display: block;
-      overflow: hidden;
-    }
-  </style>
-
   <section class="similar-cars-section" id="similarCarsSection">
     <div class="container">
       <h2 class="similar-cars-title">同价位其他车</h2>
@@ -739,6 +486,7 @@
         var seenHref = {};
         doc.querySelectorAll('.car-card-link').forEach(function (link) {
           if (link.closest('#recommendSection')) return;
+          if (link.closest('#comingSoonSection')) return;
           var priceElem = link.querySelector('.car-price');
           var nameElem = link.querySelector('.car-name');
           if (!priceElem || !nameElem) return;

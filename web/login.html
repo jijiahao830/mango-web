@@ -8,6 +8,8 @@
   <title>芒果超跑 · 专属认证</title>
   <link rel="stylesheet" href="./login_car.css">
   <script src="./members.js"></script>
+  <!-- 若用 Live Server、其它端口或 file:// 打开本页，请填写会员 API 根地址（与 python member_api.py 一致），例如 http://127.0.0.1:8765 -->
+  <script>window.MANGO_API_ORIGIN = "";</script>
 </head>
 <body>
   <div class="login-container">
@@ -65,18 +67,39 @@
   </div>
 
   <script>
-    document.getElementById('loginForm').addEventListener('submit', function(e) {
+    async function resolveMemberLevel(nameInput) {
+      let memberLevel = '普通';
+      var origin = (typeof window.MANGO_API_ORIGIN !== 'undefined' && window.MANGO_API_ORIGIN)
+        ? String(window.MANGO_API_ORIGIN).replace(/\/$/, '')
+        : '';
+      var url = origin + '/api/member/lookup';
+      try {
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: nameInput }),
+        });
+        const data = await res.json().catch(function() { return {}; });
+        if (res.ok && data.ok && Object.prototype.hasOwnProperty.call(data, 'level')) {
+          memberLevel = String(data.level);
+        } else if (typeof membersData !== 'undefined' && membersData[nameInput]) {
+          memberLevel = membersData[nameInput];
+        }
+      } catch (err) {
+        if (typeof membersData !== 'undefined' && membersData[nameInput]) {
+          memberLevel = membersData[nameInput];
+        }
+      }
+      return memberLevel;
+    }
+
+    document.getElementById('loginForm').addEventListener('submit', async function(e) {
       e.preventDefault();
       const nameInput = document.getElementById('driverName').value.trim();
       
       if(nameInput) {
-        // 从 members.js 里的 membersData 匹配会员等级，默认为普通会员
-        let memberLevel = "普通";
+        const memberLevel = await resolveMemberLevel(nameInput);
         let levelClass = "";
-        
-        if (typeof membersData !== 'undefined' && membersData[nameInput]) {
-          memberLevel = membersData[nameInput];
-        }
         
         // 根据等级分配不同的样式类
         if (memberLevel.includes('黑')) {

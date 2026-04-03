@@ -1,0 +1,226 @@
+/* 经典使用场景 — 与兰博基尼详情页一致；各车通过 :root --brand / --brand-light 着色 */
+
+.scenario-showcase-section {
+  padding: 80px 0;
+  background: linear-gradient(135deg, var(--bg-secondary), var(--bg));
+}
+
+.scenario-showcase {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 60px;
+  align-items: center;
+  margin-top: 40px;
+}
+
+.scenario-showcase-image {
+  position: relative;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+  aspect-ratio: 2048 / 1648;
+  display: flex;
+}
+
+.scenario-showcase-image picture {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.scenario-showcase-image img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  object-position: center center !important;
+  display: block;
+  transition: transform 0.5s ease;
+}
+
+.scenario-showcase-image:hover img {
+  transform: scale(1.05);
+}
+
+.scenario-showcase-content {
+  padding: 8px 20px 20px;
+}
+
+.scenario-tab-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  align-items: center;
+  margin-top: -4px;
+  margin-bottom: 26px;
+}
+
+.scenario-tab {
+  font-family: inherit;
+  font-size: clamp(24px, 3.5vw, 34px);
+  font-weight: 900;
+  line-height: 1.2;
+  padding: 12px 28px;
+  border-radius: 14px;
+  border: 2px solid var(--border);
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+}
+
+.scenario-tab:hover {
+  color: var(--text);
+  border-color: color-mix(in srgb, var(--brand) 45%, transparent);
+}
+
+.scenario-tab.active {
+  color: var(--text);
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--brand) 12%, transparent),
+    color-mix(in srgb, var(--brand-light) 8%, transparent)
+  );
+  box-shadow: 0 4px 20px color-mix(in srgb, var(--brand) 15%, transparent);
+}
+
+.scenario-badge {
+  display: inline-block;
+  background: linear-gradient(135deg, var(--brand), var(--brand-light));
+  color: white;
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-bottom: 20px;
+}
+
+.scenario-showcase-title {
+  font-size: clamp(28px, 4vw, 36px);
+  font-weight: 900;
+  margin-bottom: 20px;
+  color: var(--text);
+}
+
+.scenario-showcase-desc {
+  font-size: 16px;
+  line-height: 1.8;
+  color: var(--muted);
+  margin-bottom: 30px;
+}
+
+.scenario-features {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.scenario-features li {
+  font-size: 15px;
+  color: var(--text);
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.scenario-features li:last-child {
+  border-bottom: none;
+}
+
+@media (max-width: 968px) {
+  .scenario-showcase-section {
+    padding: 50px 0;
+  }
+
+  .scenario-showcase {
+    grid-template-columns: 1fr;
+    gap: 0;
+    margin-top: 24px;
+    background: linear-gradient(145deg, #1e2329, #181c24);
+    border-radius: 20px;
+    overflow: hidden;
+    border: none;
+  }
+
+  .scenario-showcase-image {
+    order: -1;
+  }
+
+  .scenario-showcase-image {
+    border-radius: 0;
+    box-shadow: none;
+    aspect-ratio: 2048 / 1648;
+    width: 100%;
+  }
+
+  .scenario-showcase-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover !important;
+    object-position: center center !important;
+  }
+
+  .scenario-showcase-content {
+    padding: 16px 20px 28px;
+    text-align: center;
+  }
+
+  .scenario-tab-group {
+    justify-content: center;
+    gap: 20px;
+    margin-top: 0;
+    margin-bottom: 22px;
+  }
+
+  .scenario-tab {
+    padding: 11px 22px;
+  }
+
+  .scenario-badge {
+    margin-bottom: 14px;
+    font-size: 11px;
+    padding: 5px 14px;
+  }
+
+  .scenario-showcase-title {
+    font-size: 22px;
+    margin-bottom: 12px;
+  }
+
+  .scenario-showcase-desc {
+    font-size: 14px;
+    line-height: 1.7;
+    margin-bottom: 20px;
+  }
+
+  .scenario-features {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+    border-top: 1px solid var(--border);
+  }
+
+  .scenario-features li {
+    font-size: 13px;
+    padding: 12px 8px;
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+    border-right: 1px solid var(--border);
+  }
+
+  .scenario-features li:nth-child(2n) {
+    border-right: none;
+  }
+
+  .scenario-features li:nth-last-child(-n+2) {
+    border-bottom: none;
+  }
+
+  .scenario-features li:last-child {
+    border-bottom: none;
+  }
+}
+
+.scenario-showcase-content .hero-badge {
+  margin-bottom: 20px;
+}

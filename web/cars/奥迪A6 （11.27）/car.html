@@ -7,15 +7,53 @@
 
   <title>奥迪 A6L · 芒果超跑</title>
   <link rel="stylesheet" href="./car.css">
+  <link rel="stylesheet" href="../detail-other-models.css">
+  <link rel="stylesheet" href="../similar-price-cars.css">
+  <link rel="stylesheet" href="../scenario-showcase.css">
 </head>
-<body>
+<body data-daily-price="799" data-car-display-name="奥迪 A6L">
 
   <!-- Header -->
-  <header class="detail-header">
-    <a href="../../car.html#carGrid" class="back-btn">← 返回车库</a>
-    <div class="header-logo"><img src="../../logo/logo2.png" alt="芒果超跑" class="header-logo-img"></div>
-    <button class="btn-reserve">立即预约</button>
+    <header class="detail-header">
+    <div class="header-left-btn">
+      <a href="../../car.html#carGrid" class="back-btn">← 返回车库</a>
+    </div>
+
+    <div class="header-center-nav">
+      <div class="dropdown-container">
+        <span class="dropdown-trigger">其他车型 <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><polyline points="6 9 12 15 18 9"></polyline></svg></span>
+        <div class="dropdown-menu">
+          <div class="dropdown-menu-inner"></div>
+          <div class="dropdown-grid">
+            <a href="../%E5%A5%A5%E8%BF%AAA3/car.html" class="car-card-link">
+              <div class="car-card" data-category="">
+                <picture>
+                  <source srcset="../%E5%A5%A5%E8%BF%AAA3/详情页-banner.webp" type="image/webp">
+                  <img class="car-image car-image-photo" src="../%E5%A5%A5%E8%BF%AAA3/封面.jpg" alt="奥迪 A3">
+                </picture>
+                <div class="car-badge card-badge-overlay title-badge">奥迪 A3</div>
+              </div>
+            </a>
+            <a href="../%E5%A5%A5%E8%BF%AAA6/car.html" class="car-card-link">
+              <div class="car-card" data-category="">
+                <picture>
+                  <source srcset="../%E5%A5%A5%E8%BF%AAA6/详情页-banner.webp" type="image/webp">
+                  <img class="car-image car-image-photo" src="../%E5%A5%A5%E8%BF%AAA6/封面.jpg" alt="奥迪 A6L">
+                </picture>
+                <div class="car-badge card-badge-overlay title-badge">奥迪 A6L</div>
+              </div>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="header-right-logo">
+      <a href="../../car.html">
+        <img src="../../logo/logo2.png" alt="芒果超跑" class="header-right-logo-img">
+      </a>
+    </div>
   </header>
+
 
   <!-- Hero Section -->
   <section class="hero-detail">
@@ -328,17 +366,30 @@
           <p class="ignition-hint">点击点火，聆听引擎的咆哮</p>
         </div>
         <audio id="engine-audio" src="./engine.mp3" preload="auto"></audio>
-        <p class="cta-desc">立即预约试驾，感受科技座舱与商务风范的完美结合</p>
-        <div class="cta-actions">
-          <button class="btn-primary btn-lg">立即预约 ¥799/天</button>
-          <button class="btn-ghost btn-lg">咨询客服</button>
-        </div>
       </div>
     </div>
   </section>
 
   <!-- Footer -->
-  <footer class="detail-footer">
+      <!-- 同价位其他车模块 -->
+  <section class="similar-cars-section" id="similarCarsSection">
+    <div class="container">
+      <h2 class="similar-cars-title">同价位其他车</h2>
+      <p class="similar-cars-subtitle">加载中…</p>
+      <div class="similar-cars-row-outer">
+        <div class="similar-cars-carousel" id="similarCarsGrid">
+          <!-- 车辆卡片将由 JS 动态加载 -->
+        </div>
+      </div>
+    </div>
+  </section>
+
+<div class="detail-fab-actions" id="detailFabActions" aria-hidden="true">
+    <button type="button" class="btn-primary btn-lg detail-fab-btn">立即预约</button>
+    <button type="button" class="btn-ghost btn-lg detail-fab-btn">咨询客服</button>
+  </div>
+
+<footer class="detail-footer">
     <div class="container">
       <div class="footer-content">
         <div class="footer-brand">芒果超跑</div>
@@ -354,5 +405,7 @@
   </footer>
 
   <script src="./car.js"></script>
+  <script src="../detail-fab.js"></script>
+  <script src="../similar-price-cars.js"></script>
 </body>
 </html>

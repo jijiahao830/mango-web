@@ -102,7 +102,7 @@ document.querySelectorAll('.stat-card, .feature-card, .spec-group, .thumbnail-it
 });
 
 // Reserve button actions
-document.querySelectorAll('.btn-reserve, .btn-primary').forEach(btn => {
+document.querySelectorAll('.btn-reserve, .btn-primary, #detailFabActions .btn-ghost').forEach(btn => {
   btn.addEventListener('click', function() {
     alert('预约功能开发中，请联系客服：400-888-8888');
   });

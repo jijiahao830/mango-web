@@ -1,1 +1,2 @@
-const membersData = {"季": "芒果", "朱": "银芒果", "覃": "金芒果", "胡": "黑芒果"};
+/** 未启动 member_api 或接口失败时的兜底；正式数据在 MySQL 表 member */
+const membersData = {};
