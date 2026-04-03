@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" type="image/png" href="./logo/logo2.png">
+  <title>数据后台 · 芒果超跑</title>
+  <link rel="stylesheet" href="./login_car.css">
+  <!-- 若用 Live Server 等打开，请填写与 member_api.py 一致的根地址，例如 http://127.0.0.1:8765 -->
+  <script>window.MANGO_API_ORIGIN = "";</script>
+  <style>
+    body { overflow: auto; min-height: 100vh; height: auto; }
+    .login-container { min-height: 100vh; height: auto; padding: 48px 16px; }
+    .cardata-panel {
+      display: none;
+      position: relative;
+      z-index: 10;
+      width: 100%;
+      max-width: 960px;
+      margin: 0 auto;
+      background: rgba(23, 26, 33, 0.75);
+      backdrop-filter: blur(24px);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 24px;
+      padding: 40px 32px;
+      text-align: left;
+    }
+    .cardata-panel.visible { display: block; }
+    .cardata-panel h1 {
+      font-size: 1.35rem;
+      font-weight: 600;
+      margin-bottom: 8px;
+      letter-spacing: 0.02em;
+    }
+    .cardata-panel .hint {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      margin-bottom: 28px;
+    }
+    .cardata-placeholder {
+      border: 1px dashed rgba(255, 255, 255, 0.12);
+      border-radius: 16px;
+      padding: 48px 24px;
+      text-align: center;
+      color: var(--text-muted);
+    }
+    .gate-error {
+      color: #ff6b6b;
+      font-size: 0.875rem;
+      margin-top: 12px;
+      min-height: 1.25em;
+    }
+    #gateCard { display: block; }
+    #gateCard.hidden { display: none; }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <div class="bg-fx"></div>
+    <div class="bg-noise"></div>
+
+    <div class="login-card animate-in" id="gateCard">
+      <div class="brand-header">
+        <img src="./logo/logo2-1.png" alt="芒果超跑" class="login-logo">
+        <h2 class="login-title">DATA CONSOLE</h2>
+        <p class="login-subtitle">请输入后台口令以继续</p>
+      </div>
+      <form class="login-form" id="gateForm" autocomplete="off">
+        <div class="input-group">
+          <input type="password" id="gatePassword" required autocomplete="off" placeholder=" ">
+          <label for="gatePassword">口令</label>
+          <div class="input-glow"></div>
+        </div>
+        <button type="submit" class="btn-engine-start" id="gateSubmit">
+          <span class="btn-text">验证并进入</span>
+          <span class="btn-fx"></span>
+        </button>
+        <p class="gate-error" id="gateError" aria-live="polite"></p>
+      </form>
+    </div>
+
+    <div class="cardata-panel" id="dataPanel" aria-hidden="true">
+      <h1>数据统计</h1>
+      <p class="hint">后续可在此接入图表、表格与导出等功能。</p>
+      <div class="cardata-placeholder">
+        后台区域已解锁。请将统计接口与展示组件接在此处。
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      var STORAGE = 'mango_cardata_ok';
+
+      function apiOrigin() {
+        if (typeof window.MANGO_API_ORIGIN !== 'undefined' && window.MANGO_API_ORIGIN) {
+          return String(window.MANGO_API_ORIGIN).replace(/\/$/, '');
+        }
+        return '';
+      }
+
+      function showPanel() {
+        document.getElementById('gateCard').classList.add('hidden');
+        var panel = document.getElementById('dataPanel');
+        panel.classList.add('visible');
+        panel.setAttribute('aria-hidden', 'false');
+      }
+
+      function tryUnlockFromStorage() {
+        try {
+          if (sessionStorage.getItem(STORAGE) === '1') {
+            showPanel();
+            return true;
+          }
+        } catch (e) {}
+        return false;
+      }
+
+      document.getElementById('gateForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+        var err = document.getElementById('gateError');
+        var btn = document.getElementById('gateSubmit');
+        var pwd = document.getElementById('gatePassword').value;
+        err.textContent = '';
+        btn.disabled = true;
+        var url = (apiOrigin() || '') + '/api/cardata-auth';
+        fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password: pwd }),
+          credentials: 'omit'
+        })
+          .then(function (res) { return res.json().then(function (j) { return { res: res, j: j }; }); })
+          .then(function (_ref) {
+            var res = _ref.res;
+            var j = _ref.j;
+            if (res.ok && j && j.ok) {
+              try { sessionStorage.setItem(STORAGE, '1'); } catch (e2) {}
+              showPanel();
+              return;
+            }
+            if (j && j.error === 'not_configured') {
+              err.textContent = '服务端未配置口令：请在 app_config.json 中设置 cardata_password（非空）。';
+            } else {
+              err.textContent = '口令错误或服务不可用，请重试。';
+            }
+          })
+          .catch(function () {
+            err.textContent = '无法连接接口，请确认已启动 member_api.py 且 MANGO_API_ORIGIN 正确。';
+          })
+          .finally(function () {
+            btn.disabled = false;
+          });
+      });
+
+      if (!tryUnlockFromStorage()) {
+        /* 需输入口令 */
+      }
+    })();
+  </script>
+</body>
+</html>

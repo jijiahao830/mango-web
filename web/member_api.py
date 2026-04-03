@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import json
 import re
+import secrets
 import sqlite3
 import sys
 from datetime import datetime
@@ -440,6 +441,40 @@ def record_vehicle_click(member: str, brand: str, model: str, price: Decimal) ->
 
 
 app = Flask(__name__)
+
+def _verify_cardata_password(plain: str, expected: str) -> bool:
+    """常量时间比较 UTF-8 字节（长度不一致时视为不匹配）。"""
+    try:
+        a = plain.encode("utf-8")
+        b = expected.encode("utf-8")
+        return secrets.compare_digest(a, b)
+    except ValueError:
+        return False
+
+
+@app.route("/api/cardata-auth", methods=["POST", "OPTIONS"])
+def api_cardata_auth():
+    """校验 cardata 后台口令（与 app_config.json 中 cardata_password 一致）。"""
+    if request.method == "OPTIONS":
+        return _cors(make_response("", HTTPStatus.NO_CONTENT))
+    cfg = load_config()
+    raw = cfg.get("cardata_password")
+    expected = (str(raw) if raw is not None else "").strip()
+    if not expected:
+        return (
+            _cors(jsonify(ok=False, error="not_configured")),
+            HTTPStatus.SERVICE_UNAVAILABLE,
+        )
+    payload = request.get_json(silent=True) or {}
+    given = (payload.get("password") or "")
+    if not isinstance(given, str):
+        given = str(given)
+    if not _verify_cardata_password(given, expected):
+        return (
+            _cors(jsonify(ok=False, error="invalid_password")),
+            HTTPStatus.UNAUTHORIZED,
+        )
+    return _cors(jsonify(ok=True))
 
 
 def _cors(resp):
