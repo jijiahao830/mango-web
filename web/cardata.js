@@ -332,11 +332,11 @@
 
     if (isStoreAggregateNoDim) {
       if (kind === 'today') {
-        title = '今日到店（会员去重）';
+        title = '今日到店人数';
         var sdk = findStatDateKey(keys) || findDateKey(keys);
         if (sdk && row[sdk] != null) subLine = String(row[sdk]);
       } else {
-        title = kind === 'week' ? '本周到店（会员去重）' : '本月到店（会员去重）';
+        title = kind === 'week' ? '本周到店人数' : '本月到店人数';
         var pkAgg = findStatPeriodKey(keys) || findPeriodKey(keys);
         if (pkAgg && row[pkAgg] != null) subLine = String(row[pkAgg]);
       }
@@ -380,7 +380,6 @@
     html += '</svg>';
     html += '</div>';
     html += '<div class="gauge-readout"><span class="val">' + escapeHtml(String(Math.round(val))) + '</span><span class="unit">' + unit + '</span></div>';
-    html += '<div class="gauge-scale-max">满刻度 ' + maxScale + ' ' + unit + '（×1.1 向上取整）</div>';
     html += '</div></div>';
     container.innerHTML = html;
   }
