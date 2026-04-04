@@ -704,6 +704,35 @@ document.addEventListener('DOMContentLoaded', function() {
     return '';
   }
 
+  /** 按昨日全站点击排行行（vehicle 车名）映射到列表页卡片，不满 4 则顺序补全 */
+  function buildChosenFromYesterdayRows(fullCatalog, vehicleRows) {
+    var chosen = [];
+    var used = new Set();
+    (vehicleRows || []).forEach(function (r) {
+      var name = r.vehicle != null ? String(r.vehicle).trim() : '';
+      if (!name || chosen.length >= 4) return;
+      var ent = matchCatalogEntryForViewCar(fullCatalog, name);
+      if (!ent || used.has(recommendCarKey(ent))) return;
+      chosen.push(ent);
+      used.add(recommendCarKey(ent));
+    });
+    while (chosen.length < 4) {
+      var nxt = fullCatalog.find(function (c) { return !used.has(recommendCarKey(c)); });
+      if (!nxt) break;
+      chosen.push(nxt);
+      used.add(recommendCarKey(nxt));
+    }
+    return chosen.slice(0, 4);
+  }
+
+  function renderRecommendChosen(gridEl, chosen) {
+    chosen = chosen.slice(0, 4);
+    gridEl.innerHTML = '';
+    chosen.forEach(function (c) {
+      gridEl.appendChild(c.link.cloneNode(true));
+    });
+  }
+
   function refreshTodayRecommend() {
     var recommendSection = document.getElementById('recommendSection');
     if (!recommendSection) return;
@@ -716,6 +745,41 @@ document.addEventListener('DOMContentLoaded', function() {
     var member = sessionStorage.getItem('mango_driver_name');
     /** 接口返回的视图车名；finish 内优先将其固定为推荐第 1 辆（不依赖 clicks 是否合并成功） */
     var viewTopCarRaw = '';
+
+    var postRec = function (path, body) {
+      var b = apiOriginRecommend();
+      if (!b) {
+        return Promise.resolve({ res: { ok: false }, j: {} });
+      }
+      return fetch(b + path, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body || {}),
+        credentials: 'omit'
+      })
+        .then(function (res) {
+          return res.json().then(function (j) {
+            return { res: res, j: j || {} };
+          }).catch(function () {
+            return { res: res, j: {} };
+          });
+        })
+        .catch(function () {
+          return { res: { ok: false }, j: {} };
+        });
+    };
+
+    function loadYesterdayTopThen(fallbackFinish) {
+      postRec('/api/yesterday-vehicle-click-top', { limit: 12 }).then(function (o) {
+        var vrows = o.res.ok && o.j && o.j.ok && Array.isArray(o.j.rows) ? o.j.rows : [];
+        if (vrows.length) {
+          renderRecommendChosen(grid, buildChosenFromYesterdayRows(fullCatalog, vrows));
+        } else {
+          fallbackFinish();
+        }
+      });
+    }
+
     var finish = function () {
       var userRanked = fullCatalog.filter(function (c) { return c.clicks > 0; }).sort(function (a, b) {
         return b.clicks - a.clicks || Math.abs(a.price - b.price);
@@ -842,44 +906,23 @@ document.addEventListener('DOMContentLoaded', function() {
       }
 
       chosen = chosen.slice(0, 4);
-      grid.innerHTML = '';
-      chosen.forEach(function (c) {
-        grid.appendChild(c.link.cloneNode(true));
-      });
+      renderRecommendChosen(grid, chosen);
     };
 
+    /* 新用户：未登录 → 昨日全站点击前 4（视图）；无 API 则回退原「价差」推荐 */
     if (!member || !String(member).trim()) {
       fullCatalog.forEach(function (c) { c.clicks = 0; });
-      finish();
+      loadYesterdayTopThen(finish);
       return;
     }
 
-    var base = apiOriginRecommend();
-    if (!base) {
+    if (!apiOriginRecommend()) {
       fullCatalog.forEach(function (c) { c.clicks = 0; });
       finish();
       return;
     }
 
     var m = String(member).trim();
-    var postRec = function (path, body) {
-      return fetch(base + path, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-        credentials: 'omit'
-      })
-        .then(function (res) {
-          return res.json().then(function (j) {
-            return { res: res, j: j || {} };
-          }).catch(function () {
-            return { res: res, j: {} };
-          });
-        })
-        .catch(function () {
-          return { res: { ok: false }, j: {} };
-        });
-    };
 
     Promise.all([
       postRec('/api/member-vehicle-clicks-summary', { member: m }),
@@ -889,11 +932,19 @@ document.addEventListener('DOMContentLoaded', function() {
       var oView = pair[1];
       var rows =
         oSum.res.ok && oSum.j && oSum.j.ok && Array.isArray(oSum.j.rows) ? oSum.j.rows : [];
-      mergeRowsIntoCatalogClicks(fullCatalog, rows);
       var cn = '';
       if (oView.res.ok && oView.j && oView.j.ok && oView.j.car_name != null) {
         cn = String(oView.j.car_name).trim();
       }
+      var hasPersonalData = (cn && cn.length > 0) || (rows && rows.length > 0);
+      /* 已登录但库中无个人点击：与未登录相同，用昨日全站排行 */
+      if (!hasPersonalData) {
+        fullCatalog.forEach(function (c) { c.clicks = 0; });
+        viewTopCarRaw = '';
+        loadYesterdayTopThen(finish);
+        return;
+      }
+      mergeRowsIntoCatalogClicks(fullCatalog, rows);
       viewTopCarRaw = cn;
       if (cn) applyViewTopCarBoost(fullCatalog, cn);
       finish();

@@ -1358,6 +1358,109 @@ def _member_max_click_car_row(member: str) -> tuple[str | None, str | None]:
     return (name if name else None), None
 
 
+def _yesterday_vehicle_click_top_rows(limit: int) -> tuple[list[dict[str, Any]], str | None]:
+    """昨日全站车辆点击排行（视图 v_yesterday_vehicle_click），按点击次数降序取前 limit 条。"""
+    try:
+        lim = int(limit)
+    except (TypeError, ValueError):
+        lim = 4
+    lim = max(1, min(lim, 50))
+
+    cfg = load_config()
+    db = cfg.get("database") or {}
+    if (db.get("type") or "mysql").strip().lower() != "mysql":
+        return [], "mysql_only"
+
+    try:
+        import pymysql
+        from pymysql.constants import CLIENT
+        from pymysql.cursors import DictCursor
+    except ImportError:
+        return [], "import_pymysql"
+
+    try:
+        view = _sql_ident_mysql(str(db.get("yesterday_vehicle_click_view") or "v_yesterday_vehicle_click"))
+        col_vehicle = _sql_ident_mysql(
+            str(db.get("yesterday_vehicle_click_vehicle_column") or "车辆")
+        )
+        col_cnt = _sql_ident_mysql(str(db.get("yesterday_vehicle_click_count_column") or "点击次数"))
+    except ValueError as e:
+        return [], str(e)
+
+    mq = db.get("mysql") or {}
+    host = str(mq.get("host") or "127.0.0.1")
+    port = int(mq.get("port") or 3306)
+    user = str(mq.get("user") or "root")
+    password = str(mq.get("password") or "")
+    database = str(mq.get("database") or "").strip()
+    if not database:
+        return [], "no_database"
+
+    sql = (
+        f"SELECT `{col_vehicle}` AS `vehicle`, `{col_cnt}` AS `total_clicks` "
+        f"FROM `{view}` ORDER BY `{col_cnt}` DESC LIMIT %s"
+    )
+
+    conn = pymysql.connect(
+        host=host,
+        port=port,
+        user=user,
+        password=password,
+        database=database,
+        charset="utf8mb4",
+        cursorclass=DictCursor,
+        autocommit=True,
+        client_flag=CLIENT.FOUND_ROWS,
+    )
+    try:
+        with conn.cursor() as cur:
+            cur.execute(sql, (lim,))
+            raw_rows = cur.fetchall()
+    except Exception as e:
+        return [], str(e)
+    finally:
+        conn.close()
+
+    out: list[dict[str, Any]] = []
+    for row in raw_rows or []:
+        out.append(
+            {
+                "vehicle": _json_safe_mysql_value(row.get("vehicle")),
+                "total_clicks": _json_safe_mysql_value(row.get("total_clicks")),
+            }
+        )
+    return out, None
+
+
+@app.route("/api/yesterday-vehicle-click-top", methods=["POST", "OPTIONS"])
+def api_yesterday_vehicle_click_top():
+    """新用户 / 无个人点击：选车页「今日推荐」用昨日全站点击前 N 名（视图 v_yesterday_vehicle_click）。"""
+    if request.method == "OPTIONS":
+        return _cors(make_response("", HTTPStatus.NO_CONTENT))
+    payload = request.get_json(silent=True) or {}
+    raw_limit = payload.get("limit", 4)
+    try:
+        limit = int(raw_limit)
+    except (TypeError, ValueError):
+        limit = 4
+    rows, err = _yesterday_vehicle_click_top_rows(limit)
+    if err:
+        if err == "mysql_only":
+            return _cors(jsonify(ok=False, error="mysql_only")), HTTPStatus.SERVICE_UNAVAILABLE
+        if err == "import_pymysql":
+            return (
+                _cors(jsonify(ok=False, error="db_error", detail="请安装 pymysql")),
+                HTTPStatus.SERVICE_UNAVAILABLE,
+            )
+        if err == "no_database":
+            return (
+                _cors(jsonify(ok=False, error="db_error", detail="未配置 database.mysql.database")),
+                HTTPStatus.SERVICE_UNAVAILABLE,
+            )
+        return _cors(jsonify(ok=False, error="db_error", detail=err)), HTTPStatus.SERVICE_UNAVAILABLE
+    return _cors(jsonify(ok=True, rows=rows))
+
+
 @app.route("/api/member-max-click-car", methods=["POST", "OPTIONS"])
 def api_member_max_click_car():
     """选车页推荐：按视图返回该会员历史点击最多的车名（与 v_member_max_click_car 一致）。"""
