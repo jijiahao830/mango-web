@@ -1,4 +1,42 @@
 document.addEventListener('DOMContentLoaded', function() {
+  const CAR_FILTER_STORAGE_KEY = 'mangoCarFilterState';
+  const CAR_FILTER_OWNER_KEY = 'mango_filter_saved_for_driver';
+
+  /** sessionStorage 在部分环境/双开页面下不可靠，localStorage 作镜像，刷新后仍能恢复价格等筛选 */
+  function readPersistedFilterJson() {
+    var s = sessionStorage.getItem(CAR_FILTER_STORAGE_KEY);
+    if (s) return s;
+    try {
+      return localStorage.getItem(CAR_FILTER_STORAGE_KEY) || '';
+    } catch (e) {
+      return '';
+    }
+  }
+
+  function clearPersistedFilterAll() {
+    sessionStorage.removeItem(CAR_FILTER_STORAGE_KEY);
+    sessionStorage.removeItem(CAR_FILTER_OWNER_KEY);
+    try {
+      localStorage.removeItem(CAR_FILTER_STORAGE_KEY);
+      localStorage.removeItem(CAR_FILTER_OWNER_KEY);
+    } catch (e) {}
+  }
+
+  function writePersistedFilterJson(json) {
+    sessionStorage.setItem(CAR_FILTER_STORAGE_KEY, json);
+    try {
+      localStorage.setItem(CAR_FILTER_STORAGE_KEY, json);
+    } catch (e) {}
+  }
+
+  function writeFilterOwner(driverName) {
+    if (!driverName) return;
+    sessionStorage.setItem(CAR_FILTER_OWNER_KEY, driverName);
+    try {
+      localStorage.setItem(CAR_FILTER_OWNER_KEY, driverName);
+    } catch (e) {}
+  }
+
   const scenarioBtns = document.querySelectorAll('.filter-btn[data-scenario]');
   const categoryBtns = document.querySelectorAll('.filter-btn[data-category]');
   const brandBtns = document.querySelectorAll('.filter-btn[data-brand]');
@@ -73,12 +111,20 @@ document.addEventListener('DOMContentLoaded', function() {
     priceMax: 5000
   };
 
-  // 尝试从 sessionStorage 恢复状态（login.html 登录成功时会清除，保证每位用户进车库默认「全部」）
-  let savedStateRaw = sessionStorage.getItem('mangoCarFilterState');
+  // 尝试从 sessionStorage / localStorage 恢复状态（login 成功时会清除两端，保证换用户后进车库默认「全部」）
+  let savedStateRaw = readPersistedFilterJson();
   const currentDriver = sessionStorage.getItem('mango_driver_name') || '';
-  const filterOwner = sessionStorage.getItem('mango_filter_saved_for_driver');
-  if (savedStateRaw && currentDriver && filterOwner != null && filterOwner !== '' && filterOwner !== currentDriver) {
-    sessionStorage.removeItem('mangoCarFilterState');
+  var filterOwner = '';
+  try {
+    filterOwner =
+      sessionStorage.getItem(CAR_FILTER_OWNER_KEY) ||
+      localStorage.getItem(CAR_FILTER_OWNER_KEY) ||
+      '';
+  } catch (e) {
+    filterOwner = sessionStorage.getItem(CAR_FILTER_OWNER_KEY) || '';
+  }
+  if (savedStateRaw && currentDriver && filterOwner !== '' && filterOwner !== currentDriver) {
+    clearPersistedFilterAll();
     savedStateRaw = null;
   }
   if (savedStateRaw) {
@@ -104,12 +150,11 @@ document.addEventListener('DOMContentLoaded', function() {
     if (brandFilterButtons) brandFilterButtons.classList.remove('brand-expanded');
   }
 
-  // 保存状态到 sessionStorage 的辅助函数（记录当前登录用户，便于与上一用户区分）
   function saveState() {
-    sessionStorage.setItem('mangoCarFilterState', JSON.stringify(state));
+    writePersistedFilterJson(JSON.stringify(state));
     var d = sessionStorage.getItem('mango_driver_name');
     if (d) {
-      sessionStorage.setItem('mango_filter_saved_for_driver', d);
+      writeFilterOwner(d);
     }
   }
 
@@ -118,6 +163,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // Initialize prices by scanning all cars
   function initPrices() {
+    if (!priceMinSlider || !priceMaxSlider) return;
+
     let min = Infinity;
     let max = -Infinity;
     
@@ -142,20 +189,32 @@ document.addEventListener('DOMContentLoaded', function() {
     priceMaxSlider.min = min;
     priceMaxSlider.max = max;
 
-    // 如果没有保存的状态或者保存的状态不在合理范围内，才使用默认值
-    if (!sessionStorage.getItem('mangoCarFilterState')) {
+    const hadStoredFilters = !!readPersistedFilterJson();
+
+    if (!hadStoredFilters) {
       state.priceMin = min;
       state.priceMax = max;
       priceMinSlider.value = min;
       priceMaxSlider.value = max;
     } else {
-      // 恢复状态到 UI 上
-      priceMinSlider.value = state.priceMin;
-      priceMaxSlider.value = state.priceMax;
-      
-      // 恢复按钮状态
+      let pMin = parseInt(String(state.priceMin), 10);
+      let pMax = parseInt(String(state.priceMax), 10);
+      if (isNaN(pMin)) pMin = min;
+      if (isNaN(pMax)) pMax = max;
+      pMin = Math.max(min, Math.min(pMin, max));
+      pMax = Math.max(min, Math.min(pMax, max));
+      if (pMin > pMax) {
+        const swap = pMin;
+        pMin = pMax;
+        pMax = swap;
+      }
+      state.priceMin = pMin;
+      state.priceMax = pMax;
+      priceMinSlider.value = pMin;
+      priceMaxSlider.value = pMax;
+
       const updateBtns = (btns, key, datasetAttr) => {
-        btns.forEach(b => {
+        btns.forEach((b) => {
           if (b.dataset[datasetAttr] === state[key]) {
             b.classList.add('active');
           } else {
@@ -163,7 +222,7 @@ document.addEventListener('DOMContentLoaded', function() {
           }
         });
       };
-      
+
       updateBtns(scenarioBtns, 'scenario', 'scenario');
       updateBtns(categoryBtns, 'category', 'category');
       updateBtns(brandBtns, 'brand', 'brand');
@@ -179,6 +238,8 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     updatePriceSliders();
+    /* 与滑块实际值、钳位结果写回 sessionStorage，避免刷新后仍用旧的 500/5000 或未保存的拖动 */
+    saveState();
   }
 
   // Price slider logic
@@ -229,8 +290,16 @@ document.addEventListener('DOMContentLoaded', function() {
     saveState();
     refreshCars();
   });
-  priceMinSlider.addEventListener('change', scrollToCarSectionTop);
-  priceMaxSlider.addEventListener('change', scrollToCarSectionTop);
+  priceMinSlider.addEventListener('change', () => {
+    updatePriceSliders();
+    saveState();
+    scrollToCarSectionTop();
+  });
+  priceMaxSlider.addEventListener('change', () => {
+    updatePriceSliders();
+    saveState();
+    scrollToCarSectionTop();
+  });
 
   // Button logic
   function setupGroupButtons(btns, stateKey) {
@@ -1146,11 +1215,17 @@ document.addEventListener('DOMContentLoaded', function() {
     // --- 联动逻辑结束 ---
 
     
-    // 今日推荐 / 即将上新：仅当「使用场景」「分类」「品牌」三个标签均为「全部」时显示；任一改选非「全部」则隐藏（价格、搜索仍只过滤卡片，不隐藏这两块）
+    // 今日推荐 / 即将上新：场景、分类、品牌均为「全部」，且价格区间为全站最小～最大（未做价格筛选）时显示；搜索仍只过滤下方品牌区卡片
     const recommendSection = document.getElementById('recommendSection');
     const comingSoonSection = document.getElementById('comingSoonSection');
+    const priceIsFullRange =
+      Number(state.priceMin) === Number(globalMinPrice) &&
+      Number(state.priceMax) === Number(globalMaxPrice);
     const showSpotlightBlocks =
-      state.scenario === 'all' && state.category === 'all' && state.brand === 'all';
+      state.scenario === 'all' &&
+      state.category === 'all' &&
+      state.brand === 'all' &&
+      priceIsFullRange;
     if (recommendSection) {
       recommendSection.style.display = showSpotlightBlocks ? '' : 'none';
     }

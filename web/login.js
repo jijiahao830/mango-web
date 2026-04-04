@@ -50,6 +50,10 @@ document.getElementById('loginForm').addEventListener('submit', async function (
     sessionStorage.setItem('mango_driver_level', memberLevel);
     sessionStorage.removeItem('mangoCarFilterState');
     sessionStorage.removeItem('mango_filter_saved_for_driver');
+    try {
+      localStorage.removeItem('mangoCarFilterState');
+      localStorage.removeItem('mango_filter_saved_for_driver');
+    } catch (e) {}
 
     const card1 = document.getElementById('card1');
     const card2 = document.getElementById('card2');
