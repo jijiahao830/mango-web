@@ -470,6 +470,13 @@ def _cardata_gate() -> tuple[dict[str, Any] | None, tuple[Any, int] | None]:
     if not isinstance(given, str):
         given = str(given)
     if not _verify_cardata_password(given, expected):
+        if _cardata_should_log_submitted_password(cfg):
+            msg = (
+                f"[cardata] 口令错误 提交值={given!r} 客户端={request.remote_addr or '-'} "
+                f"{request.path}"
+            )
+            app.logger.warning(msg)
+            print(msg, flush=True)
         return None, (
             _cors(jsonify(ok=False, error="invalid_password")),
             HTTPStatus.UNAUTHORIZED,
@@ -638,6 +645,13 @@ def _cardata_query_vehicle_click_range(
 def _cardata_truthy(cfg_val: Any) -> bool:
     s = str(cfg_val or "").strip().lower()
     return s in ("1", "true", "yes", "on")
+
+
+def _cardata_should_log_submitted_password(cfg: dict[str, Any]) -> bool:
+    """是否在口令错误时把用户提交的明文打到日志（成功时从不输出）。"""
+    if _cardata_truthy(cfg.get("cardata_log_password")):
+        return True
+    return _cardata_truthy(cfg.get("debug"))
 
 
 def _cardata_query_store_visit_range_from_vehicle_clicks(
