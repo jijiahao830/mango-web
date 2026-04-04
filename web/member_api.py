@@ -12,7 +12,7 @@ import re
 import secrets
 import sqlite3
 import sys
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
 from http import HTTPStatus
 from pathlib import Path
@@ -452,16 +452,16 @@ def _verify_cardata_password(plain: str, expected: str) -> bool:
         return False
 
 
-@app.route("/api/cardata-auth", methods=["POST", "OPTIONS"])
-def api_cardata_auth():
-    """校验 cardata 后台口令（与 app_config.json 中 cardata_password 一致）。"""
-    if request.method == "OPTIONS":
-        return _cors(make_response("", HTTPStatus.NO_CONTENT))
+def _cardata_gate() -> tuple[dict[str, Any] | None, tuple[Any, int] | None]:
+    """
+    校验请求体中的 password 是否与 app_config.json 的 cardata_password 一致。
+    成功返回 (cfg, None)；失败返回 (None, (response, http_status))。
+    """
     cfg = load_config()
     raw = cfg.get("cardata_password")
     expected = (str(raw) if raw is not None else "").strip()
     if not expected:
-        return (
+        return None, (
             _cors(jsonify(ok=False, error="not_configured")),
             HTTPStatus.SERVICE_UNAVAILABLE,
         )
@@ -470,11 +470,345 @@ def api_cardata_auth():
     if not isinstance(given, str):
         given = str(given)
     if not _verify_cardata_password(given, expected):
-        return (
+        return None, (
             _cors(jsonify(ok=False, error="invalid_password")),
             HTTPStatus.UNAUTHORIZED,
         )
-    return _cors(jsonify(ok=True))
+    return cfg, None
+
+
+def _json_safe_mysql_value(v: Any) -> Any:
+    if v is None:
+        return None
+    if isinstance(v, Decimal):
+        return float(v)
+    if isinstance(v, datetime):
+        return v.isoformat(sep=" ", timespec="seconds")
+    if isinstance(v, date):
+        return v.isoformat()
+    d = getattr(v, "isoformat", None)
+    if callable(d):
+        try:
+            return v.isoformat()
+        except Exception:
+            pass
+    return v
+
+
+def _resolve_cardata_view_name(cfg: dict[str, Any], default: str, config_key: str) -> str:
+    v = cfg.get(config_key)
+    if v:
+        return str(v).strip()
+    db_inner = cfg.get("database")
+    if isinstance(db_inner, dict) and db_inner.get(config_key):
+        return str(db_inner[config_key]).strip()
+    return default
+
+
+def _cardata_query_view(cfg: dict[str, Any], view_name: str) -> tuple[list[dict[str, Any]], str | None]:
+    """SELECT * FROM 视图。成功 (rows, None)，失败 ([], 错误码或描述)。"""
+    try:
+        view_ident = _sql_ident_mysql(view_name.strip())
+    except ValueError as e:
+        return [], str(e)
+
+    db = cfg.get("database") or {}
+    if (db.get("type") or "mysql").strip().lower() != "mysql":
+        return [], "mysql_only"
+
+    try:
+        import pymysql
+        from pymysql.constants import CLIENT
+        from pymysql.cursors import DictCursor
+    except ImportError:
+        return [], "import_pymysql"
+
+    mq = db.get("mysql") or {}
+    host = str(mq.get("host") or "127.0.0.1")
+    port = int(mq.get("port") or 3306)
+    user = str(mq.get("user") or "root")
+    password = str(mq.get("password") or "")
+    database = str(mq.get("database") or "").strip()
+    if not database:
+        return [], "no_database"
+
+    conn = pymysql.connect(
+        host=host,
+        port=port,
+        user=user,
+        password=password,
+        database=database,
+        charset="utf8mb4",
+        cursorclass=DictCursor,
+        autocommit=True,
+        client_flag=CLIENT.FOUND_ROWS,
+    )
+    try:
+        with conn.cursor() as cur:
+            cur.execute(f"SELECT * FROM `{view_ident}`")
+            raw_rows = cur.fetchall()
+    except Exception as e:
+        return [], str(e)
+    finally:
+        conn.close()
+
+    rows: list[dict[str, Any]] = []
+    for row in raw_rows:
+        rows.append({k: _json_safe_mysql_value(v) for k, v in row.items()})
+    return rows, None
+
+
+# 自定义日期区间查询的最大跨度（天），防止一次扫表过大
+_CARDATA_CUSTOM_RANGE_MAX_DAYS = 730
+
+
+def _cardata_query_vehicle_click_range(
+    cfg: dict[str, Any], start_d: date, end_d: date
+) -> tuple[list[dict[str, Any]], str | None]:
+    """
+    按日期区间在 vehicle_click_stat 上按车聚合点击次数，返回行结构与周/月视图一致：
+    统计周期、车辆、总点击次数（按总点击降序）。
+    """
+    db = cfg.get("database") or {}
+    if (db.get("type") or "mysql").strip().lower() != "mysql":
+        return [], "mysql_only"
+
+    try:
+        import pymysql
+        from pymysql.constants import CLIENT
+        from pymysql.cursors import DictCursor
+    except ImportError:
+        return [], "import_pymysql"
+
+    try:
+        table = _sql_ident_mysql(str(db.get("vehicle_click_table") or "vehicle_click_stat"))
+        col_d = _sql_ident_mysql(str(db.get("vehicle_click_date_column") or "click_date"))
+        col_b = _sql_ident_mysql(str(db.get("vehicle_click_brand_column") or "brand"))
+        col_model = _sql_ident_mysql(str(db.get("vehicle_click_model_column") or "model"))
+        col_cnt = _sql_ident_mysql(str(db.get("vehicle_click_count_column") or "click_count"))
+    except ValueError as e:
+        return [], str(e)
+
+    mq = db.get("mysql") or {}
+    host = str(mq.get("host") or "127.0.0.1")
+    port = int(mq.get("port") or 3306)
+    user = str(mq.get("user") or "root")
+    password = str(mq.get("password") or "")
+    database = str(mq.get("database") or "").strip()
+    if not database:
+        return [], "no_database"
+
+    period_label = f"{start_d.isoformat()} ~ {end_d.isoformat()}"
+    sql = (
+        f"SELECT %s AS `统计周期`, "
+        f"CONCAT(`{col_b}`, ' ', `{col_model}`) AS `车辆`, "
+        f"SUM(`{col_cnt}`) AS `总点击次数` "
+        f"FROM `{table}` WHERE `{col_d}` BETWEEN %s AND %s "
+        f"GROUP BY `{col_b}`, `{col_model}` "
+        f"ORDER BY `总点击次数` DESC "
+        f"LIMIT 500"
+    )
+
+    conn = pymysql.connect(
+        host=host,
+        port=port,
+        user=user,
+        password=password,
+        database=database,
+        charset="utf8mb4",
+        cursorclass=DictCursor,
+        autocommit=True,
+        client_flag=CLIENT.FOUND_ROWS,
+    )
+    try:
+        with conn.cursor() as cur:
+            cur.execute(sql, (period_label, start_d, end_d))
+            raw_rows = cur.fetchall()
+    except Exception as e:
+        return [], str(e)
+    finally:
+        conn.close()
+
+    rows_out: list[dict[str, Any]] = []
+    for row in raw_rows:
+        rows_out.append({k: _json_safe_mysql_value(v) for k, v in row.items()})
+    return rows_out, None
+
+
+def _cardata_truthy(cfg_val: Any) -> bool:
+    s = str(cfg_val or "").strip().lower()
+    return s in ("1", "true", "yes", "on")
+
+
+def _cardata_query_store_visit_range_from_vehicle_clicks(
+    cfg: dict[str, Any], start_d: date, end_d: date
+) -> tuple[list[dict[str, Any]], str | None]:
+    """
+    自定义区间「到店人数」：在 vehicle_click_stat 上对 click_date 落在区间内的 member 去重计数
+    （与 view_today_visit_count / view_week_visit_count 等同口径，不依赖额外观图）。
+    返回列：统计周期、门店（展示用标签）、到店人数。
+    表/列可通过 database.vehicle_click_table、vehicle_click_date_column、vehicle_click_member_column 覆盖。
+    """
+    db = cfg.get("database") or {}
+    if (db.get("type") or "mysql").strip().lower() != "mysql":
+        return [], "mysql_only"
+
+    try:
+        import pymysql
+        from pymysql.constants import CLIENT
+        from pymysql.cursors import DictCursor
+    except ImportError:
+        return [], "import_pymysql"
+
+    try:
+        table = _sql_ident_mysql(str(db.get("vehicle_click_table") or "vehicle_click_stat"))
+        col_d = _sql_ident_mysql(str(db.get("vehicle_click_date_column") or "click_date"))
+        col_m = _sql_ident_mysql(str(db.get("vehicle_click_member_column") or "member"))
+    except ValueError as e:
+        return [], str(e)
+
+    total_label = str(db.get("store_visit_total_label") or "全店合计").strip() or "全店合计"
+    mq = db.get("mysql") or {}
+    host = str(mq.get("host") or "127.0.0.1")
+    port = int(mq.get("port") or 3306)
+    user = str(mq.get("user") or "root")
+    password = str(mq.get("password") or "")
+    database = str(mq.get("database") or "").strip()
+    if not database:
+        return [], "no_database"
+
+    period_label = f"{start_d.isoformat()} ~ {end_d.isoformat()}"
+    sql = (
+        f"SELECT %s AS `统计周期`, %s AS `门店`, "
+        f"COUNT(DISTINCT `{col_m}`) AS `到店人数` "
+        f"FROM `{table}` WHERE `{col_d}` BETWEEN %s AND %s"
+    )
+    params: tuple[Any, ...] = (period_label, total_label, start_d, end_d)
+
+    conn = pymysql.connect(
+        host=host,
+        port=port,
+        user=user,
+        password=password,
+        database=database,
+        charset="utf8mb4",
+        cursorclass=DictCursor,
+        autocommit=True,
+        client_flag=CLIENT.FOUND_ROWS,
+    )
+    try:
+        with conn.cursor() as cur:
+            cur.execute(sql, params)
+            raw_rows = cur.fetchall()
+    except Exception as e:
+        return [], str(e)
+    finally:
+        conn.close()
+
+    rows_out: list[dict[str, Any]] = []
+    for row in raw_rows:
+        rows_out.append({k: _json_safe_mysql_value(v) for k, v in row.items()})
+    return rows_out, None
+
+
+def _cardata_query_store_visit_range_legacy_table(
+    cfg: dict[str, Any], start_d: date, end_d: date
+) -> tuple[list[dict[str, Any]], str | None]:
+    """
+    到店人数：在 store_visit_stat（可配置）上按日期区间聚合。
+    若配置 store_visit_dimension_column（如门店），则按维度 GROUP BY 取 TOP；
+    若不配置维度，则整表 SUM 为一行，门店列显示 store_visit_total_label（默认「全店合计」）。
+    需在 database.cardata_custom_store_use_store_visit_table 中开启后使用。
+    """
+    db = cfg.get("database") or {}
+    if (db.get("type") or "mysql").strip().lower() != "mysql":
+        return [], "mysql_only"
+
+    try:
+        import pymysql
+        from pymysql.constants import CLIENT
+        from pymysql.cursors import DictCursor
+    except ImportError:
+        return [], "import_pymysql"
+
+    try:
+        table = _sql_ident_mysql(str(db.get("store_visit_table") or "store_visit_stat"))
+        col_d = _sql_ident_mysql(str(db.get("store_visit_date_column") or "visit_date"))
+        col_cnt = _sql_ident_mysql(str(db.get("store_visit_count_column") or "visit_count"))
+    except ValueError as e:
+        return [], str(e)
+
+    dim_raw = (db.get("store_visit_dimension_column") or "").strip()
+    total_label = str(db.get("store_visit_total_label") or "全店合计").strip() or "全店合计"
+
+    mq = db.get("mysql") or {}
+    host = str(mq.get("host") or "127.0.0.1")
+    port = int(mq.get("port") or 3306)
+    user = str(mq.get("user") or "root")
+    password = str(mq.get("password") or "")
+    database = str(mq.get("database") or "").strip()
+    if not database:
+        return [], "no_database"
+
+    period_label = f"{start_d.isoformat()} ~ {end_d.isoformat()}"
+
+    if dim_raw:
+        try:
+            col_dim = _sql_ident_mysql(dim_raw)
+        except ValueError as e:
+            return [], str(e)
+        sql = (
+            f"SELECT %s AS `统计周期`, `{col_dim}` AS `门店`, SUM(`{col_cnt}`) AS `到店人数` "
+            f"FROM `{table}` WHERE `{col_d}` BETWEEN %s AND %s "
+            f"GROUP BY `{col_dim}` "
+            f"ORDER BY `到店人数` DESC "
+            f"LIMIT 500"
+        )
+        params: tuple[Any, ...] = (period_label, start_d, end_d)
+    else:
+        sql = (
+            f"SELECT %s AS `统计周期`, %s AS `门店`, SUM(`{col_cnt}`) AS `到店人数` "
+            f"FROM `{table}` WHERE `{col_d}` BETWEEN %s AND %s"
+        )
+        params = (period_label, total_label, start_d, end_d)
+
+    conn = pymysql.connect(
+        host=host,
+        port=port,
+        user=user,
+        password=password,
+        database=database,
+        charset="utf8mb4",
+        cursorclass=DictCursor,
+        autocommit=True,
+        client_flag=CLIENT.FOUND_ROWS,
+    )
+    try:
+        with conn.cursor() as cur:
+            cur.execute(sql, params)
+            raw_rows = cur.fetchall()
+    except Exception as e:
+        return [], str(e)
+    finally:
+        conn.close()
+
+    rows_out: list[dict[str, Any]] = []
+    for row in raw_rows:
+        rows_out.append({k: _json_safe_mysql_value(v) for k, v in row.items()})
+    return rows_out, None
+
+
+def _cardata_query_store_visit_range(
+    cfg: dict[str, Any], start_d: date, end_d: date
+) -> tuple[list[dict[str, Any]], str | None]:
+    """
+    自定义区间到店人数：默认从 vehicle_click_stat 按会员去重；
+    若 database.cardata_custom_store_use_store_visit_table 为 true，则改用 store_visit_stat 及原聚合逻辑。
+    """
+    db = cfg.get("database") or {}
+    if _cardata_truthy(db.get("cardata_custom_store_use_store_visit_table")):
+        return _cardata_query_store_visit_range_legacy_table(cfg, start_d, end_d)
+    return _cardata_query_store_visit_range_from_vehicle_clicks(cfg, start_d, end_d)
 
 
 def _cors(resp):
@@ -483,6 +817,234 @@ def _cors(resp):
     resp.headers["Access-Control-Allow-Headers"] = "Content-Type"
     resp.headers["Access-Control-Allow-Methods"] = "POST, OPTIONS"
     return resp
+
+
+def _cardata_view_http_response(
+    cfg: dict[str, Any] | None,
+    err: tuple[Any, int] | None,
+    default_view: str,
+    config_key: str,
+) -> Any:
+    """cardata 视图查询的统一错误处理与 JSON 返回。"""
+    if err:
+        return err[0], err[1]
+    assert cfg is not None
+    view_name = _resolve_cardata_view_name(cfg, default_view, config_key)
+    rows, qerr = _cardata_query_view(cfg, view_name)
+    if qerr:
+        if qerr == "mysql_only":
+            return (
+                _cors(jsonify(ok=False, error="mysql_only")),
+                HTTPStatus.SERVICE_UNAVAILABLE,
+            )
+        if qerr == "import_pymysql":
+            return (
+                _cors(jsonify(ok=False, error="db_error", detail="请安装 pymysql")),
+                HTTPStatus.SERVICE_UNAVAILABLE,
+            )
+        if qerr == "no_database":
+            return (
+                _cors(jsonify(ok=False, error="db_error", detail="未配置 database.mysql.database")),
+                HTTPStatus.SERVICE_UNAVAILABLE,
+            )
+        if qerr.startswith("非法"):
+            return _cors(jsonify(ok=False, error="invalid_view", detail=qerr)), HTTPStatus.BAD_REQUEST
+        return (
+            _cors(jsonify(ok=False, error="db_error", detail=qerr)),
+            HTTPStatus.SERVICE_UNAVAILABLE,
+        )
+    return _cors(jsonify(ok=True, rows=rows))
+
+
+@app.route("/api/cardata-auth", methods=["POST", "OPTIONS"])
+def api_cardata_auth():
+    """校验 cardata 后台口令（与 app_config.json 中 cardata_password 一致）。"""
+    if request.method == "OPTIONS":
+        return _cors(make_response("", HTTPStatus.NO_CONTENT))
+    _cfg, err = _cardata_gate()
+    if err:
+        return err[0], err[1]
+    return _cors(jsonify(ok=True))
+
+
+@app.route("/api/cardata-today-vehicle-clicks", methods=["POST", "OPTIONS"])
+def api_cardata_today_vehicle_clicks():
+    """今日车辆点击排行（默认读视图 v_today_vehicle_click，可在配置中覆盖）。"""
+    if request.method == "OPTIONS":
+        return _cors(make_response("", HTTPStatus.NO_CONTENT))
+    cfg, err = _cardata_gate()
+    return _cardata_view_http_response(cfg, err, "v_today_vehicle_click", "cardata_today_clicks_view")
+
+
+@app.route("/api/cardata-week-vehicle-total", methods=["POST", "OPTIONS"])
+def api_cardata_week_vehicle_total():
+    """本周车辆累计点击（默认读视图 v_week_vehicle_total，可在配置 cardata_week_vehicle_view 覆盖）。"""
+    if request.method == "OPTIONS":
+        return _cors(make_response("", HTTPStatus.NO_CONTENT))
+    cfg, err = _cardata_gate()
+    return _cardata_view_http_response(cfg, err, "v_week_vehicle_total", "cardata_week_vehicle_view")
+
+
+@app.route("/api/cardata-month-vehicle-total", methods=["POST", "OPTIONS"])
+def api_cardata_month_vehicle_total():
+    """本月车辆累计点击（默认读视图 v_month_vehicle_total，可在配置 cardata_month_vehicle_view 覆盖）。"""
+    if request.method == "OPTIONS":
+        return _cors(make_response("", HTTPStatus.NO_CONTENT))
+    cfg, err = _cardata_gate()
+    return _cardata_view_http_response(cfg, err, "v_month_vehicle_total", "cardata_month_vehicle_view")
+
+
+@app.route("/api/cardata-custom-range", methods=["POST", "OPTIONS"])
+def api_cardata_custom_range():
+    """自定义起止日期，从 vehicle_click_stat 聚合查询（与表/列配置一致）。"""
+    if request.method == "OPTIONS":
+        return _cors(make_response("", HTTPStatus.NO_CONTENT))
+    cfg, err = _cardata_gate()
+    if err:
+        return err[0], err[1]
+
+    payload = request.get_json(silent=True) or {}
+    start_s = (payload.get("start_date") or "").strip()
+    end_s = (payload.get("end_date") or "").strip()
+    try:
+        start_d = date.fromisoformat(start_s)
+        end_d = date.fromisoformat(end_s)
+    except ValueError:
+        return (
+            _cors(jsonify(ok=False, error="bad_date", detail="请使用 YYYY-MM-DD 格式日期")),
+            HTTPStatus.BAD_REQUEST,
+        )
+    if start_d > end_d:
+        return (
+            _cors(jsonify(ok=False, error="bad_range", detail="开始日期不能晚于结束日期")),
+            HTTPStatus.BAD_REQUEST,
+        )
+    if (end_d - start_d).days > _CARDATA_CUSTOM_RANGE_MAX_DAYS:
+        return (
+            _cors(
+                jsonify(
+                    ok=False,
+                    error="range_too_long",
+                    detail=f"日期区间最长 {_CARDATA_CUSTOM_RANGE_MAX_DAYS} 天",
+                )
+            ),
+            HTTPStatus.BAD_REQUEST,
+        )
+
+    rows, qerr = _cardata_query_vehicle_click_range(cfg, start_d, end_d)
+    if qerr:
+        if qerr == "mysql_only":
+            return (
+                _cors(jsonify(ok=False, error="mysql_only")),
+                HTTPStatus.SERVICE_UNAVAILABLE,
+            )
+        if qerr == "import_pymysql":
+            return (
+                _cors(jsonify(ok=False, error="db_error", detail="请安装 pymysql")),
+                HTTPStatus.SERVICE_UNAVAILABLE,
+            )
+        if qerr == "no_database":
+            return (
+                _cors(jsonify(ok=False, error="db_error", detail="未配置 database.mysql.database")),
+                HTTPStatus.SERVICE_UNAVAILABLE,
+            )
+        if qerr.startswith("非法"):
+            return _cors(jsonify(ok=False, error="invalid_ident", detail=qerr)), HTTPStatus.BAD_REQUEST
+        return (
+            _cors(jsonify(ok=False, error="db_error", detail=qerr)),
+            HTTPStatus.SERVICE_UNAVAILABLE,
+        )
+    return _cors(jsonify(ok=True, rows=rows))
+
+
+@app.route("/api/cardata-today-store-visit", methods=["POST", "OPTIONS"])
+def api_cardata_today_store_visit():
+    """今日到店人数（默认视图 view_today_visit_count：stat_date + visit_num，配置 cardata_today_store_visit_view）。"""
+    if request.method == "OPTIONS":
+        return _cors(make_response("", HTTPStatus.NO_CONTENT))
+    cfg, err = _cardata_gate()
+    return _cardata_view_http_response(cfg, err, "view_today_visit_count", "cardata_today_store_visit_view")
+
+
+@app.route("/api/cardata-week-store-visit", methods=["POST", "OPTIONS"])
+def api_cardata_week_store_visit():
+    """本周到店人数（默认视图 view_week_visit_count：stat_period + visit_num，配置 cardata_week_store_visit_view）。"""
+    if request.method == "OPTIONS":
+        return _cors(make_response("", HTTPStatus.NO_CONTENT))
+    cfg, err = _cardata_gate()
+    return _cardata_view_http_response(cfg, err, "view_week_visit_count", "cardata_week_store_visit_view")
+
+
+@app.route("/api/cardata-month-store-visit", methods=["POST", "OPTIONS"])
+def api_cardata_month_store_visit():
+    """本月到店人数（默认视图 view_month_visit_count：统计周期 + visit_num，配置 cardata_month_store_visit_view）。"""
+    if request.method == "OPTIONS":
+        return _cors(make_response("", HTTPStatus.NO_CONTENT))
+    cfg, err = _cardata_gate()
+    return _cardata_view_http_response(cfg, err, "view_month_visit_count", "cardata_month_store_visit_view")
+
+
+@app.route("/api/cardata-custom-range-store", methods=["POST", "OPTIONS"])
+def api_cardata_custom_range_store():
+    """自定义起止日期到店人数：默认 vehicle_click_stat 会员去重；可选改回 store_visit_stat（见配置说明）。"""
+    if request.method == "OPTIONS":
+        return _cors(make_response("", HTTPStatus.NO_CONTENT))
+    cfg, err = _cardata_gate()
+    if err:
+        return err[0], err[1]
+
+    payload = request.get_json(silent=True) or {}
+    start_s = (payload.get("start_date") or "").strip()
+    end_s = (payload.get("end_date") or "").strip()
+    try:
+        start_d = date.fromisoformat(start_s)
+        end_d = date.fromisoformat(end_s)
+    except ValueError:
+        return (
+            _cors(jsonify(ok=False, error="bad_date", detail="请使用 YYYY-MM-DD 格式日期")),
+            HTTPStatus.BAD_REQUEST,
+        )
+    if start_d > end_d:
+        return (
+            _cors(jsonify(ok=False, error="bad_range", detail="开始日期不能晚于结束日期")),
+            HTTPStatus.BAD_REQUEST,
+        )
+    if (end_d - start_d).days > _CARDATA_CUSTOM_RANGE_MAX_DAYS:
+        return (
+            _cors(
+                jsonify(
+                    ok=False,
+                    error="range_too_long",
+                    detail=f"日期区间最长 {_CARDATA_CUSTOM_RANGE_MAX_DAYS} 天",
+                )
+            ),
+            HTTPStatus.BAD_REQUEST,
+        )
+
+    rows, qerr = _cardata_query_store_visit_range(cfg, start_d, end_d)
+    if qerr:
+        if qerr == "mysql_only":
+            return (
+                _cors(jsonify(ok=False, error="mysql_only")),
+                HTTPStatus.SERVICE_UNAVAILABLE,
+            )
+        if qerr == "import_pymysql":
+            return (
+                _cors(jsonify(ok=False, error="db_error", detail="请安装 pymysql")),
+                HTTPStatus.SERVICE_UNAVAILABLE,
+            )
+        if qerr == "no_database":
+            return (
+                _cors(jsonify(ok=False, error="db_error", detail="未配置 database.mysql.database")),
+                HTTPStatus.SERVICE_UNAVAILABLE,
+            )
+        if qerr.startswith("非法"):
+            return _cors(jsonify(ok=False, error="invalid_ident", detail=qerr)), HTTPStatus.BAD_REQUEST
+        return (
+            _cors(jsonify(ok=False, error="db_error", detail=qerr)),
+            HTTPStatus.SERVICE_UNAVAILABLE,
+        )
+    return _cors(jsonify(ok=True, rows=rows))
 
 
 @app.route("/api/member/lookup", methods=["POST", "OPTIONS"])

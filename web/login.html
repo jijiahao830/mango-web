@@ -6,7 +6,7 @@
   <link rel="icon" type="image/png" href="./logo/logo2.png">
 
   <title>芒果超跑 · 专属认证</title>
-  <link rel="stylesheet" href="./login_car.css">
+  <link rel="stylesheet" href="./login.css">
   <script src="./members.js"></script>
   <!-- 若用 Live Server、其它端口或 file:// 打开本页，请填写会员 API 根地址（与 python member_api.py 一致），例如 http://127.0.0.1:8765 -->
   <script>window.MANGO_API_ORIGIN = "";</script>
@@ -66,108 +66,6 @@
     </div>
   </div>
 
-  <script>
-    async function resolveMemberLevel(nameInput) {
-      let memberLevel = '普通';
-      var origin = (typeof window.MANGO_API_ORIGIN !== 'undefined' && window.MANGO_API_ORIGIN)
-        ? String(window.MANGO_API_ORIGIN).replace(/\/$/, '')
-        : '';
-      var url = origin + '/api/member/lookup';
-      try {
-        const res = await fetch(url, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name: nameInput }),
-        });
-        const data = await res.json().catch(function() { return {}; });
-        if (res.ok && data.ok && Object.prototype.hasOwnProperty.call(data, 'level')) {
-          memberLevel = String(data.level);
-        } else if (typeof membersData !== 'undefined' && membersData[nameInput]) {
-          memberLevel = membersData[nameInput];
-        }
-      } catch (err) {
-        if (typeof membersData !== 'undefined' && membersData[nameInput]) {
-          memberLevel = membersData[nameInput];
-        }
-      }
-      return memberLevel;
-    }
-
-    document.getElementById('loginForm').addEventListener('submit', async function(e) {
-      e.preventDefault();
-      const nameInput = document.getElementById('driverName').value.trim();
-      
-      if(nameInput) {
-        const memberLevel = await resolveMemberLevel(nameInput);
-        let levelClass = "";
-        
-        // 根据等级分配不同的样式类
-        if (memberLevel.includes('黑')) {
-          levelClass = 'level-black';
-        } else if (memberLevel.includes('金')) {
-          levelClass = 'level-gold';
-        } else if (memberLevel.includes('银')) {
-          levelClass = 'level-silver';
-        } else if (memberLevel.includes('芒果')) {
-          levelClass = 'level-mango';
-        }
-        
-        sessionStorage.setItem('mango_driver_name', nameInput);
-        sessionStorage.setItem('mango_driver_level', memberLevel);
-        /* 新登录后选车页各标签默认「全部」：清除上一用户遗留的筛选记忆 */
-        sessionStorage.removeItem('mangoCarFilterState');
-        sessionStorage.removeItem('mango_filter_saved_for_driver');
-        
-        // 将等级样式应用到卡片上
-        const card1 = document.getElementById('card1');
-        const card2 = document.getElementById('card2');
-        card1.className = `welcome-card active-card ${levelClass}`;
-        // card2 可以等翻转时再赋予，或者保持空卡片样式
-        
-        // 按钮动画
-        const btn = document.querySelector('.btn-engine-start');
-        btn.classList.add('igniting');
-        btn.querySelector('.btn-text').textContent = 'IGNITING...';
-        
-        // 生成欢迎语
-        const welcomeMessage = `尊贵的${memberLevel}会员，${nameInput}先生，<br>感谢您选择芒果超跑，<br>即将为您开启您的专属车库。`;
-        document.getElementById('welcomeMessage').innerHTML = `<p>${welcomeMessage}</p>`;
-        
-        setTimeout(() => {
-          // 隐藏登录框，显示欢迎卡片容器
-          document.querySelector('.login-card').style.display = 'none';
-          const cardsContainer = document.getElementById('welcomeCards');
-          cardsContainer.style.display = 'block'; // 叠层不需要 flex
-
-          // 给卡片容器加个进场动画
-          cardsContainer.classList.add('animate-in');
-        }, 800);
-      }
-    });
-
-    // 卡片切换逻辑
-    document.getElementById('nextCardBtn').addEventListener('click', function() {
-      const card1 = document.getElementById('card1');
-      const card2 = document.getElementById('card2');
-      const enterBtn = document.getElementById('enterGarageBtn');
-      
-      // 卡片1滑出
-      card1.style.transform = 'translateX(-120%) rotateY(-20deg)';
-      card1.style.opacity = '0';
-      
-      // 卡片2滑入并成为 active
-      setTimeout(() => {
-        // 保持原有的 levelClass
-        const currentLevelClass = card1.className.match(/level-[a-z]+/);
-        card2.className = `welcome-card active-card ${currentLevelClass ? currentLevelClass[0] : ''}`;
-        enterBtn.style.display = 'block';
-      }, 300);
-    });
-
-    // 点击按钮跳转
-    document.getElementById('enterGarageBtn').addEventListener('click', function() {
-      window.location.href = 'car.html#carSection';
-    });
-  </script>
+  <script src="./login.js"></script>
 </body>
 </html>

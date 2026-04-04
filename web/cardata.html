@@ -5,54 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" type="image/png" href="./logo/logo2.png">
   <title>数据后台 · 芒果超跑</title>
-  <link rel="stylesheet" href="./login_car.css">
+  <link rel="stylesheet" href="./login.css">
+  <link rel="stylesheet" href="./cardata.css">
   <!-- 若用 Live Server 等打开，请填写与 member_api.py 一致的根地址，例如 http://127.0.0.1:8765 -->
   <script>window.MANGO_API_ORIGIN = "";</script>
-  <style>
-    body { overflow: auto; min-height: 100vh; height: auto; }
-    .login-container { min-height: 100vh; height: auto; padding: 48px 16px; }
-    .cardata-panel {
-      display: none;
-      position: relative;
-      z-index: 10;
-      width: 100%;
-      max-width: 960px;
-      margin: 0 auto;
-      background: rgba(23, 26, 33, 0.75);
-      backdrop-filter: blur(24px);
-      border: 1px solid rgba(255, 255, 255, 0.06);
-      border-radius: 24px;
-      padding: 40px 32px;
-      text-align: left;
-    }
-    .cardata-panel.visible { display: block; }
-    .cardata-panel h1 {
-      font-size: 1.35rem;
-      font-weight: 600;
-      margin-bottom: 8px;
-      letter-spacing: 0.02em;
-    }
-    .cardata-panel .hint {
-      color: var(--text-muted);
-      font-size: 0.9rem;
-      margin-bottom: 28px;
-    }
-    .cardata-placeholder {
-      border: 1px dashed rgba(255, 255, 255, 0.12);
-      border-radius: 16px;
-      padding: 48px 24px;
-      text-align: center;
-      color: var(--text-muted);
-    }
-    .gate-error {
-      color: #ff6b6b;
-      font-size: 0.875rem;
-      margin-top: 12px;
-      min-height: 1.25em;
-    }
-    #gateCard { display: block; }
-    #gateCard.hidden { display: none; }
-  </style>
 </head>
 <body>
   <div class="login-container">
@@ -81,82 +37,75 @@
 
     <div class="cardata-panel" id="dataPanel" aria-hidden="true">
       <h1>数据统计</h1>
-      <p class="hint">后续可在此接入图表、表格与导出等功能。</p>
-      <div class="cardata-placeholder">
-        后台区域已解锁。请将统计接口与展示组件接在此处。
+        <p class="hint">本月车辆点击默认 <code>v_month_vehicle_total</code>；今日/本周/本月到店默认对应视图（可配置）；到店<strong>自定义区间</strong>由服务端直接查 <code>vehicle_click_stat</code>（区间内 <code>member</code> 去重人数）。</p>
+
+      <div class="rank-toolbar">
+        <span class="hint-inline">「刷新」会更新今日/周/月及<strong>两处自定义日期</strong>；满刻度均为「数值×1.1」向上取整。</span>
+        <button type="button" class="btn-refresh" id="btnRefreshRank" disabled>刷新</button>
       </div>
+
+      <section class="cardata-block">
+        <h2 class="cardata-section-title cardata-block-heading">车辆点击 · 次数最多</h2>
+
+        <h3 class="cardata-subsection-title">今日</h3>
+        <div class="rank-table-wrap" id="rankTableWrapToday">
+          <p class="rank-loading">加载中…</p>
+        </div>
+
+        <h3 class="cardata-subsection-title">本周</h3>
+        <div class="rank-table-wrap" id="rankTableWrapWeek">
+          <p class="rank-loading">加载中…</p>
+        </div>
+
+        <h3 class="cardata-subsection-title">本月</h3>
+        <div class="rank-table-wrap" id="rankTableWrapMonth">
+          <p class="rank-loading">加载中…</p>
+        </div>
+
+        <h3 class="cardata-subsection-title">自定义日期范围</h3>
+        <p class="hint hint-below-title">选择起止日期（最长 730 天），按车汇总点击次数。默认最近 7 天（含今天），进入页面或点顶部「刷新」后自动查询。</p>
+        <div class="cardata-range-form" id="customRangeForm">
+          <label>开始 <input type="date" id="customRangeStart" autocomplete="off"></label>
+          <label>结束 <input type="date" id="customRangeEnd" autocomplete="off"></label>
+          <button type="button" class="btn-refresh" id="btnCustomRangeQuery">查询</button>
+        </div>
+        <div class="rank-table-wrap" id="rankTableWrapCustom">
+          <p class="rank-loading">加载中…</p>
+        </div>
+      </section>
+
+      <section class="cardata-block">
+        <h2 class="cardata-section-title cardata-block-heading">到店人数 · 人数最多</h2>
+
+        <h3 class="cardata-subsection-title">今日</h3>
+        <div class="rank-table-wrap" id="rankTableWrapStoreToday">
+          <p class="rank-loading">加载中…</p>
+        </div>
+
+        <h3 class="cardata-subsection-title">本周</h3>
+        <div class="rank-table-wrap" id="rankTableWrapStoreWeek">
+          <p class="rank-loading">加载中…</p>
+        </div>
+
+        <h3 class="cardata-subsection-title">本月</h3>
+        <div class="rank-table-wrap" id="rankTableWrapStoreMonth">
+          <p class="rank-loading">加载中…</p>
+        </div>
+
+        <h3 class="cardata-subsection-title">自定义日期范围</h3>
+        <p class="hint hint-below-title">选择起止日期（最长 730 天），统计该区间内有点击记录的会员去重人数（全店一行展示）。默认最近 7 天（含今天），进入页面或点顶部「刷新」后自动查询。</p>
+        <div class="cardata-range-form" id="storeRangeForm">
+          <label>开始 <input type="date" id="storeRangeStart" autocomplete="off"></label>
+          <label>结束 <input type="date" id="storeRangeEnd" autocomplete="off"></label>
+          <button type="button" class="btn-refresh" id="btnStoreRangeQuery">查询</button>
+        </div>
+        <div class="rank-table-wrap" id="rankTableWrapStoreCustom">
+          <p class="rank-loading">加载中…</p>
+        </div>
+      </section>
     </div>
   </div>
 
-  <script>
-    (function () {
-      var STORAGE = 'mango_cardata_ok';
-
-      function apiOrigin() {
-        if (typeof window.MANGO_API_ORIGIN !== 'undefined' && window.MANGO_API_ORIGIN) {
-          return String(window.MANGO_API_ORIGIN).replace(/\/$/, '');
-        }
-        return '';
-      }
-
-      function showPanel() {
-        document.getElementById('gateCard').classList.add('hidden');
-        var panel = document.getElementById('dataPanel');
-        panel.classList.add('visible');
-        panel.setAttribute('aria-hidden', 'false');
-      }
-
-      function tryUnlockFromStorage() {
-        try {
-          if (sessionStorage.getItem(STORAGE) === '1') {
-            showPanel();
-            return true;
-          }
-        } catch (e) {}
-        return false;
-      }
-
-      document.getElementById('gateForm').addEventListener('submit', function (e) {
-        e.preventDefault();
-        var err = document.getElementById('gateError');
-        var btn = document.getElementById('gateSubmit');
-        var pwd = document.getElementById('gatePassword').value;
-        err.textContent = '';
-        btn.disabled = true;
-        var url = (apiOrigin() || '') + '/api/cardata-auth';
-        fetch(url, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ password: pwd }),
-          credentials: 'omit'
-        })
-          .then(function (res) { return res.json().then(function (j) { return { res: res, j: j }; }); })
-          .then(function (_ref) {
-            var res = _ref.res;
-            var j = _ref.j;
-            if (res.ok && j && j.ok) {
-              try { sessionStorage.setItem(STORAGE, '1'); } catch (e2) {}
-              showPanel();
-              return;
-            }
-            if (j && j.error === 'not_configured') {
-              err.textContent = '服务端未配置口令：请在 app_config.json 中设置 cardata_password（非空）。';
-            } else {
-              err.textContent = '口令错误或服务不可用，请重试。';
-            }
-          })
-          .catch(function () {
-            err.textContent = '无法连接接口，请确认已启动 member_api.py 且 MANGO_API_ORIGIN 正确。';
-          })
-          .finally(function () {
-            btn.disabled = false;
-          });
-      });
-
-      if (!tryUnlockFromStorage()) {
-        /* 需输入口令 */
-      }
-    })();
-  </script>
+  <script src="./cardata.js"></script>
 </body>
 </html>
