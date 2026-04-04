@@ -40,6 +40,87 @@
     }
   }
 
+  function syncVehicleRangeSummary() {
+    var s = document.getElementById('customRangeStart');
+    var e = document.getElementById('customRangeEnd');
+    var sum = document.getElementById('customRangeSummary');
+    if (!sum || !s || !e) return;
+    sum.textContent = s.value && e.value ? s.value + ' ~ ' + e.value : '';
+  }
+
+  function syncStoreRangeSummary() {
+    var s = document.getElementById('storeRangeStart');
+    var e = document.getElementById('storeRangeEnd');
+    var sum = document.getElementById('storeRangeSummary');
+    if (!sum || !s || !e) return;
+    sum.textContent = s.value && e.value ? s.value + ' ~ ' + e.value : '';
+  }
+
+  function syncAllRangeSummaries() {
+    syncVehicleRangeSummary();
+    syncStoreRangeSummary();
+  }
+
+  function setRangePanelOpen(panelId, btnId, isOpen) {
+    var panel = document.getElementById(panelId);
+    var btn = document.getElementById(btnId);
+    if (!panel || !btn) return;
+    panel.hidden = !isOpen;
+    btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+  }
+
+  function closeAllRangePanels() {
+    setRangePanelOpen('customRangePanel', 'btnCustomRangeMenu', false);
+    setRangePanelOpen('storeRangePanel', 'btnStoreRangeMenu', false);
+  }
+
+  function bindCustomRangeMenus() {
+    var vBtn = document.getElementById('btnCustomRangeMenu');
+    var vPanel = document.getElementById('customRangePanel');
+    var sBtn = document.getElementById('btnStoreRangeMenu');
+    var sPanel = document.getElementById('storeRangePanel');
+    if (vBtn && vPanel) {
+      vBtn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        var openNext = vPanel.hidden;
+        if (openNext && sPanel && !sPanel.hidden) {
+          setRangePanelOpen('storeRangePanel', 'btnStoreRangeMenu', false);
+        }
+        setRangePanelOpen('customRangePanel', 'btnCustomRangeMenu', openNext);
+      });
+    }
+    if (sBtn && sPanel) {
+      sBtn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        var openNext = sPanel.hidden;
+        if (openNext && vPanel && !vPanel.hidden) {
+          setRangePanelOpen('customRangePanel', 'btnCustomRangeMenu', false);
+        }
+        setRangePanelOpen('storeRangePanel', 'btnStoreRangeMenu', openNext);
+      });
+    }
+    document.addEventListener('click', function () {
+      closeAllRangePanels();
+    });
+    if (vPanel) {
+      vPanel.addEventListener('click', function (e) {
+        e.stopPropagation();
+      });
+    }
+    if (sPanel) {
+      sPanel.addEventListener('click', function (e) {
+        e.stopPropagation();
+      });
+    }
+    ['customRangeStart', 'customRangeEnd', 'storeRangeStart', 'storeRangeEnd'].forEach(function (id) {
+      var el = document.getElementById(id);
+      if (el) {
+        el.addEventListener('change', syncAllRangeSummaries);
+        el.addEventListener('input', syncAllRangeSummaries);
+      }
+    });
+  }
+
   function showPanel() {
     document.getElementById('gateCard').classList.add('hidden');
     var panel = document.getElementById('dataPanel');
@@ -50,6 +131,7 @@
     loadDashboardStats();
     initRangeDefaults('customRangeStart', 'customRangeEnd');
     initRangeDefaults('storeRangeStart', 'storeRangeEnd');
+    syncAllRangeSummaries();
     var defRange = defaultRangeYmdPair();
     loadCustomRangeVehicle(defRange.start, defRange.end);
     loadCustomRangeStore(defRange.start, defRange.end);
@@ -354,6 +436,8 @@
         if (o.res.ok && o.j && o.j.ok && Array.isArray(o.j.rows)) {
           renderTopGauge(wrap, o.j.rows.slice(0, 1), { kind: 'custom', metric: 'vehicle' });
           runNeedleAnimations(wrap);
+          syncVehicleRangeSummary();
+          setRangePanelOpen('customRangePanel', 'btnCustomRangeMenu', false);
           return;
         }
         var detail = (o.j && (o.j.detail || o.j.error)) ? String(o.j.detail || o.j.error) : '';
@@ -404,6 +488,8 @@
         if (o.res.ok && o.j && o.j.ok && Array.isArray(o.j.rows)) {
           renderTopGauge(wrap, o.j.rows.slice(0, 1), { kind: 'custom', metric: 'store' });
           runNeedleAnimations(wrap);
+          syncStoreRangeSummary();
+          setRangePanelOpen('storeRangePanel', 'btnStoreRangeMenu', false);
           return;
         }
         var detail = (o.j && (o.j.detail || o.j.error)) ? String(o.j.detail || o.j.error) : '';
@@ -548,6 +634,8 @@
   document.getElementById('btnStoreRangeQuery').addEventListener('click', function () {
     loadCustomRangeStore();
   });
+
+  bindCustomRangeMenus();
 
   if (!tryUnlockFromStorage()) {
     /* 需输入口令 */

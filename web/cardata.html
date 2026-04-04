@@ -40,67 +40,113 @@
         <p class="hint">本月车辆点击默认 <code>v_month_vehicle_total</code>；今日/本周/本月到店默认对应视图（可配置）；到店<strong>自定义区间</strong>由服务端直接查 <code>vehicle_click_stat</code>（区间内 <code>member</code> 去重人数）。</p>
 
       <div class="rank-toolbar">
-        <span class="hint-inline">「刷新」会更新今日/周/月及<strong>两处自定义日期</strong>；满刻度均为「数值×1.1」向上取整。</span>
+        <span class="hint-inline">「自定义」列点<strong>菜单图标</strong>可调起止日期；「刷新」会带上当前区间。满刻度为数值×1.1 向上取整。</span>
         <button type="button" class="btn-refresh" id="btnRefreshRank" disabled>刷新</button>
       </div>
 
       <section class="cardata-block">
         <h2 class="cardata-section-title cardata-block-heading">车辆点击 · 次数最多</h2>
-
-        <h3 class="cardata-subsection-title">今日</h3>
-        <div class="rank-table-wrap" id="rankTableWrapToday">
-          <p class="rank-loading">加载中…</p>
-        </div>
-
-        <h3 class="cardata-subsection-title">本周</h3>
-        <div class="rank-table-wrap" id="rankTableWrapWeek">
-          <p class="rank-loading">加载中…</p>
-        </div>
-
-        <h3 class="cardata-subsection-title">本月</h3>
-        <div class="rank-table-wrap" id="rankTableWrapMonth">
-          <p class="rank-loading">加载中…</p>
-        </div>
-
-        <h3 class="cardata-subsection-title">自定义日期范围</h3>
-        <p class="hint hint-below-title">选择起止日期（最长 730 天），按车汇总点击次数。默认最近 7 天（含今天），进入页面或点顶部「刷新」后自动查询。</p>
-        <div class="cardata-range-form" id="customRangeForm">
-          <label>开始 <input type="date" id="customRangeStart" autocomplete="off"></label>
-          <label>结束 <input type="date" id="customRangeEnd" autocomplete="off"></label>
-          <button type="button" class="btn-refresh" id="btnCustomRangeQuery">查询</button>
-        </div>
-        <div class="rank-table-wrap" id="rankTableWrapCustom">
-          <p class="rank-loading">加载中…</p>
+        <div class="cardata-metrics-row" role="presentation">
+          <div class="cardata-metric-cell">
+            <h3 class="cardata-subsection-title">今日</h3>
+            <div class="rank-table-wrap rank-table-wrap--metric" id="rankTableWrapToday">
+              <p class="rank-loading">加载中…</p>
+            </div>
+          </div>
+          <div class="cardata-metric-cell">
+            <h3 class="cardata-subsection-title">本周</h3>
+            <div class="rank-table-wrap rank-table-wrap--metric" id="rankTableWrapWeek">
+              <p class="rank-loading">加载中…</p>
+            </div>
+          </div>
+          <div class="cardata-metric-cell">
+            <h3 class="cardata-subsection-title">本月</h3>
+            <div class="rank-table-wrap rank-table-wrap--metric" id="rankTableWrapMonth">
+              <p class="rank-loading">加载中…</p>
+            </div>
+          </div>
+          <div class="cardata-metric-cell cardata-metric-cell--custom">
+            <div class="cardata-custom-header">
+              <h3 class="cardata-subsection-title">自定义</h3>
+              <span class="cardata-range-summary" id="customRangeSummary" title="当前查询区间"></span>
+              <button
+                type="button"
+                class="cardata-range-menu-btn"
+                id="btnCustomRangeMenu"
+                aria-expanded="false"
+                aria-controls="customRangePanel"
+                aria-label="打开车辆自定义时间范围"
+              >
+                <svg class="cardata-icon-menu" viewBox="0 0 24 24" aria-hidden="true">
+                  <path fill="currentColor" d="M4 6h16v2H4V6zm0 5h16v2H4v-2zm0 5h16v2H4v-2z" />
+                </svg>
+              </button>
+            </div>
+            <div class="cardata-range-panel" id="customRangePanel" hidden>
+              <p class="hint hint-in-cell">最长 730 天，按车汇总。改期后点查询。</p>
+              <div class="cardata-range-form cardata-range-form--compact" id="customRangeForm">
+                <label>开始 <input type="date" id="customRangeStart" autocomplete="off"></label>
+                <label>结束 <input type="date" id="customRangeEnd" autocomplete="off"></label>
+                <button type="button" class="btn-refresh" id="btnCustomRangeQuery">查询</button>
+              </div>
+            </div>
+            <div class="rank-table-wrap rank-table-wrap--metric" id="rankTableWrapCustom">
+              <p class="rank-loading">加载中…</p>
+            </div>
+          </div>
         </div>
       </section>
 
       <section class="cardata-block">
         <h2 class="cardata-section-title cardata-block-heading">到店人数 · 人数最多</h2>
-
-        <h3 class="cardata-subsection-title">今日</h3>
-        <div class="rank-table-wrap" id="rankTableWrapStoreToday">
-          <p class="rank-loading">加载中…</p>
-        </div>
-
-        <h3 class="cardata-subsection-title">本周</h3>
-        <div class="rank-table-wrap" id="rankTableWrapStoreWeek">
-          <p class="rank-loading">加载中…</p>
-        </div>
-
-        <h3 class="cardata-subsection-title">本月</h3>
-        <div class="rank-table-wrap" id="rankTableWrapStoreMonth">
-          <p class="rank-loading">加载中…</p>
-        </div>
-
-        <h3 class="cardata-subsection-title">自定义日期范围</h3>
-        <p class="hint hint-below-title">选择起止日期（最长 730 天），统计该区间内有点击记录的会员去重人数（全店一行展示）。默认最近 7 天（含今天），进入页面或点顶部「刷新」后自动查询。</p>
-        <div class="cardata-range-form" id="storeRangeForm">
-          <label>开始 <input type="date" id="storeRangeStart" autocomplete="off"></label>
-          <label>结束 <input type="date" id="storeRangeEnd" autocomplete="off"></label>
-          <button type="button" class="btn-refresh" id="btnStoreRangeQuery">查询</button>
-        </div>
-        <div class="rank-table-wrap" id="rankTableWrapStoreCustom">
-          <p class="rank-loading">加载中…</p>
+        <div class="cardata-metrics-row" role="presentation">
+          <div class="cardata-metric-cell">
+            <h3 class="cardata-subsection-title">今日</h3>
+            <div class="rank-table-wrap rank-table-wrap--metric" id="rankTableWrapStoreToday">
+              <p class="rank-loading">加载中…</p>
+            </div>
+          </div>
+          <div class="cardata-metric-cell">
+            <h3 class="cardata-subsection-title">本周</h3>
+            <div class="rank-table-wrap rank-table-wrap--metric" id="rankTableWrapStoreWeek">
+              <p class="rank-loading">加载中…</p>
+            </div>
+          </div>
+          <div class="cardata-metric-cell">
+            <h3 class="cardata-subsection-title">本月</h3>
+            <div class="rank-table-wrap rank-table-wrap--metric" id="rankTableWrapStoreMonth">
+              <p class="rank-loading">加载中…</p>
+            </div>
+          </div>
+          <div class="cardata-metric-cell cardata-metric-cell--custom">
+            <div class="cardata-custom-header">
+              <h3 class="cardata-subsection-title">自定义</h3>
+              <span class="cardata-range-summary" id="storeRangeSummary" title="当前查询区间"></span>
+              <button
+                type="button"
+                class="cardata-range-menu-btn"
+                id="btnStoreRangeMenu"
+                aria-expanded="false"
+                aria-controls="storeRangePanel"
+                aria-label="打开到店自定义时间范围"
+              >
+                <svg class="cardata-icon-menu" viewBox="0 0 24 24" aria-hidden="true">
+                  <path fill="currentColor" d="M4 6h16v2H4V6zm0 5h16v2H4v-2zm0 5h16v2H4v-2z" />
+                </svg>
+              </button>
+            </div>
+            <div class="cardata-range-panel" id="storeRangePanel" hidden>
+              <p class="hint hint-in-cell">最长 730 天，会员去重。改期后点查询。</p>
+              <div class="cardata-range-form cardata-range-form--compact" id="storeRangeForm">
+                <label>开始 <input type="date" id="storeRangeStart" autocomplete="off"></label>
+                <label>结束 <input type="date" id="storeRangeEnd" autocomplete="off"></label>
+                <button type="button" class="btn-refresh" id="btnStoreRangeQuery">查询</button>
+              </div>
+            </div>
+            <div class="rank-table-wrap rank-table-wrap--metric" id="rankTableWrapStoreCustom">
+              <p class="rank-loading">加载中…</p>
+            </div>
+          </div>
         </div>
       </section>
     </div>

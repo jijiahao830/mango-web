@@ -17,7 +17,7 @@ body {
   position: relative;
   z-index: 10;
   width: 100%;
-  max-width: 1100px;
+  max-width: 1440px;
   margin: 0 auto;
   background: rgba(23, 26, 33, 0.75);
   backdrop-filter: blur(24px);
@@ -83,6 +83,169 @@ body {
 
 .cardata-block .cardata-subsection-title:first-of-type {
   margin-top: 0;
+}
+
+/* 今日 / 本周 / 本月 / 自定义 同一行四列；仪表区域下对齐 */
+.cardata-metrics-row {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px 12px;
+  align-items: stretch;
+}
+
+.cardata-metric-cell {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+
+/* 四个格子里的仪表卡统一贴在列底部 */
+.cardata-metric-cell > .rank-table-wrap--metric {
+  margin-top: auto;
+}
+
+.cardata-metric-cell .cardata-subsection-title {
+  margin-top: 0;
+  font-size: 0.88rem;
+}
+
+.cardata-metric-cell > .cardata-subsection-title {
+  margin-bottom: 6px;
+  flex-shrink: 0;
+}
+
+.rank-table-wrap--metric {
+  padding: 12px 10px 16px;
+}
+
+.rank-table-wrap--metric .dashboard-grid--single {
+  max-width: 100%;
+}
+
+.rank-table-wrap--metric .gauge-readout .val {
+  font-size: 1.35rem;
+}
+
+.rank-table-wrap--metric .gauge-scale-max {
+  font-size: 0.62rem;
+  line-height: 1.35;
+}
+
+.hint-in-cell {
+  font-size: 0.72rem !important;
+  line-height: 1.35;
+  margin-top: 0;
+  margin-bottom: 8px !important;
+  color: var(--text-muted);
+}
+
+.cardata-custom-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 6px;
+  margin-bottom: 4px;
+  min-width: 0;
+  flex-shrink: 0;
+}
+
+.cardata-metric-cell--custom > .cardata-range-panel:not([hidden]) {
+  flex-shrink: 0;
+}
+
+.cardata-custom-header .cardata-subsection-title {
+  margin-bottom: 0;
+  flex-shrink: 0;
+}
+
+.cardata-range-summary {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.72rem;
+  color: rgba(255, 255, 255, 0.55);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cardata-range-menu-btn {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 186, 140, 0.95);
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    border-color 0.15s,
+    color 0.15s;
+}
+
+.cardata-range-menu-btn:hover {
+  background: rgba(255, 107, 53, 0.12);
+  border-color: rgba(255, 107, 53, 0.35);
+  color: var(--brand-light);
+}
+
+.cardata-range-menu-btn[aria-expanded='true'] {
+  background: rgba(255, 107, 53, 0.18);
+  border-color: rgba(255, 107, 53, 0.45);
+}
+
+.cardata-icon-menu {
+  width: 20px;
+  height: 20px;
+  display: block;
+}
+
+.cardata-range-panel {
+  margin-bottom: 6px;
+  padding: 10px 12px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 107, 53, 0.22);
+  background: rgba(0, 0, 0, 0.28);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+.cardata-range-panel[hidden] {
+  display: none !important;
+}
+
+.cardata-range-form--compact {
+  padding: 10px 12px;
+  margin-bottom: 10px;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+}
+
+.cardata-range-form--compact label {
+  width: 100%;
+  justify-content: space-between;
+}
+
+.cardata-range-form--compact .btn-refresh {
+  width: 100%;
+  margin-top: 2px;
+}
+
+@media (max-width: 1279px) {
+  .cardata-metrics-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .cardata-metrics-row {
+    grid-template-columns: 1fr;
+  }
 }
 
 .rank-toolbar {
