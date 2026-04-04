@@ -642,6 +642,78 @@ def _cardata_query_vehicle_click_range(
     return rows_out, None
 
 
+def _cardata_query_vehicle_click_today(
+    cfg: dict[str, Any],
+) -> tuple[list[dict[str, Any]], str | None]:
+    """
+    今日车辆点击：只统计 vehicle_click_stat 里 click_date = CURDATE()（MySQL 会话日历日）。
+    与 /api/cardata-custom-range 使用同一套表与列配置，避免 v_today_vehicle_click 等视图过滤错误导致「非当日」车上榜。
+    """
+    db = cfg.get("database") or {}
+    if (db.get("type") or "mysql").strip().lower() != "mysql":
+        return [], "mysql_only"
+
+    try:
+        import pymysql
+        from pymysql.constants import CLIENT
+        from pymysql.cursors import DictCursor
+    except ImportError:
+        return [], "import_pymysql"
+
+    try:
+        table = _sql_ident_mysql(str(db.get("vehicle_click_table") or "vehicle_click_stat"))
+        col_d = _sql_ident_mysql(str(db.get("vehicle_click_date_column") or "click_date"))
+        col_b = _sql_ident_mysql(str(db.get("vehicle_click_brand_column") or "brand"))
+        col_model = _sql_ident_mysql(str(db.get("vehicle_click_model_column") or "model"))
+        col_cnt = _sql_ident_mysql(str(db.get("vehicle_click_count_column") or "click_count"))
+    except ValueError as e:
+        return [], str(e)
+
+    mq = db.get("mysql") or {}
+    host = str(mq.get("host") or "127.0.0.1")
+    port = int(mq.get("port") or 3306)
+    user = str(mq.get("user") or "root")
+    password = str(mq.get("password") or "")
+    database = str(mq.get("database") or "").strip()
+    if not database:
+        return [], "no_database"
+
+    sql = (
+        f"SELECT CAST(CURDATE() AS CHAR) AS `统计周期`, "
+        f"CONCAT(`{col_b}`, ' ', `{col_model}`) AS `车辆`, "
+        f"SUM(`{col_cnt}`) AS `总点击次数` "
+        f"FROM `{table}` WHERE `{col_d}` = CURDATE() "
+        f"GROUP BY `{col_b}`, `{col_model}` "
+        f"ORDER BY `总点击次数` DESC "
+        f"LIMIT 500"
+    )
+
+    conn = pymysql.connect(
+        host=host,
+        port=port,
+        user=user,
+        password=password,
+        database=database,
+        charset="utf8mb4",
+        cursorclass=DictCursor,
+        autocommit=True,
+        client_flag=CLIENT.FOUND_ROWS,
+    )
+    try:
+        with conn.cursor() as cur:
+            cur.execute(sql)
+            raw_rows = cur.fetchall()
+    except Exception as e:
+        return [], str(e)
+    finally:
+        conn.close()
+
+    rows_out: list[dict[str, Any]] = []
+    for row in raw_rows:
+        rows_out.append({k: _json_safe_mysql_value(v) for k, v in row.items()})
+    return rows_out, None
+
+
 def _cardata_truthy(cfg_val: Any) -> bool:
     s = str(cfg_val or "").strip().lower()
     return s in ("1", "true", "yes", "on")
@@ -883,11 +955,36 @@ def api_cardata_auth():
 
 @app.route("/api/cardata-today-vehicle-clicks", methods=["POST", "OPTIONS"])
 def api_cardata_today_vehicle_clicks():
-    """今日车辆点击排行（默认读视图 v_today_vehicle_click，可在配置中覆盖）。"""
+    """今日车辆点击：vehicle_click_stat 中 click_date = CURDATE() 聚合（与自定义区间一致，不读 v_today_vehicle_click）。"""
     if request.method == "OPTIONS":
         return _cors(make_response("", HTTPStatus.NO_CONTENT))
     cfg, err = _cardata_gate()
-    return _cardata_view_http_response(cfg, err, "v_today_vehicle_click", "cardata_today_clicks_view")
+    if err:
+        return err[0], err[1]
+    rows, qerr = _cardata_query_vehicle_click_today(cfg)
+    if qerr:
+        if qerr == "mysql_only":
+            return (
+                _cors(jsonify(ok=False, error="mysql_only")),
+                HTTPStatus.SERVICE_UNAVAILABLE,
+            )
+        if qerr == "import_pymysql":
+            return (
+                _cors(jsonify(ok=False, error="db_error", detail="请安装 pymysql")),
+                HTTPStatus.SERVICE_UNAVAILABLE,
+            )
+        if qerr == "no_database":
+            return (
+                _cors(jsonify(ok=False, error="db_error", detail="未配置 database.mysql.database")),
+                HTTPStatus.SERVICE_UNAVAILABLE,
+            )
+        if qerr.startswith("非法"):
+            return _cors(jsonify(ok=False, error="invalid_ident", detail=qerr)), HTTPStatus.BAD_REQUEST
+        return (
+            _cors(jsonify(ok=False, error="db_error", detail=qerr)),
+            HTTPStatus.SERVICE_UNAVAILABLE,
+        )
+    return _cors(jsonify(ok=True, rows=rows))
 
 
 @app.route("/api/cardata-week-vehicle-total", methods=["POST", "OPTIONS"])
@@ -1108,6 +1205,215 @@ def api_vehicle_click():
             HTTPStatus.SERVICE_UNAVAILABLE,
         )
     return _cors(jsonify(ok=True))
+
+
+def _member_vehicle_clicks_summary_rows(member: str) -> tuple[list[dict[str, Any]], str | None]:
+    """按会员汇总 vehicle_click_stat：品牌、车型、总点击次数。"""
+    member = member.strip()
+    if not member:
+        return [], "empty_member"
+
+    cfg = load_config()
+    db = cfg.get("database") or {}
+    if (db.get("type") or "mysql").strip().lower() != "mysql":
+        return [], "mysql_only"
+
+    try:
+        import pymysql
+        from pymysql.constants import CLIENT
+        from pymysql.cursors import DictCursor
+    except ImportError:
+        return [], "import_pymysql"
+
+    try:
+        table = _sql_ident_mysql(str(db.get("vehicle_click_table") or "vehicle_click_stat"))
+        col_m = _sql_ident_mysql(str(db.get("vehicle_click_member_column") or "member"))
+        col_b = _sql_ident_mysql(str(db.get("vehicle_click_brand_column") or "brand"))
+        col_model = _sql_ident_mysql(str(db.get("vehicle_click_model_column") or "model"))
+        col_cnt = _sql_ident_mysql(str(db.get("vehicle_click_count_column") or "click_count"))
+    except ValueError as e:
+        return [], str(e)
+
+    mq = db.get("mysql") or {}
+    host = str(mq.get("host") or "127.0.0.1")
+    port = int(mq.get("port") or 3306)
+    user = str(mq.get("user") or "root")
+    password = str(mq.get("password") or "")
+    database = str(mq.get("database") or "").strip()
+    if not database:
+        return [], "no_database"
+
+    sql = (
+        f"SELECT `{col_b}` AS `brand`, `{col_model}` AS `model`, "
+        f"SUM(`{col_cnt}`) AS `total_clicks` "
+        f"FROM `{table}` WHERE `{col_m}` = %s "
+        f"GROUP BY `{col_b}`, `{col_model}` "
+        f"ORDER BY `total_clicks` DESC"
+    )
+
+    conn = pymysql.connect(
+        host=host,
+        port=port,
+        user=user,
+        password=password,
+        database=database,
+        charset="utf8mb4",
+        cursorclass=DictCursor,
+        autocommit=True,
+        client_flag=CLIENT.FOUND_ROWS,
+    )
+    try:
+        with conn.cursor() as cur:
+            cur.execute(sql, (member,))
+            raw_rows = cur.fetchall()
+    except Exception as e:
+        return [], str(e)
+    finally:
+        conn.close()
+
+    out: list[dict[str, Any]] = []
+    for row in raw_rows:
+        out.append(
+            {
+                "brand": row.get("brand"),
+                "model": row.get("model"),
+                "total_clicks": _json_safe_mysql_value(row.get("total_clicks")),
+            }
+        )
+    return out, None
+
+
+def _member_max_click_car_row(member: str) -> tuple[str | None, str | None]:
+    """
+    查询视图 v_member_max_click_car（可配置）：该会员按 brand+model 汇总后点击最多的车辆展示名。
+    返回 (car_name, err)；无记录时为 (None, None)。
+    """
+    member = member.strip()
+    if not member:
+        return None, "empty_member"
+
+    cfg = load_config()
+    db = cfg.get("database") or {}
+    if (db.get("type") or "mysql").strip().lower() != "mysql":
+        return None, "mysql_only"
+
+    try:
+        import pymysql
+        from pymysql.constants import CLIENT
+        from pymysql.cursors import DictCursor
+    except ImportError:
+        return None, "import_pymysql"
+
+    try:
+        view = _sql_ident_mysql(str(db.get("member_max_click_car_view") or "v_member_max_click_car"))
+        col_member = _sql_ident_mysql(
+            str(db.get("member_max_click_car_member_column") or "会员名称")
+        )
+        col_car = _sql_ident_mysql(
+            str(db.get("member_max_click_car_name_column") or "点击次数最多的车")
+        )
+    except ValueError as e:
+        return None, str(e)
+
+    mq = db.get("mysql") or {}
+    host = str(mq.get("host") or "127.0.0.1")
+    port = int(mq.get("port") or 3306)
+    user = str(mq.get("user") or "root")
+    password = str(mq.get("password") or "")
+    database = str(mq.get("database") or "").strip()
+    if not database:
+        return None, "no_database"
+
+    sql = (
+        f"SELECT `{col_car}` AS `top_car` FROM `{view}` "
+        f"WHERE `{col_member}` = %s LIMIT 1"
+    )
+
+    conn = pymysql.connect(
+        host=host,
+        port=port,
+        user=user,
+        password=password,
+        database=database,
+        charset="utf8mb4",
+        cursorclass=DictCursor,
+        autocommit=True,
+        client_flag=CLIENT.FOUND_ROWS,
+    )
+    try:
+        with conn.cursor() as cur:
+            cur.execute(sql, (member,))
+            row = cur.fetchone()
+    except Exception as e:
+        return None, str(e)
+    finally:
+        conn.close()
+
+    if not row:
+        return None, None
+    raw = row.get("top_car")
+    if raw is None:
+        return None, None
+    name = str(raw).strip()
+    return (name if name else None), None
+
+
+@app.route("/api/member-max-click-car", methods=["POST", "OPTIONS"])
+def api_member_max_click_car():
+    """选车页推荐：按视图返回该会员历史点击最多的车名（与 v_member_max_click_car 一致）。"""
+    if request.method == "OPTIONS":
+        return _cors(make_response("", HTTPStatus.NO_CONTENT))
+    payload = request.get_json(silent=True) or {}
+    member = (payload.get("member") or "").strip()
+    if not member:
+        return _cors(jsonify(ok=False, error="missing_member")), HTTPStatus.BAD_REQUEST
+    car_name, err = _member_max_click_car_row(member)
+    if err:
+        if err == "mysql_only":
+            return _cors(jsonify(ok=False, error="mysql_only")), HTTPStatus.SERVICE_UNAVAILABLE
+        if err == "import_pymysql":
+            return (
+                _cors(jsonify(ok=False, error="db_error", detail="请安装 pymysql")),
+                HTTPStatus.SERVICE_UNAVAILABLE,
+            )
+        if err == "no_database":
+            return (
+                _cors(jsonify(ok=False, error="db_error", detail="未配置 database.mysql.database")),
+                HTTPStatus.SERVICE_UNAVAILABLE,
+            )
+        if err == "empty_member":
+            return _cors(jsonify(ok=False, error="missing_member")), HTTPStatus.BAD_REQUEST
+        return _cors(jsonify(ok=False, error="db_error", detail=err)), HTTPStatus.SERVICE_UNAVAILABLE
+    return _cors(jsonify(ok=True, car_name=car_name))
+
+
+@app.route("/api/member-vehicle-clicks-summary", methods=["POST", "OPTIONS"])
+def api_member_vehicle_clicks_summary():
+    """选车页「今日推荐」：按会员汇总各车点击次数（无需 cardata 口令）。"""
+    if request.method == "OPTIONS":
+        return _cors(make_response("", HTTPStatus.NO_CONTENT))
+    payload = request.get_json(silent=True) or {}
+    member = (payload.get("member") or "").strip()
+    if not member:
+        return _cors(jsonify(ok=False, error="missing_member")), HTTPStatus.BAD_REQUEST
+    rows, err = _member_vehicle_clicks_summary_rows(member)
+    if err:
+        if err == "mysql_only":
+            return _cors(jsonify(ok=False, error="mysql_only")), HTTPStatus.SERVICE_UNAVAILABLE
+        if err == "import_pymysql":
+            return (
+                _cors(jsonify(ok=False, error="db_error", detail="请安装 pymysql")),
+                HTTPStatus.SERVICE_UNAVAILABLE,
+            )
+        if err == "no_database":
+            return (
+                _cors(jsonify(ok=False, error="db_error", detail="未配置 database.mysql.database")),
+                HTTPStatus.SERVICE_UNAVAILABLE,
+            )
+        if err == "empty_member":
+            return _cors(jsonify(ok=False, error="missing_member")), HTTPStatus.BAD_REQUEST
+        return _cors(jsonify(ok=False, error="db_error", detail=err)), HTTPStatus.SERVICE_UNAVAILABLE
+    return _cors(jsonify(ok=True, rows=rows))
 
 
 @app.get("/")

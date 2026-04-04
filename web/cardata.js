@@ -224,8 +224,17 @@
     return isNaN(n) ? 0 : n;
   }
 
-  function gaugeMaxFromValue(v) {
-    var m = Math.ceil(Math.max(0, v) * 1.1);
+  /** 满刻度 = ceil(当前值 × 倍率)，至少为 1 */
+  function gaugeMaxMultiplier(kind) {
+    if (kind === 'today') return 1.2;
+    if (kind === 'week') return 1.15;
+    if (kind === 'month') return 1.05;
+    return 1.1;
+  }
+
+  function gaugeMaxFromValue(v, kind) {
+    var mult = gaugeMaxMultiplier(kind || 'custom');
+    var m = Math.ceil(Math.max(0, v) * mult);
     return m < 1 ? 1 : m;
   }
 
@@ -316,7 +325,7 @@
     var keys = Object.keys(row);
     var countKey = metric === 'store' ? findVisitCountKey(keys) : findClickColumnKey(keys);
     var val = parseNumberCell(row, countKey);
-    var maxScale = gaugeMaxFromValue(val);
+    var maxScale = gaugeMaxFromValue(val, kind);
     var frac = maxScale > 0 ? Math.min(1, val / maxScale) : 0;
 
     var title = '';
@@ -345,7 +354,8 @@
       title = titleKey ? (row[titleKey] != null ? String(row[titleKey]) : '') : '';
       if (!title) title = '—';
       if (kind === 'today') {
-        var dateKey = findDateKey(keys);
+        var dateKey =
+          findDateKey(keys) || findStatDateKey(keys) || findPeriodKey(keys);
         if (dateKey && row[dateKey] != null) subLine = String(row[dateKey]);
       } else {
         var pk2 = findPeriodKey(keys);

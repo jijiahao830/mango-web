@@ -400,6 +400,506 @@ document.addEventListener('DOMContentLoaded', function() {
     return true;
   }
 
+  /** 与 vehicle-click.js 一致，用于从列表页车名解析品牌/车型 */
+  const KNOWN_BRANDS_FOR_RECOMMEND = [
+    '阿斯顿马丁', '劳斯莱斯', '兰博基尼', '玛莎拉蒂', '雷克萨斯', '保时捷',
+    '法拉利', '迈巴赫', '奔驰', '宝马', '奥迪', '路虎', '特斯拉', '理想',
+    '小米', '路特斯', '岚图', '雪佛兰', '丰田', '房车', '五菱宏光', '五菱',
+    '其他'
+  ].sort(function (a, b) { return b.length - a.length; });
+
+  function parseBrandModelFromCardName(displayName, sectionBrand) {
+    var s = (displayName || '').trim();
+    if (!s) return { brand: sectionBrand || '', model: '' };
+    for (var i = 0; i < KNOWN_BRANDS_FOR_RECOMMEND.length; i++) {
+      var br = KNOWN_BRANDS_FOR_RECOMMEND[i];
+      if (s.indexOf(br) === 0) {
+        var rest = s.slice(br.length).replace(/^\s+/, '');
+        return { brand: br, model: rest || s };
+      }
+    }
+    var parts = s.split(/\s+/);
+    return { brand: parts[0] || sectionBrand || '', model: parts.slice(1).join(' ') || s };
+  }
+
+  function recommendCarKey(entry) {
+    return (entry.brand || '') + '\t' + (entry.model || '');
+  }
+
+  /** 与库里 brand/model 或列表 displayName 对齐：全角空格、折叠空白 */
+  function normalizeRecommendToken(s) {
+    if (s == null || s === '') return '';
+    return String(s)
+      .replace(/\u3000/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  /** 视图里 concat(brand,model) 可能与列表「带空格车名」不一致，压缩后比较 */
+  function compactCarNameForMatch(s) {
+    return normalizeRecommendToken(s).replace(/\s+/g, '');
+  }
+
+  /** 在列表目录中查找视图「点击最多车」对应条目；失败则返回 null */
+  function matchCatalogEntryForViewCar(fullCatalog, viewCarName) {
+    var vn = normalizeRecommendToken(viewCarName);
+    if (!vn) return null;
+    var vCompact = compactCarNameForMatch(vn);
+    var vbm = parseBrandModelFromCardName(vn, '');
+    var vKey = vbm.brand && vbm.model ? recommendNormKey(vbm.brand, vbm.model) : '';
+    for (var i = 0; i < fullCatalog.length; i++) {
+      var c = fullCatalog[i];
+      var dn = normalizeRecommendToken(c.displayName);
+      if (dn === vn) return c;
+      if (compactCarNameForMatch(dn) === vCompact) return c;
+      if (vKey && recommendNormKey(c.brand, c.model) === vKey) return c;
+      if (vbm.brand && vbm.model && c.brand === vbm.brand && c.model === vbm.model) return c;
+    }
+    return null;
+  }
+
+  function recommendNormKey(brand, model) {
+    var b = normalizeRecommendToken(brand);
+    var m = normalizeRecommendToken(model);
+    return (b + '|' + m).toLowerCase();
+  }
+
+  /** 将 /api/member-vehicle-clicks-summary 的 rows 合并到 fullCatalog[].clicks（精确 key + 与 displayName 对齐的兜底） */
+  function mergeRowsIntoCatalogClicks(fullCatalog, rows) {
+    var clickMap = {};
+    if (rows && rows.length) {
+      rows.forEach(function (r) {
+        var k = recommendNormKey(r.brand, r.model);
+        var n = parseInt(String(r.total_clicks), 10);
+        var v = isNaN(n) ? 0 : n;
+        clickMap[k] = (clickMap[k] || 0) + v;
+      });
+    }
+    fullCatalog.forEach(function (c) {
+      c.clicks = clickMap[recommendNormKey(c.brand, c.model)] || 0;
+    });
+    if (!rows || !rows.length) return;
+    fullCatalog.forEach(function (c) {
+      if (c.clicks > 0) return;
+      var dn = normalizeRecommendToken(c.displayName);
+      var add = 0;
+      rows.forEach(function (r) {
+        var n = parseInt(String(r.total_clicks), 10) || 0;
+        if (!n) return;
+        var rb = normalizeRecommendToken(r.brand);
+        var rm = normalizeRecommendToken(r.model);
+        var comb = normalizeRecommendToken(rb + ' ' + rm);
+        var restAfterBrand = rb && dn.indexOf(rb) === 0 ? normalizeRecommendToken(dn.slice(rb.length)) : '';
+        var match =
+          (comb && comb === dn) ||
+          (rb && rm && restAfterBrand === rm) ||
+          (rb && !rm && dn === rb);
+        if (match) add += n;
+      });
+      if (add > 0) c.clicks = add;
+    });
+  }
+
+  /**
+   * 视图 v_member_max_click_car 给出的车名（brand + 空格 + model）优先作为推荐第 1 辆：
+   * 在已有 summary 合并结果上再抬升该车 clicks，避免与其它车打分并列。
+   */
+  function applyViewTopCarBoost(fullCatalog, viewCarName) {
+    var vn = normalizeRecommendToken(viewCarName);
+    if (!vn) return;
+    var maxClick = 0;
+    fullCatalog.forEach(function (c) {
+      if (c.clicks > maxClick) maxClick = c.clicks;
+    });
+    var boost = maxClick + 1000000;
+    var vCompact = compactCarNameForMatch(vn);
+    var vbm = parseBrandModelFromCardName(vn, '');
+    var vKey = vbm.brand && vbm.model ? recommendNormKey(vbm.brand, vbm.model) : '';
+    fullCatalog.forEach(function (c) {
+      var dn = normalizeRecommendToken(c.displayName);
+      var hit =
+        dn === vn ||
+        compactCarNameForMatch(dn) === vCompact ||
+        (vKey && recommendNormKey(c.brand, c.model) === vKey) ||
+        (vbm.brand && vbm.model && c.brand === vbm.brand && c.model === vbm.model);
+      if (hit) c.clicks = Math.max(c.clicks || 0, boost);
+    });
+  }
+
+  function scoreLexGreater(a, b) {
+    for (var k = 0; k < Math.max(a.length, b.length); k++) {
+      var av = a[k] != null ? a[k] : 0;
+      var bv = b[k] != null ? b[k] : 0;
+      if (av > bv) return true;
+      if (av < bv) return false;
+    }
+    return false;
+  }
+
+  function pickSameBrandBestPair(pool) {
+    var byBrand = {};
+    pool.forEach(function (c) {
+      if (!byBrand[c.brand]) byBrand[c.brand] = [];
+      byBrand[c.brand].push(c);
+    });
+    var bestPair = null;
+    var bestScore = null;
+    Object.keys(byBrand).forEach(function (br) {
+      var arr = byBrand[br];
+      if (arr.length < 2) return;
+      for (var i = 0; i < arr.length; i++) {
+        for (var j = i + 1; j < arr.length; j++) {
+          var a = arr[i];
+          var b = arr[j];
+          var minC = Math.min(a.clicks, b.clicks);
+          var sumC = a.clicks + b.clicks;
+          var diff = Math.abs(a.price - b.price);
+          var score = [minC, sumC, -diff];
+          if (!bestScore || scoreLexGreater(score, bestScore)) {
+            bestScore = score;
+            bestPair = [a, b];
+          }
+        }
+      }
+    });
+    return bestPair;
+  }
+
+  function pickAnyBrandBestPair(pool) {
+    var bestPair = null;
+    var bestScore = null;
+    for (var i = 0; i < pool.length; i++) {
+      for (var j = i + 1; j < pool.length; j++) {
+        var a = pool[i];
+        var b = pool[j];
+        var minC = Math.min(a.clicks, b.clicks);
+        var sumC = a.clicks + b.clicks;
+        var diff = Math.abs(a.price - b.price);
+        var score = [minC, sumC, -diff];
+        if (!bestScore || scoreLexGreater(score, bestScore)) {
+          bestScore = score;
+          bestPair = [a, b];
+        }
+      }
+    }
+    return bestPair;
+  }
+
+  /** 第 3、4 辆：仅接受「品牌不同」的组合；不做同品牌兜底 */
+  function pickDifferentBrandClosestPair(pool, usedKeys) {
+    var bestPair = null;
+    var bestScore = null;
+    for (var i = 0; i < pool.length; i++) {
+      for (var j = i + 1; j < pool.length; j++) {
+        var a = pool[i];
+        var b = pool[j];
+        if (usedKeys.has(recommendCarKey(a)) || usedKeys.has(recommendCarKey(b))) continue;
+        if (a.brand === b.brand) continue;
+        var diff = Math.abs(a.price - b.price);
+        var minC = Math.min(a.clicks, b.clicks);
+        var sumC = a.clicks + b.clicks;
+        var score = [minC, sumC, -diff];
+        if (!bestScore || scoreLexGreater(score, bestScore)) {
+          bestScore = score;
+          bestPair = [a, b];
+        }
+      }
+    }
+    return bestPair;
+  }
+
+  /**
+   * 第 3、4 辆：与 refCar（通常为点击最多的第 1 辆）价差最小，且品牌异于 refCar；
+   * 两辆之间尽量异牌；不足则次优（仅保证不同车）。
+   */
+  function pickTwoOtherBrandsClosestToRefPrice(fullCatalog, usedKeys, refCar) {
+    if (!refCar || !(refCar.price > 0)) return null;
+    var refPrice = refCar.price;
+    var refBrand = refCar.brand;
+    var pool = fullCatalog.filter(function (c) {
+      return !usedKeys.has(recommendCarKey(c)) && c.brand !== refBrand;
+    });
+    if (pool.length < 2) return null;
+    pool.sort(function (a, b) {
+      return Math.abs(a.price - refPrice) - Math.abs(b.price - refPrice);
+    });
+    var third = pool[0];
+    var poolOtherBrand = pool.filter(function (c) {
+      return recommendCarKey(c) !== recommendCarKey(third) && c.brand !== third.brand;
+    });
+    var fourth = null;
+    if (poolOtherBrand.length) {
+      poolOtherBrand.sort(function (a, b) {
+        return Math.abs(a.price - refPrice) - Math.abs(b.price - refPrice);
+      });
+      fourth = poolOtherBrand[0];
+    } else {
+      var poolRest = pool.filter(function (c) {
+        return recommendCarKey(c) !== recommendCarKey(third);
+      });
+      if (!poolRest.length) return null;
+      poolRest.sort(function (a, b) {
+        return Math.abs(a.price - refPrice) - Math.abs(b.price - refPrice);
+      });
+      fourth = poolRest[0];
+    }
+    return fourth ? [third, fourth] : null;
+  }
+
+  function singleUserCarPairFirstTwo(c0, fullCatalog) {
+    var same = fullCatalog.filter(function (c) {
+      return c.brand === c0.brand && recommendCarKey(c) !== recommendCarKey(c0);
+    });
+    var pickClosest = function (arr, ref) {
+      if (!arr.length) return null;
+      var sorted = arr.slice().sort(function (a, b) {
+        return Math.abs(a.price - ref.price) - Math.abs(b.price - ref.price);
+      });
+      return sorted[0];
+    };
+    var c1 = pickClosest(same, c0);
+    if (!c1) {
+      var rest = fullCatalog.filter(function (c) { return recommendCarKey(c) !== recommendCarKey(c0); });
+      c1 = pickClosest(rest, c0);
+    }
+    return c1 ? [c0, c1] : null;
+  }
+
+  function collectRecommendCatalog() {
+    var links = document.querySelectorAll('#carGrid .brand-section .car-card-link');
+    var list = [];
+    var seen = new Set();
+    links.forEach(function (link) {
+      var nameEl = link.querySelector('.car-name');
+      if (!nameEl) return;
+      var price = getCardPrice(link);
+      if (!(price > 0)) return;
+      var sectionBrand = getCardBrand(link) || '';
+      var bm = parseBrandModelFromCardName(nameEl.textContent.trim(), sectionBrand);
+      if (!bm.brand) bm.brand = sectionBrand;
+      if (!bm.model) return;
+      var nk = recommendNormKey(bm.brand, bm.model);
+      if (seen.has(nk)) return;
+      seen.add(nk);
+      list.push({
+        brand: bm.brand,
+        model: bm.model,
+        displayName: nameEl.textContent.trim(),
+        price: price,
+        link: link,
+        clicks: 0
+      });
+    });
+    return list;
+  }
+
+  function apiOriginRecommend() {
+    if (typeof window.MANGO_API_ORIGIN !== 'undefined' && window.MANGO_API_ORIGIN) {
+      return String(window.MANGO_API_ORIGIN).replace(/\/$/, '');
+    }
+    /* 未配置时：与 member_api 同机同端口打开 car.html 时可直接请求当前站点 */
+    if (typeof window.location !== 'undefined' && window.location.protocol !== 'file:') {
+      return String(window.location.origin).replace(/\/$/, '');
+    }
+    return '';
+  }
+
+  function refreshTodayRecommend() {
+    var recommendSection = document.getElementById('recommendSection');
+    if (!recommendSection) return;
+    var grid = recommendSection.querySelector('.car-grid');
+    if (!grid) return;
+
+    var fullCatalog = collectRecommendCatalog();
+    if (fullCatalog.length < 4) return;
+
+    var member = sessionStorage.getItem('mango_driver_name');
+    /** 接口返回的视图车名；finish 内优先将其固定为推荐第 1 辆（不依赖 clicks 是否合并成功） */
+    var viewTopCarRaw = '';
+    var finish = function () {
+      var userRanked = fullCatalog.filter(function (c) { return c.clicks > 0; }).sort(function (a, b) {
+        return b.clicks - a.clicks || Math.abs(a.price - b.price);
+      });
+
+      var chosen = [];
+      var used = new Set();
+
+      var viewMatched = viewTopCarRaw ? matchCatalogEntryForViewCar(fullCatalog, viewTopCarRaw) : null;
+
+      /* 视图「点击最多车」能对应到列表时：强制第 1 辆（解决 API/汇总与视图不一致、 boost 未命中等问题） */
+      if (viewMatched) {
+        chosen.push(viewMatched);
+        used.add(recommendCarKey(viewMatched));
+        var viewPair = singleUserCarPairFirstTwo(viewMatched, fullCatalog);
+        if (viewPair && viewPair[1] && !used.has(recommendCarKey(viewPair[1]))) {
+          chosen.push(viewPair[1]);
+          used.add(recommendCarKey(viewPair[1]));
+        }
+      } else if (userRanked.length > 0) {
+        /* 有个人点击时：第 1 辆固定为点击最高（避免双车打分把宝马抬到劳斯莱斯前面） */
+        var top = userRanked[0];
+        chosen.push(top);
+        used.add(recommendCarKey(top));
+        var topPair = singleUserCarPairFirstTwo(top, fullCatalog);
+        if (topPair && topPair[1] && !used.has(recommendCarKey(topPair[1]))) {
+          chosen.push(topPair[1]);
+          used.add(recommendCarKey(topPair[1]));
+        }
+      } else {
+        var firstPair = pickSameBrandBestPair(userRanked);
+        if (!firstPair && userRanked.length >= 2) {
+          firstPair = pickAnyBrandBestPair(userRanked);
+        } else if (!firstPair && userRanked.length === 1) {
+          firstPair = singleUserCarPairFirstTwo(userRanked[0], fullCatalog);
+        }
+        if (!firstPair) {
+          firstPair = pickAnyBrandBestPair(fullCatalog);
+        }
+        if (firstPair && firstPair[0] && firstPair[1]) {
+          firstPair.forEach(function (c) {
+            if (!used.has(recommendCarKey(c))) {
+              chosen.push(c);
+              used.add(recommendCarKey(c));
+            }
+          });
+        }
+      }
+
+      while (chosen.length < 2) {
+        var fillA = fullCatalog.find(function (c) { return !used.has(recommendCarKey(c)); });
+        if (!fillA) break;
+        chosen.push(fillA);
+        used.add(recommendCarKey(fillA));
+      }
+
+      /* 第 3、4 辆：与第 1 辆（点击最多的车）价差最近的「其他品牌」，且两辆尽量异牌 */
+      var refAnchor = chosen[0];
+      var pairNearTop =
+        refAnchor && pickTwoOtherBrandsClosestToRefPrice(fullCatalog, used, refAnchor);
+      if (!pairNearTop) {
+        pairNearTop = pickDifferentBrandClosestPair(fullCatalog, used);
+      }
+      if (pairNearTop) {
+        pairNearTop.forEach(function (carEntry) {
+          if (chosen.length >= 4) return;
+          if (!used.has(recommendCarKey(carEntry))) {
+            chosen.push(carEntry);
+            used.add(recommendCarKey(carEntry));
+          }
+        });
+      }
+
+      while (chosen.length < 4) {
+        var fillB = null;
+        var refB = chosen[0];
+        if (chosen.length === 3) {
+          fillB = fullCatalog
+            .filter(function (c) {
+              return (
+                !used.has(recommendCarKey(c)) &&
+                c.brand !== chosen[2].brand &&
+                (refB ? c.brand !== refB.brand : true)
+              );
+            })
+            .sort(function (a, b) {
+              var ar = refB ? Math.abs(a.price - refB.price) : 0;
+              var br = refB ? Math.abs(b.price - refB.price) : 0;
+              return ar - br;
+            })[0];
+        }
+        if (!fillB) {
+          fillB = fullCatalog.find(function (c) { return !used.has(recommendCarKey(c)); });
+        }
+        if (!fillB) break;
+        chosen.push(fillB);
+        used.add(recommendCarKey(fillB));
+      }
+
+      /* 若第 3、4 辆同品牌，优先换成与 refAnchor 仍异牌的另一候选 */
+      if (chosen.length === 4 && chosen[2].brand === chosen[3].brand && refAnchor) {
+        var drop2 = chosen.pop();
+        used.delete(recommendCarKey(drop2));
+        var repl2 = fullCatalog
+          .filter(function (c) {
+            return (
+              !used.has(recommendCarKey(c)) &&
+              c.brand !== chosen[2].brand &&
+              c.brand !== refAnchor.brand
+            );
+          })
+          .sort(function (a, b) {
+            return (
+              Math.abs(a.price - refAnchor.price) - Math.abs(b.price - refAnchor.price)
+            );
+          })[0];
+        if (repl2) {
+          chosen.push(repl2);
+          used.add(recommendCarKey(repl2));
+        } else {
+          chosen.push(drop2);
+          used.add(recommendCarKey(drop2));
+        }
+      }
+
+      chosen = chosen.slice(0, 4);
+      grid.innerHTML = '';
+      chosen.forEach(function (c) {
+        grid.appendChild(c.link.cloneNode(true));
+      });
+    };
+
+    if (!member || !String(member).trim()) {
+      fullCatalog.forEach(function (c) { c.clicks = 0; });
+      finish();
+      return;
+    }
+
+    var base = apiOriginRecommend();
+    if (!base) {
+      fullCatalog.forEach(function (c) { c.clicks = 0; });
+      finish();
+      return;
+    }
+
+    var m = String(member).trim();
+    var postRec = function (path, body) {
+      return fetch(base + path, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+        credentials: 'omit'
+      })
+        .then(function (res) {
+          return res.json().then(function (j) {
+            return { res: res, j: j || {} };
+          }).catch(function () {
+            return { res: res, j: {} };
+          });
+        })
+        .catch(function () {
+          return { res: { ok: false }, j: {} };
+        });
+    };
+
+    Promise.all([
+      postRec('/api/member-vehicle-clicks-summary', { member: m }),
+      postRec('/api/member-max-click-car', { member: m })
+    ]).then(function (pair) {
+      var oSum = pair[0];
+      var oView = pair[1];
+      var rows =
+        oSum.res.ok && oSum.j && oSum.j.ok && Array.isArray(oSum.j.rows) ? oSum.j.rows : [];
+      mergeRowsIntoCatalogClicks(fullCatalog, rows);
+      var cn = '';
+      if (oView.res.ok && oView.j && oView.j.ok && oView.j.car_name != null) {
+        cn = String(oView.j.car_name).trim();
+      }
+      viewTopCarRaw = cn;
+      if (cn) applyViewTopCarBoost(fullCatalog, cn);
+      finish();
+    });
+  }
+
   /** 分类为「全部」时：折叠区为「全部」+ 前 10 个品牌，第 11 个起算「...」之后 */
   function isBrandAfterEllipsisInDefaultMode(brandName) {
     if (!brandName || brandName === 'all') return false;
@@ -654,6 +1154,7 @@ document.addEventListener('DOMContentLoaded', function() {
   // Apply saved filters after initialization
 
   refreshCars();
+  refreshTodayRecommend();
 
   const backToCarsBtn = document.getElementById('backToCarsBtn');
   const heroEl = document.querySelector('.hero');

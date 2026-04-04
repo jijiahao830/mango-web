@@ -59,7 +59,7 @@ document.getElementById('loginForm').addEventListener('submit', async function (
     btn.classList.add('igniting');
     btn.querySelector('.btn-text').textContent = 'IGNITING...';
 
-    const welcomeMessage = `尊贵的${memberLevel}会员，${nameInput}先生，<br>感谢您选择芒果超跑，<br>即将为您开启您的专属车库。`;
+    const welcomeMessage = `尊贵的${memberLevel}会员，${nameInput}<br>感谢您选择芒果超跑<br>即将为您开启您的专属车库`;
     document.getElementById('welcomeMessage').innerHTML = `<p>${welcomeMessage}</p>`;
 
     setTimeout(() => {

@@ -110,9 +110,15 @@ body {
   font-size: 0.88rem;
 }
 
+/* 与自定义列工具栏同高，标题垂直居中，四列首行水平对齐 */
 .cardata-metric-cell > .cardata-subsection-title {
+  display: flex;
+  align-items: center;
+  min-height: 36px;
   margin-bottom: 6px;
   flex-shrink: 0;
+  line-height: 1.2;
+  box-sizing: border-box;
 }
 
 .rank-table-wrap--metric {
@@ -135,33 +141,40 @@ body {
   color: var(--text-muted);
 }
 
-.cardata-custom-header {
+/* 自定义：标题、日期、菜单同行；高度与「今日」等列标题带一致 */
+.cardata-custom-toolbar {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  gap: 4px 6px;
-  margin-bottom: 4px;
+  gap: 6px 8px;
+  min-height: 36px;
+  margin-bottom: 6px;
   min-width: 0;
   flex-shrink: 0;
+  box-sizing: border-box;
+}
+
+.cardata-custom-toolbar .cardata-subsection-title {
+  margin-top: 0;
+  margin-bottom: 0;
+  flex-shrink: 0;
+  font-size: 0.88rem;
+  line-height: 1.2;
 }
 
 .cardata-metric-cell--custom > .cardata-range-panel:not([hidden]) {
   flex-shrink: 0;
 }
 
-.cardata-custom-header .cardata-subsection-title {
-  margin-bottom: 0;
-  flex-shrink: 0;
-}
-
-.cardata-range-summary {
+.cardata-custom-toolbar .cardata-range-summary {
   flex: 1;
   min-width: 0;
+  align-self: center;
   font-size: 0.72rem;
   color: rgba(255, 255, 255, 0.55);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  line-height: 1.2;
 }
 
 .cardata-range-menu-btn {
