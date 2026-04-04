@@ -36,14 +36,23 @@
     </div>
 
     <div class="cardata-panel" id="dataPanel" aria-hidden="true">
-      <h1>数据统计</h1>
-
-      <div class="rank-toolbar">
-        <button type="button" class="btn-refresh" id="btnRefreshRank" disabled>刷新</button>
-      </div>
-
-      <section class="cardata-block">
-        <h2 class="cardata-section-title cardata-block-heading">车辆点击次数最多</h2>
+      <section class="cardata-block cardata-block--first">
+        <h2 class="cardata-section-title cardata-block-heading cardata-section-title--with-refresh">
+          车辆点击次数最多
+          <button
+            type="button"
+            class="cardata-refresh-icon-btn"
+            id="btnRefreshVehicle"
+            aria-label="刷新车辆点击板块（今日/本周/本月/自定义）"
+          >
+            <svg class="cardata-icon-refresh" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+              <path
+                fill="currentColor"
+                d="M17.65 6.35A7.958 7.958 0 0012 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0112 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"
+              />
+            </svg>
+          </button>
+        </h2>
         <div class="cardata-metrics-row" role="presentation">
           <div class="cardata-metric-cell">
             <h3 class="cardata-subsection-title">今日</h3>
@@ -96,7 +105,22 @@
       </section>
 
       <section class="cardata-block">
-        <h2 class="cardata-section-title cardata-block-heading">到店人数</h2>
+        <h2 class="cardata-section-title cardata-block-heading cardata-section-title--with-refresh">
+          访问人数
+          <button
+            type="button"
+            class="cardata-refresh-icon-btn"
+            id="btnRefreshStore"
+            aria-label="刷新访问人数板块（今日/本周/本月/自定义）"
+          >
+            <svg class="cardata-icon-refresh" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+              <path
+                fill="currentColor"
+                d="M17.65 6.35A7.958 7.958 0 0012 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0112 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"
+              />
+            </svg>
+          </button>
+        </h2>
         <div class="cardata-metrics-row" role="presentation">
           <div class="cardata-metric-cell">
             <h3 class="cardata-subsection-title">今日</h3>
@@ -126,7 +150,7 @@
                 id="btnStoreRangeMenu"
                 aria-expanded="false"
                 aria-controls="storeRangePanel"
-                aria-label="打开到店自定义时间范围"
+                aria-label="打开访问数据自定义时间范围"
               >
                 <svg class="cardata-icon-menu" viewBox="0 0 24 24" aria-hidden="true">
                   <path fill="currentColor" d="M4 6h16v2H4V6zm0 5h16v2H4v-2zm0 5h16v2H4v-2z" />

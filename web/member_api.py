@@ -730,9 +730,9 @@ def _cardata_query_store_visit_range_from_vehicle_clicks(
     cfg: dict[str, Any], start_d: date, end_d: date
 ) -> tuple[list[dict[str, Any]], str | None]:
     """
-    自定义区间「到店人数」：在 vehicle_click_stat 上对 click_date 落在区间内的 member 去重计数
+    自定义区间「访问人数」：在 vehicle_click_stat 上对 click_date 落在区间内的 member 去重计数
     （与 view_today_visit_count / view_week_visit_count 等同口径，不依赖额外观图）。
-    返回列：统计周期、门店（展示用标签）、到店人数。
+    返回列：统计周期、门店（展示用标签）、访问人数。
     表/列可通过 database.vehicle_click_table、vehicle_click_date_column、vehicle_click_member_column 覆盖。
     """
     db = cfg.get("database") or {}
@@ -766,7 +766,7 @@ def _cardata_query_store_visit_range_from_vehicle_clicks(
     period_label = f"{start_d.isoformat()} ~ {end_d.isoformat()}"
     sql = (
         f"SELECT %s AS `统计周期`, %s AS `门店`, "
-        f"COUNT(DISTINCT `{col_m}`) AS `到店人数` "
+        f"COUNT(DISTINCT `{col_m}`) AS `访问人数` "
         f"FROM `{table}` WHERE `{col_d}` BETWEEN %s AND %s"
     )
     params: tuple[Any, ...] = (period_label, total_label, start_d, end_d)
@@ -801,7 +801,7 @@ def _cardata_query_store_visit_range_legacy_table(
     cfg: dict[str, Any], start_d: date, end_d: date
 ) -> tuple[list[dict[str, Any]], str | None]:
     """
-    到店人数：在 store_visit_stat（可配置）上按日期区间聚合。
+    访问人数：在 store_visit_stat（可配置）上按日期区间聚合。
     若配置 store_visit_dimension_column（如门店），则按维度 GROUP BY 取 TOP；
     若不配置维度，则整表 SUM 为一行，门店列显示 store_visit_total_label（默认「全店合计」）。
     需在 database.cardata_custom_store_use_store_visit_table 中开启后使用。
@@ -844,16 +844,16 @@ def _cardata_query_store_visit_range_legacy_table(
         except ValueError as e:
             return [], str(e)
         sql = (
-            f"SELECT %s AS `统计周期`, `{col_dim}` AS `门店`, SUM(`{col_cnt}`) AS `到店人数` "
+            f"SELECT %s AS `统计周期`, `{col_dim}` AS `门店`, SUM(`{col_cnt}`) AS `访问人数` "
             f"FROM `{table}` WHERE `{col_d}` BETWEEN %s AND %s "
             f"GROUP BY `{col_dim}` "
-            f"ORDER BY `到店人数` DESC "
+            f"ORDER BY `访问人数` DESC "
             f"LIMIT 500"
         )
         params: tuple[Any, ...] = (period_label, start_d, end_d)
     else:
         sql = (
-            f"SELECT %s AS `统计周期`, %s AS `门店`, SUM(`{col_cnt}`) AS `到店人数` "
+            f"SELECT %s AS `统计周期`, %s AS `门店`, SUM(`{col_cnt}`) AS `访问人数` "
             f"FROM `{table}` WHERE `{col_d}` BETWEEN %s AND %s"
         )
         params = (period_label, total_label, start_d, end_d)
@@ -888,7 +888,7 @@ def _cardata_query_store_visit_range(
     cfg: dict[str, Any], start_d: date, end_d: date
 ) -> tuple[list[dict[str, Any]], str | None]:
     """
-    自定义区间到店人数：默认从 vehicle_click_stat 按会员去重；
+    自定义区间访问人数：默认从 vehicle_click_stat 按会员去重；
     若 database.cardata_custom_store_use_store_visit_table 为 true，则改用 store_visit_stat 及原聚合逻辑。
     """
     db = cfg.get("database") or {}
@@ -1070,7 +1070,7 @@ def api_cardata_custom_range():
 
 @app.route("/api/cardata-today-store-visit", methods=["POST", "OPTIONS"])
 def api_cardata_today_store_visit():
-    """今日到店人数（默认视图 view_today_visit_count：stat_date + visit_num，配置 cardata_today_store_visit_view）。"""
+    """今日访问人数（默认视图 view_today_visit_count：stat_date + visit_num，配置 cardata_today_store_visit_view）。"""
     if request.method == "OPTIONS":
         return _cors(make_response("", HTTPStatus.NO_CONTENT))
     cfg, err = _cardata_gate()
@@ -1079,7 +1079,7 @@ def api_cardata_today_store_visit():
 
 @app.route("/api/cardata-week-store-visit", methods=["POST", "OPTIONS"])
 def api_cardata_week_store_visit():
-    """本周到店人数（默认视图 view_week_visit_count：stat_period + visit_num，配置 cardata_week_store_visit_view）。"""
+    """本周访问人数（默认视图 view_week_visit_count：stat_period + visit_num，配置 cardata_week_store_visit_view）。"""
     if request.method == "OPTIONS":
         return _cors(make_response("", HTTPStatus.NO_CONTENT))
     cfg, err = _cardata_gate()
@@ -1088,7 +1088,7 @@ def api_cardata_week_store_visit():
 
 @app.route("/api/cardata-month-store-visit", methods=["POST", "OPTIONS"])
 def api_cardata_month_store_visit():
-    """本月到店人数（默认视图 view_month_visit_count：统计周期 + visit_num，配置 cardata_month_store_visit_view）。"""
+    """本月访问人数（默认视图 view_month_visit_count：统计周期 + visit_num，配置 cardata_month_store_visit_view）。"""
     if request.method == "OPTIONS":
         return _cors(make_response("", HTTPStatus.NO_CONTENT))
     cfg, err = _cardata_gate()
@@ -1097,7 +1097,7 @@ def api_cardata_month_store_visit():
 
 @app.route("/api/cardata-custom-range-store", methods=["POST", "OPTIONS"])
 def api_cardata_custom_range_store():
-    """自定义起止日期到店人数：默认 vehicle_click_stat 会员去重；可选改回 store_visit_stat（见配置说明）。"""
+    """自定义起止日期访问人数：默认 vehicle_click_stat 会员去重；可选改回 store_visit_stat（见配置说明）。"""
     if request.method == "OPTIONS":
         return _cors(make_response("", HTTPStatus.NO_CONTENT))
     cfg, err = _cardata_gate()

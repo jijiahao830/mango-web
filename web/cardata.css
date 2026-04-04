@@ -12,6 +12,11 @@ body {
   padding: 48px 16px;
 }
 
+/* 数据面板打开时减少外圈留白，便于两板块一屏展示 */
+.login-container:has(#dataPanel.visible) {
+  padding: 20px 12px 24px;
+}
+
 .cardata-panel {
   display: none;
   position: relative;
@@ -22,8 +27,8 @@ body {
   background: rgba(23, 26, 33, 0.75);
   backdrop-filter: blur(24px);
   border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 24px;
-  padding: 40px 32px;
+  border-radius: 20px;
+  padding: 16px 18px 18px;
   text-align: left;
 }
 
@@ -31,11 +36,60 @@ body {
   display: block;
 }
 
-.cardata-panel h1 {
-  font-size: 1.35rem;
-  font-weight: 600;
-  margin-bottom: 8px;
-  letter-spacing: 0.02em;
+.cardata-block--first {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
+}
+
+/* 大标题与紧跟其后的刷新图标同一行 */
+.cardata-section-title--with-refresh {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 10px;
+  margin-bottom: 10px;
+}
+
+.cardata-refresh-icon-btn {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 2px;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  color: var(--brand-light);
+  cursor: pointer;
+  vertical-align: middle;
+  transition: color 0.15s ease, opacity 0.15s ease;
+}
+
+.cardata-refresh-icon-btn:hover {
+  color: rgba(255, 255, 255, 0.95);
+  opacity: 1;
+}
+
+.cardata-refresh-icon-btn:focus-visible {
+  outline: 2px solid rgba(255, 107, 53, 0.55);
+  outline-offset: 3px;
+}
+
+.cardata-icon-refresh {
+  display: block;
+  transform-origin: 50% 50%;
+}
+
+@keyframes cardata-refresh-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.cardata-refresh-icon-btn.is-spinning .cardata-icon-refresh {
+  animation: cardata-refresh-spin 0.55s linear forwards;
 }
 
 .cardata-panel .hint {
@@ -56,21 +110,21 @@ body {
   letter-spacing: 0.02em;
 }
 
-.cardata-section-title:first-of-type {
-  margin-top: 0;
-}
-
 .cardata-block {
-  margin-top: 36px;
-  padding-top: 28px;
+  margin-top: 14px;
+  padding-top: 12px;
   border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .cardata-block-heading {
   margin-top: 0;
-  margin-bottom: 20px;
-  font-size: 1.15rem;
+  margin-bottom: 0;
+  font-size: 1.05rem;
   color: rgba(255, 255, 255, 0.95);
+}
+
+.cardata-block-heading.cardata-section-title--with-refresh {
+  margin-bottom: 10px;
 }
 
 .cardata-subsection-title {
@@ -89,7 +143,7 @@ body {
 .cardata-metrics-row {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 14px 12px;
+  gap: 8px 8px;
   align-items: stretch;
 }
 
@@ -114,23 +168,11 @@ body {
 .cardata-metric-cell > .cardata-subsection-title {
   display: flex;
   align-items: center;
-  min-height: 36px;
-  margin-bottom: 6px;
+  min-height: 28px;
+  margin-bottom: 4px;
   flex-shrink: 0;
   line-height: 1.2;
   box-sizing: border-box;
-}
-
-.rank-table-wrap--metric {
-  padding: 12px 10px 16px;
-}
-
-.rank-table-wrap--metric .dashboard-grid--single {
-  max-width: 100%;
-}
-
-.rank-table-wrap--metric .gauge-readout .val {
-  font-size: 1.35rem;
 }
 
 .hint-in-cell {
@@ -146,8 +188,8 @@ body {
   display: flex;
   align-items: center;
   gap: 6px 8px;
-  min-height: 36px;
-  margin-bottom: 6px;
+  min-height: 28px;
+  margin-bottom: 4px;
   min-width: 0;
   flex-shrink: 0;
   box-sizing: border-box;
@@ -254,20 +296,6 @@ body {
   .cardata-metrics-row {
     grid-template-columns: 1fr;
   }
-}
-
-.rank-toolbar {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  flex-wrap: wrap;
-  gap: 12px;
-  margin-bottom: 12px;
-}
-
-.rank-toolbar .hint-inline {
-  color: var(--text-muted);
-  font-size: 0.85rem;
 }
 
 .btn-refresh {

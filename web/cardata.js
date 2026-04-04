@@ -1,5 +1,5 @@
 /**
- * cardata.html — 车辆点击 + 到店人数（今日/本周/本月/自定义）
+ * cardata.html — 车辆点击 + 访问人数（今日/本周/本月/自定义）
  * 依赖 window.MANGO_API_ORIGIN
  */
 (function () {
@@ -126,13 +126,12 @@
     var panel = document.getElementById('dataPanel');
     panel.classList.add('visible');
     panel.setAttribute('aria-hidden', 'false');
-    var btn = document.getElementById('btnRefreshRank');
-    if (btn) btn.disabled = false;
-    loadDashboardStats();
     initRangeDefaults('customRangeStart', 'customRangeEnd');
     initRangeDefaults('storeRangeStart', 'storeRangeEnd');
     syncAllRangeSummaries();
     var defRange = defaultRangeYmdPair();
+    loadVehicleMetrics();
+    loadStoreMetrics();
     loadCustomRangeVehicle(defRange.start, defRange.end);
     loadCustomRangeStore(defRange.start, defRange.end);
   }
@@ -155,6 +154,9 @@
     }
     for (i = 0; i < keys.length; i++) {
       if (keys[i].indexOf('visit_num') >= 0) return keys[i];
+    }
+    for (i = 0; i < keys.length; i++) {
+      if (keys[i].indexOf('访问') >= 0) return keys[i];
     }
     for (i = 0; i < keys.length; i++) {
       if (keys[i].indexOf('到店') >= 0) return keys[i];
@@ -242,6 +244,93 @@
     return 1 - Math.pow(1 - t, 3);
   }
 
+  function easeInCubic(t) {
+    return t * t * t;
+  }
+
+  function getGaugeReadoutVal(wrap) {
+    var el = wrap.querySelector('.gauge-readout .val');
+    if (!el) return 0;
+    var n = parseInt(String(el.textContent).replace(/,/g, ''), 10);
+    return isNaN(n) ? 0 : n;
+  }
+
+  function setGaugeReadoutVal(wrap, n) {
+    var el = wrap.querySelector('.gauge-readout .val');
+    if (el) el.textContent = String(Math.round(n));
+  }
+
+  /**
+   * 指针动画到 targetFrac（0=刻度左端）；useEaseIn 为 true 时用于归零（先快后慢的反义：先慢后快可改用 linear）
+   */
+  function animateNeedleGroupsToFrac(wrap, targetFrac, durationMs, useEaseIn) {
+    return new Promise(function (resolve) {
+      if (!wrap || !wrap.querySelector) {
+        resolve();
+        return;
+      }
+      var groups = wrap.querySelectorAll('.gauge-needle-group');
+      if (!groups.length) {
+        resolve();
+        return;
+      }
+      targetFrac = Math.max(0, Math.min(1, targetFrac));
+      var fromFracs = [];
+      groups.forEach(function (g, i) {
+        var f = parseFloat(g.getAttribute('data-target-frac'), 10);
+        fromFracs[i] = isNaN(f) ? 0 : Math.max(0, Math.min(1, f));
+      });
+      var v0 = getGaugeReadoutVal(wrap);
+      var start = null;
+      function step(ts) {
+        if (start === null) start = ts;
+        var elapsed = ts - start;
+        var p = durationMs <= 0 ? 1 : Math.min(1, elapsed / durationMs);
+        var eased = useEaseIn ? easeInCubic(p) : easeOutCubic(p);
+        groups.forEach(function (g, i) {
+          var frac = fromFracs[i] + (targetFrac - fromFracs[i]) * eased;
+          var deg = (180 + frac * 180) % 360;
+          g.setAttribute('transform', 'rotate(' + deg + ' 100 100)');
+        });
+        if (targetFrac === 0) {
+          setGaugeReadoutVal(wrap, v0 * (1 - eased));
+        }
+        if (p < 1) {
+          requestAnimationFrame(step);
+        } else {
+          groups.forEach(function (g) {
+            g.setAttribute('data-target-frac', String(targetFrac));
+          });
+          if (targetFrac === 0) setGaugeReadoutVal(wrap, 0);
+          resolve();
+        }
+      }
+      requestAnimationFrame(step);
+    });
+  }
+
+  /** 多个格子并行归零后再执行 done（无仪表时直接 done） */
+  function refreshGaugesThenZero(wraps, done) {
+    var list = (wraps || []).filter(function (w) {
+      return w;
+    });
+    var needAnim = list.some(function (w) {
+      return w.querySelector && w.querySelector('.gauge-needle-group');
+    });
+    if (!needAnim) {
+      done();
+      return;
+    }
+    var ZERO_MS = 480;
+    Promise.all(
+      list.map(function (w) {
+        return animateNeedleGroupsToFrac(w, 0, ZERO_MS, true);
+      })
+    ).then(function () {
+      done();
+    });
+  }
+
   function runNeedleAnimations(wrap) {
     var groups = wrap.querySelectorAll('.gauge-needle-group');
     var DURATION = 1400;
@@ -281,10 +370,10 @@
 
   function emptyMessage(kind, metric) {
     if (metric === 'store') {
-      if (kind === 'week') return '本周暂无到店数据。';
-      if (kind === 'month') return '本月暂无到店数据。';
-      if (kind === 'custom') return '该时间段内暂无到店数据。';
-      return '今日暂无到店数据。';
+      if (kind === 'week') return '本周暂无访问数据。';
+      if (kind === 'month') return '本月暂无访问数据。';
+      if (kind === 'custom') return '该时间段内暂无访问数据。';
+      return '今日暂无访问数据。';
     }
     if (kind === 'week') return '本周暂无点击数据。';
     if (kind === 'month') return '本月暂无点击数据。';
@@ -341,11 +430,11 @@
 
     if (isStoreAggregateNoDim) {
       if (kind === 'today') {
-        title = '今日到店人数';
+        title = '今日访问人数';
         var sdk = findStatDateKey(keys) || findDateKey(keys);
         if (sdk && row[sdk] != null) subLine = String(row[sdk]);
       } else {
-        title = kind === 'week' ? '本周到店人数' : '本月到店人数';
+        title = kind === 'week' ? '本周访问人数' : '本月访问人数';
         var pkAgg = findStatPeriodKey(keys) || findPeriodKey(keys);
         if (pkAgg && row[pkAgg] != null) subLine = String(row[pkAgg]);
       }
@@ -405,7 +494,8 @@
     });
   }
 
-  function loadCustomRangeVehicle(startOverride, endOverride) {
+  function loadCustomRangeVehicle(startOverride, endOverride, opts) {
+    opts = opts || {};
     var wrap = document.getElementById('rankTableWrapCustom');
     var pwd = sessionStorage.getItem(STORAGE_PWD);
     if (!pwd) {
@@ -434,30 +524,40 @@
       wrap.innerHTML = '<p class="rank-error">开始日期不能晚于结束日期。</p>';
       return;
     }
-    wrap.innerHTML = '<p class="rank-loading">查询中…</p>';
-    var base = apiOrigin() || '';
-    fetchJson(base + '/api/cardata-custom-range', {
-      password: pwd,
-      start_date: start,
-      end_date: end
-    })
-      .then(function (o) {
-        if (o.res.ok && o.j && o.j.ok && Array.isArray(o.j.rows)) {
-          renderTopGauge(wrap, o.j.rows.slice(0, 1), { kind: 'custom', metric: 'vehicle' });
-          runNeedleAnimations(wrap);
-          syncVehicleRangeSummary();
-          setRangePanelOpen('customRangePanel', 'btnCustomRangeMenu', false);
-          return;
-        }
-        var detail = (o.j && (o.j.detail || o.j.error)) ? String(o.j.detail || o.j.error) : '';
-        wrap.innerHTML = '<p class="rank-error">查询失败' + (detail ? '：' + escapeHtml(detail) : '') + '</p>';
+
+    function runFetch() {
+      var base = apiOrigin() || '';
+      fetchJson(base + '/api/cardata-custom-range', {
+        password: pwd,
+        start_date: start,
+        end_date: end
       })
-      .catch(function () {
-        wrap.innerHTML = '<p class="rank-error">无法连接接口，请确认已启动 member_api.py。</p>';
-      });
+        .then(function (o) {
+          if (o.res.ok && o.j && o.j.ok && Array.isArray(o.j.rows)) {
+            renderTopGauge(wrap, o.j.rows.slice(0, 1), { kind: 'custom', metric: 'vehicle' });
+            runNeedleAnimations(wrap);
+            syncVehicleRangeSummary();
+            setRangePanelOpen('customRangePanel', 'btnCustomRangeMenu', false);
+            return;
+          }
+          var detail = o.j && (o.j.detail || o.j.error) ? String(o.j.detail || o.j.error) : '';
+          wrap.innerHTML = '<p class="rank-error">查询失败' + (detail ? '：' + escapeHtml(detail) : '') + '</p>';
+        })
+        .catch(function () {
+          wrap.innerHTML = '<p class="rank-error">无法连接接口，请确认已启动 member_api.py。</p>';
+        });
+    }
+
+    if (opts.animateRefresh && wrap.querySelector('.gauge-needle-group')) {
+      animateNeedleGroupsToFrac(wrap, 0, 480, true).then(runFetch);
+      return;
+    }
+    wrap.innerHTML = '<p class="rank-loading">查询中…</p>';
+    runFetch();
   }
 
-  function loadCustomRangeStore(startOverride, endOverride) {
+  function loadCustomRangeStore(startOverride, endOverride, opts) {
+    opts = opts || {};
     var wrap = document.getElementById('rankTableWrapStoreCustom');
     var pwd = sessionStorage.getItem(STORAGE_PWD);
     if (!pwd) {
@@ -486,34 +586,102 @@
       wrap.innerHTML = '<p class="rank-error">开始日期不能晚于结束日期。</p>';
       return;
     }
-    wrap.innerHTML = '<p class="rank-loading">查询中…</p>';
-    var base = apiOrigin() || '';
-    fetchJson(base + '/api/cardata-custom-range-store', {
-      password: pwd,
-      start_date: start,
-      end_date: end
-    })
-      .then(function (o) {
-        if (o.res.ok && o.j && o.j.ok && Array.isArray(o.j.rows)) {
-          renderTopGauge(wrap, o.j.rows.slice(0, 1), { kind: 'custom', metric: 'store' });
-          runNeedleAnimations(wrap);
-          syncStoreRangeSummary();
-          setRangePanelOpen('storeRangePanel', 'btnStoreRangeMenu', false);
-          return;
-        }
-        var detail = (o.j && (o.j.detail || o.j.error)) ? String(o.j.detail || o.j.error) : '';
-        wrap.innerHTML = '<p class="rank-error">查询失败' + (detail ? '：' + escapeHtml(detail) : '') + '</p>';
+
+    function runFetch() {
+      var base = apiOrigin() || '';
+      fetchJson(base + '/api/cardata-custom-range-store', {
+        password: pwd,
+        start_date: start,
+        end_date: end
       })
-      .catch(function () {
-        wrap.innerHTML = '<p class="rank-error">无法连接接口，请确认已启动 member_api.py。</p>';
-      });
+        .then(function (o) {
+          if (o.res.ok && o.j && o.j.ok && Array.isArray(o.j.rows)) {
+            renderTopGauge(wrap, o.j.rows.slice(0, 1), { kind: 'custom', metric: 'store' });
+            runNeedleAnimations(wrap);
+            syncStoreRangeSummary();
+            setRangePanelOpen('storeRangePanel', 'btnStoreRangeMenu', false);
+            return;
+          }
+          var detail = o.j && (o.j.detail || o.j.error) ? String(o.j.detail || o.j.error) : '';
+          wrap.innerHTML = '<p class="rank-error">查询失败' + (detail ? '：' + escapeHtml(detail) : '') + '</p>';
+        })
+        .catch(function () {
+          wrap.innerHTML = '<p class="rank-error">无法连接接口，请确认已启动 member_api.py。</p>';
+        });
+    }
+
+    if (opts.animateRefresh && wrap.querySelector('.gauge-needle-group')) {
+      animateNeedleGroupsToFrac(wrap, 0, 480, true).then(runFetch);
+      return;
+    }
+    wrap.innerHTML = '<p class="rank-loading">查询中…</p>';
+    runFetch();
   }
 
-  function loadDashboardStats() {
+  var errNoPwdHtml =
+    '<p class="rank-error">无法加载排行：请退出后重新输入口令登录（本页升级后需重新验证一次）。</p>';
+
+  function loadVehicleMetrics(opts) {
+    opts = opts || {};
     var wrapT = document.getElementById('rankTableWrapToday');
     var wrapW = document.getElementById('rankTableWrapWeek');
     var wrapM = document.getElementById('rankTableWrapMonth');
     var wrapC = document.getElementById('rankTableWrapCustom');
+
+    var pwd = null;
+    try {
+      pwd = sessionStorage.getItem(STORAGE_PWD);
+    } catch (e) {}
+    if (!pwd) {
+      [wrapT, wrapW, wrapM, wrapC].forEach(function (el) {
+        if (el) el.innerHTML = errNoPwdHtml;
+      });
+      return;
+    }
+
+    function fetchAndApply() {
+      var base = apiOrigin() || '';
+      var req = { password: pwd };
+      Promise.all([
+        fetchJson(base + '/api/cardata-today-vehicle-clicks', req),
+        fetchJson(base + '/api/cardata-week-vehicle-total', req),
+        fetchJson(base + '/api/cardata-month-vehicle-total', req)
+      ])
+        .then(function (arr) {
+          function handleVehicle(o, wrap, kind) {
+            if (o.res.ok && o.j && o.j.ok && Array.isArray(o.j.rows)) {
+              renderTopGauge(wrap, o.j.rows.slice(0, 1), { kind: kind, metric: 'vehicle' });
+              runNeedleAnimations(wrap);
+            } else {
+              var d = o.j && o.j.detail ? String(o.j.detail) : '';
+              wrap.innerHTML = '<p class="rank-error">加载失败' + (d ? '：' + escapeHtml(d) : '') + '</p>';
+            }
+          }
+          handleVehicle(arr[0], wrapT, 'today');
+          handleVehicle(arr[1], wrapW, 'week');
+          handleVehicle(arr[2], wrapM, 'month');
+        })
+        .catch(function () {
+          var err = '<p class="rank-error">无法连接接口，请确认已启动 member_api.py。</p>';
+          [wrapT, wrapW, wrapM].forEach(function (el) {
+            if (el) el.innerHTML = err;
+          });
+        });
+    }
+
+    if (opts.animateRefresh) {
+      refreshGaugesThenZero([wrapT, wrapW, wrapM], fetchAndApply);
+      return;
+    }
+
+    [wrapT, wrapW, wrapM].forEach(function (el) {
+      if (el) el.innerHTML = '<p class="rank-loading">加载中…</p>';
+    });
+    fetchAndApply();
+  }
+
+  function loadStoreMetrics(opts) {
+    opts = opts || {};
     var wrapST = document.getElementById('rankTableWrapStoreToday');
     var wrapSW = document.getElementById('rankTableWrapStoreWeek');
     var wrapSM = document.getElementById('rankTableWrapStoreMonth');
@@ -523,61 +691,65 @@
     try {
       pwd = sessionStorage.getItem(STORAGE_PWD);
     } catch (e) {}
-    var errHtml = '<p class="rank-error">无法加载排行：请退出后重新输入口令登录（本页升级后需重新验证一次）。</p>';
     if (!pwd) {
-      [wrapT, wrapW, wrapM, wrapC, wrapST, wrapSW, wrapSM, wrapSC].forEach(function (el) {
-        if (el) el.innerHTML = errHtml;
+      [wrapST, wrapSW, wrapSM, wrapSC].forEach(function (el) {
+        if (el) el.innerHTML = errNoPwdHtml;
       });
       return;
     }
 
-    [wrapT, wrapW, wrapM, wrapST, wrapSW, wrapSM].forEach(function (el) {
+    function fetchAndApply() {
+      var base = apiOrigin() || '';
+      var req = { password: pwd };
+      Promise.all([
+        fetchJson(base + '/api/cardata-today-store-visit', req),
+        fetchJson(base + '/api/cardata-week-store-visit', req),
+        fetchJson(base + '/api/cardata-month-store-visit', req)
+      ])
+        .then(function (arr) {
+          function handleStore(o, wrap, kind) {
+            if (o.res.ok && o.j && o.j.ok && Array.isArray(o.j.rows)) {
+              renderTopGauge(wrap, o.j.rows.slice(0, 1), { kind: kind, metric: 'store' });
+              runNeedleAnimations(wrap);
+            } else {
+              var d = o.j && o.j.detail ? String(o.j.detail) : '';
+              wrap.innerHTML =
+                '<p class="rank-error">访问数据加载失败' + (d ? '：' + escapeHtml(d) : '') + '</p>';
+            }
+          }
+          handleStore(arr[0], wrapST, 'today');
+          handleStore(arr[1], wrapSW, 'week');
+          handleStore(arr[2], wrapSM, 'month');
+        })
+        .catch(function () {
+          var err = '<p class="rank-error">无法连接接口，请确认已启动 member_api.py。</p>';
+          [wrapST, wrapSW, wrapSM].forEach(function (el) {
+            if (el) el.innerHTML = err;
+          });
+        });
+    }
+
+    if (opts.animateRefresh) {
+      refreshGaugesThenZero([wrapST, wrapSW, wrapSM], fetchAndApply);
+      return;
+    }
+
+    [wrapST, wrapSW, wrapSM].forEach(function (el) {
       if (el) el.innerHTML = '<p class="rank-loading">加载中…</p>';
     });
+    fetchAndApply();
+  }
 
-    var base = apiOrigin() || '';
-    var req = { password: pwd };
+  /** 刷新「车辆点击」板块 4 格：今日/本周/本月/自定义 */
+  function loadVehicleSection() {
+    loadVehicleMetrics({ animateRefresh: true });
+    loadCustomRangeVehicle(undefined, undefined, { animateRefresh: true });
+  }
 
-    Promise.all([
-      fetchJson(base + '/api/cardata-today-vehicle-clicks', req),
-      fetchJson(base + '/api/cardata-week-vehicle-total', req),
-      fetchJson(base + '/api/cardata-month-vehicle-total', req),
-      fetchJson(base + '/api/cardata-today-store-visit', req),
-      fetchJson(base + '/api/cardata-week-store-visit', req),
-      fetchJson(base + '/api/cardata-month-store-visit', req)
-    ])
-      .then(function (arr) {
-        function handleVehicle(o, wrap, kind) {
-          if (o.res.ok && o.j && o.j.ok && Array.isArray(o.j.rows)) {
-            renderTopGauge(wrap, o.j.rows.slice(0, 1), { kind: kind, metric: 'vehicle' });
-            runNeedleAnimations(wrap);
-          } else {
-            var d = (o.j && o.j.detail) ? String(o.j.detail) : '';
-            wrap.innerHTML = '<p class="rank-error">加载失败' + (d ? '：' + escapeHtml(d) : '') + '</p>';
-          }
-        }
-        function handleStore(o, wrap, kind) {
-          if (o.res.ok && o.j && o.j.ok && Array.isArray(o.j.rows)) {
-            renderTopGauge(wrap, o.j.rows.slice(0, 1), { kind: kind, metric: 'store' });
-            runNeedleAnimations(wrap);
-          } else {
-            var d = (o.j && o.j.detail) ? String(o.j.detail) : '';
-            wrap.innerHTML = '<p class="rank-error">到店数据加载失败' + (d ? '：' + escapeHtml(d) : '') + '</p>';
-          }
-        }
-        handleVehicle(arr[0], wrapT, 'today');
-        handleVehicle(arr[1], wrapW, 'week');
-        handleVehicle(arr[2], wrapM, 'month');
-        handleStore(arr[3], wrapST, 'today');
-        handleStore(arr[4], wrapSW, 'week');
-        handleStore(arr[5], wrapSM, 'month');
-      })
-      .catch(function () {
-        var err = '<p class="rank-error">无法连接接口，请确认已启动 member_api.py。</p>';
-        [wrapT, wrapW, wrapM, wrapST, wrapSW, wrapSM].forEach(function (el) {
-          if (el) el.innerHTML = err;
-        });
-      });
+  /** 刷新「访问人数」板块 4 格：今日/本周/本月/自定义 */
+  function loadStoreSection() {
+    loadStoreMetrics({ animateRefresh: true });
+    loadCustomRangeStore(undefined, undefined, { animateRefresh: true });
   }
 
   function tryUnlockFromStorage() {
@@ -630,11 +802,28 @@
       });
   });
 
-  document.getElementById('btnRefreshRank').addEventListener('click', function () {
-    loadDashboardStats();
-    loadCustomRangeVehicle();
-    loadCustomRangeStore();
-  });
+  function spinRefreshIcon(btn) {
+    if (!btn || btn.classList.contains('is-spinning')) return;
+    btn.classList.add('is-spinning');
+    window.setTimeout(function () {
+      btn.classList.remove('is-spinning');
+    }, 560);
+  }
+
+  var btnRefreshVehicle = document.getElementById('btnRefreshVehicle');
+  if (btnRefreshVehicle) {
+    btnRefreshVehicle.addEventListener('click', function () {
+      spinRefreshIcon(btnRefreshVehicle);
+      loadVehicleSection();
+    });
+  }
+  var btnRefreshStore = document.getElementById('btnRefreshStore');
+  if (btnRefreshStore) {
+    btnRefreshStore.addEventListener('click', function () {
+      spinRefreshIcon(btnRefreshStore);
+      loadStoreSection();
+    });
+  }
 
   document.getElementById('btnCustomRangeQuery').addEventListener('click', function () {
     loadCustomRangeVehicle();
