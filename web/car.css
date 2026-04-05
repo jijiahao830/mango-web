@@ -1224,7 +1224,7 @@ a.btn-primary {
   background: linear-gradient(135deg, #3b82f6, #60a5fa);
 }
 
-/* 车辆表分类：豪华轿车 */
+/* 行政级轿车等角标（与选车页 data-category 一致） */
 .luxsedan-badge {
   background: linear-gradient(135deg, #f7a614, #ffcc6a);
 }

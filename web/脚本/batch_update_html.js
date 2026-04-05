@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 
 // 要执行替换操作的目录
-const carsDir = path.join(__dirname, '../cars');
+const carsDir = path.join(__dirname, '../carpark');
 
 // 遍历所有的子目录
 function updateAllCars() {

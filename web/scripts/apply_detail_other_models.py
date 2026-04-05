@@ -25,7 +25,7 @@ def build_mapping():
         m_next = re.search(r'<div class="brand-section" data-brand="', text[block_start:])
         block_end = block_start + m_next.start() if m_next else len(text)
         block = text[block_start:block_end]
-        for link in re.finditer(r'href="\./cars/([^"]+)/car\.html"', block):
+        for link in re.finditer(r'href="\./carpark/([^"]+)/car\.html"', block):
             folder = link.group(1)
             sub = block[link.start() : link.start() + 1500]
             nm = re.search(r'<div class="car-name">([^<]+)</div>', sub)
@@ -107,10 +107,10 @@ OLD_HEADER_RE = re.compile(
 
 def main():
     folder_to_info, brand_to_folders = build_mapping()
-    cars_dir = WEB / "cars"
+    carpark_dir = WEB / "carpark"
     simple_count = 0
     failed = []
-    for car_html in sorted(cars_dir.glob("*/car.html")):
+    for car_html in sorted(carpark_dir.glob("*/car.html")):
         folder = car_html.parent.name
         if folder.startswith("兰博基尼"):
             continue
@@ -135,12 +135,12 @@ def main():
         print("FAILED:", failed)
 
     for name in [
-        "兰博基尼750-4（黄色）",
-        "兰博基尼 570-4（橙色）",
-        "兰博基尼 580-2（紫色）",
-        "兰博基尼 610-4（浅蓝）",
+        "兰博基尼 V12 大牛 LP750-4 SV",
+        "兰博基尼 570-4",
+        "兰博基尼 Huracán LP580-2",
+        "兰博基尼 Huracán LP610-4",
     ]:
-        p = cars_dir / name / "car.html"
+        p = carpark_dir / name / "car.html"
         if not p.exists():
             continue
         t = p.read_text(encoding="utf-8")

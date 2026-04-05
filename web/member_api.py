@@ -901,8 +901,83 @@ def _cors(resp):
     """允许其它端口 / 域名上的静态页调用本接口（如 VS Code Live Server）。"""
     resp.headers["Access-Control-Allow-Origin"] = "*"
     resp.headers["Access-Control-Allow-Headers"] = "Content-Type"
-    resp.headers["Access-Control-Allow-Methods"] = "POST, OPTIONS"
+    resp.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
     return resp
+
+
+def _cars_catalog_rows() -> tuple[list[dict[str, Any]], str | None]:
+    """从 MySQL `cars` 表读取选车页所需字段（与 carpark 文件夹名 car_name 一致）。"""
+    cfg = load_config()
+    db = cfg.get("database") or {}
+    mq = db.get("mysql") or {}
+    table_raw = (db.get("cars_table") or "cars").strip()
+    if not re.match(r"^[A-Za-z0-9_]+$", table_raw):
+        return [], "bad_cars_table"
+    host = str(mq.get("host") or "").strip()
+    database = str(mq.get("database") or "").strip()
+    if not host or not database:
+        return [], "no_database"
+    try:
+        import pymysql
+        from pymysql.cursors import DictCursor
+    except ImportError:
+        return [], "import_pymysql"
+
+    conn = pymysql.connect(
+        host=host,
+        port=int(mq.get("port") or 3306),
+        user=str(mq.get("user") or "root"),
+        password=str(mq.get("password") or ""),
+        database=database,
+        charset="utf8mb4",
+        cursorclass=DictCursor,
+    )
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                f"SELECT `id`, `car_name`, `brand`, `model`, `rent_price`, `category` "
+                f"FROM `{table_raw}` ORDER BY `brand` ASC, `id` ASC"
+            )
+            raw_rows = cur.fetchall()
+    finally:
+        conn.close()
+
+    out: list[dict[str, Any]] = []
+    for row in raw_rows or []:
+        out.append(
+            {
+                "id": _json_safe_mysql_value(row.get("id")),
+                "car_name": _json_safe_mysql_value(row.get("car_name")),
+                "brand": _json_safe_mysql_value(row.get("brand")),
+                "model": _json_safe_mysql_value(row.get("model")),
+                "rent_price": _json_safe_mysql_value(row.get("rent_price")),
+                "category": _json_safe_mysql_value(row.get("category")),
+            }
+        )
+    return out, None
+
+
+@app.route("/api/cars-catalog", methods=["GET", "OPTIONS"])
+def api_cars_catalog():
+    """选车页：从 `cars` 表拉取全部车辆，用于动态生成筛选与卡片（封面由前端统一用五菱宏光）。"""
+    if request.method == "OPTIONS":
+        return _cors(make_response("", HTTPStatus.NO_CONTENT))
+    rows, err = _cars_catalog_rows()
+    if err:
+        if err == "no_database":
+            return (
+                _cors(jsonify(ok=False, error="db_error", detail="未配置 database.mysql")),
+                HTTPStatus.SERVICE_UNAVAILABLE,
+            )
+        if err == "import_pymysql":
+            return (
+                _cors(jsonify(ok=False, error="db_error", detail="请安装 pymysql")),
+                HTTPStatus.SERVICE_UNAVAILABLE,
+            )
+        if err == "bad_cars_table":
+            return _cors(jsonify(ok=False, error="bad_cars_table")), HTTPStatus.BAD_REQUEST
+        return _cors(jsonify(ok=False, error="db_error", detail=err)), HTTPStatus.SERVICE_UNAVAILABLE
+    return _cors(jsonify(ok=True, cars=rows))
 
 
 def _cardata_view_http_response(

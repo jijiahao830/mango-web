@@ -31,7 +31,7 @@ function generateCars() {
   const templateContent = fs.readFileSync(templatePath, 'utf8');
 
   carsData.forEach(car => {
-    const carDir = path.join(__dirname, '../cars', car.folderName);
+    const carDir = path.join(__dirname, '../carpark', car.folderName);
     
     // 如果文件夹不存在，则创建
     if (!fs.existsSync(carDir)) {

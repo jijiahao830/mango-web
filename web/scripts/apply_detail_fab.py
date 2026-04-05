@@ -4,7 +4,7 @@ import re
 from pathlib import Path
 
 WEB = Path(__file__).resolve().parent.parent
-CARS = WEB / "cars"
+CARPARK = WEB / "carpark"
 
 CTA_ACTIONS_RE = re.compile(
     r"[ \t]*<div class=\"cta-actions\">\s*<button[^>]*>.*?</button>\s*<button[^>]*>.*?</button>\s*</div>\s*",
@@ -64,7 +64,7 @@ def patch_car_js(path: Path) -> bool:
 
 def main():
     n_html = 0
-    for p in sorted(CARS.glob("*/car.html")):
+    for p in sorted(CARPARK.glob("*/car.html")):
         if "兰博基尼" in p.parent.name:
             continue
         if patch_html(p):
@@ -72,7 +72,7 @@ def main():
             print("html:", p.parent.name)
 
     n_js = 0
-    for p in sorted(CARS.glob("*/car.js")):
+    for p in sorted(CARPARK.glob("*/car.js")):
         if "兰博基尼" in p.parent.name:
             continue
         if patch_car_js(p):

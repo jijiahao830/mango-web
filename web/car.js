@@ -38,8 +38,8 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   const scenarioBtns = document.querySelectorAll('.filter-btn[data-scenario]');
-  const categoryBtns = document.querySelectorAll('.filter-btn[data-category]');
-  const brandBtns = document.querySelectorAll('.filter-btn[data-brand]');
+  let categoryBtns = document.querySelectorAll('#categoryFilterButtons .filter-btn[data-category]');
+  let brandBtns = document.querySelectorAll('#brandFilterButtons .filter-btn[data-brand]');
   const priceMinSlider = document.getElementById('priceMin');
   const priceMaxSlider = document.getElementById('priceMax');
   const priceMinLabel = document.getElementById('priceMinLabel');
@@ -47,31 +47,27 @@ document.addEventListener('DOMContentLoaded', function() {
   const resetBtn = document.getElementById('resetFilterBtn');
   const resultCount = document.querySelector('.filter-result-count');
   
-  const brandSections = document.querySelectorAll('.brand-section');
-  const carLinks = document.querySelectorAll('.brand-section .car-card-link');
+  function getBrandSections() {
+    return document.querySelectorAll('#carparkBrandSectionsRoot .brand-section');
+  }
+  function getCarLinks() {
+    return document.querySelectorAll('#carparkBrandSectionsRoot .brand-section .car-card-link');
+  }
   const sidebar = document.querySelector('.sidebar-filter');
   const carGridEl = document.getElementById('carGrid');
 
   const expandBrandBtn = document.getElementById('expandBrandBtn');
   const brandFilterButtons = document.getElementById('brandFilterButtons');
-  const initialBrandOrderChildren = brandFilterButtons
+  let initialBrandOrderChildren = brandFilterButtons
     ? Array.from(brandFilterButtons.children)
     : [];
-  const INITIAL_BRAND_ORDER = brandFilterButtons
-    ? Array.from(brandFilterButtons.querySelectorAll('.filter-btn[data-brand]'))
-        .filter((b) => b.dataset.brand !== 'all')
-        .map((b) => b.dataset.brand)
-    : [];
+  let INITIAL_BRAND_ORDER = [];
 
   const categoryFilterButtons = document.getElementById('categoryFilterButtons');
-  const initialCategoryOrderChildren = categoryFilterButtons
+  let initialCategoryOrderChildren = categoryFilterButtons
     ? Array.from(categoryFilterButtons.children)
     : [];
-  const INITIAL_CATEGORY_ORDER = categoryFilterButtons
-    ? Array.from(categoryFilterButtons.querySelectorAll('.filter-btn[data-category]'))
-        .filter((b) => b.dataset.category !== 'all')
-        .map((b) => b.dataset.category)
-    : [];
+  let INITIAL_CATEGORY_ORDER = [];
 
   // 移动端筛选面板控制
   const mobileFilterBtn = document.getElementById('mobileFilterBtn');
@@ -168,12 +164,10 @@ document.addEventListener('DOMContentLoaded', function() {
     let min = Infinity;
     let max = -Infinity;
     
-    carLinks.forEach(link => {
+    getCarLinks().forEach(link => {
       const price = getCardPrice(link);
-      if (price > 0) {
-        if (price < min) min = price;
-        if (price > max) max = price;
-      }
+      if (price < min) min = price;
+      if (price > max) max = price;
     });
 
     if (min === Infinity || max === -Infinity) {
@@ -334,9 +328,261 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 
+  function apiCatalogBase() {
+    var o =
+      typeof window.MANGO_API_ORIGIN !== 'undefined'
+        ? String(window.MANGO_API_ORIGIN || '').replace(/\/$/, '')
+        : '';
+    return o || (typeof location !== 'undefined' ? String(location.origin).replace(/\/$/, '') : '');
+  }
+
+  function escHtml(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  function coverWulingUrls() {
+    var base = './carpark/' + encodeURIComponent('五菱宏光') + '/';
+    return { webp: base + '封面.webp', jpg: base + '封面.jpg' };
+  }
+
+  function categoryBadgeClass(cat) {
+    var c = String(cat || '');
+    var m = {
+      行政级轿车: 'exec-badge',
+      豪华SUV: 'luxsuv-badge',
+      豪华suv: 'luxsuv-badge',
+      超跑: 'perf-badge',
+      性能车: 'perf-badge',
+      新能源: 'ev-badge',
+      商务车: 'biz-badge',
+      轿车: 'sedan-badge',
+      越野车: 'off-badge',
+      皮卡: 'suv-badge',
+      即将上新: 'biz-badge',
+    };
+    return m[c] || 'car-badge-inline';
+  }
+
+  function formatPriceYuan(n) {
+    var x = parseInt(String(n), 10);
+    if (isNaN(x)) return '¥0';
+    return '¥' + x.toLocaleString('zh-CN');
+  }
+
+  function buildCarCardHtml(car, opts) {
+    opts = opts || {};
+    var href = './carpark/' + encodeURIComponent(car.car_name) + '/car.html';
+    var cov = coverWulingUrls();
+    var cat = escHtml(car.category);
+    var name = escHtml(car.car_name);
+    var badge = categoryBadgeClass(car.category);
+    var priceHtml = opts.comingSoon
+      ? '¥???<span class="car-price-unit">/天</span>'
+      : formatPriceYuan(car.rent_price) + '<span class="car-price-unit">/天</span>';
+    var meta = escHtml((String(car.brand || '') + ' ' + String(car.model || '')).trim() || car.car_name);
+    return (
+      '<a class="car-card-link" href="' +
+      escHtml(href) +
+      '">' +
+      '<div class="car-card" data-category="' +
+      cat +
+      '">' +
+      '<picture><source srcset="' +
+      escHtml(cov.webp) +
+      '" type="image/webp">' +
+      '<img class="car-image car-image-photo" src="' +
+      escHtml(cov.jpg) +
+      '" alt="' +
+      name +
+      '">' +
+      '</picture>' +
+      '<div class="car-info">' +
+      '<div class="car-badge car-badge-inline ' +
+      badge +
+      '">' +
+      cat +
+      '</div>' +
+      '<div class="car-name">' +
+      name +
+      '</div>' +
+      '<div class="car-price">' +
+      priceHtml +
+      '</div>' +
+      '<div class="car-meta">' +
+      meta +
+      '</div>' +
+      '</div></div></a>'
+    );
+  }
+
+  function applyCarsCatalog(cars) {
+    if (!Array.isArray(cars) || !cars.length) {
+      var errEmpty = document.getElementById('carparkCatalogError');
+      if (errEmpty) {
+        errEmpty.textContent = '未从数据库加载到车辆，请检查 cars 表与 member_api 配置。';
+        errEmpty.style.display = '';
+      }
+      return;
+    }
+    var errOk = document.getElementById('carparkCatalogError');
+    if (errOk) errOk.style.display = 'none';
+
+    var coming = cars.filter(function (c) {
+      return String(c.category || '').trim() === '即将上新';
+    });
+    var main = cars;
+
+    var catSet = {};
+    var brandSet = {};
+    main.forEach(function (c) {
+      if (c.category) catSet[String(c.category).trim()] = true;
+      if (c.brand) brandSet[String(c.brand).trim()] = true;
+    });
+    var categories = Object.keys(catSet).sort();
+    var brands = Object.keys(brandSet).sort();
+
+    var catContainer = document.getElementById('categoryFilterButtons');
+    if (catContainer) {
+      catContainer.innerHTML = '';
+      var allCat = document.createElement('button');
+      allCat.className = 'filter-btn active';
+      allCat.dataset.category = 'all';
+      allCat.textContent = '全部';
+      catContainer.appendChild(allCat);
+      categories.forEach(function (c) {
+        var b = document.createElement('button');
+        b.className = 'filter-btn';
+        b.dataset.category = c;
+        b.textContent = c;
+        catContainer.appendChild(b);
+      });
+    }
+
+    var brandContainer = document.getElementById('brandFilterButtons');
+    var expandBtn = document.getElementById('expandBrandBtn');
+    if (brandContainer && expandBtn) {
+      brandContainer.innerHTML = '';
+      var allBr = document.createElement('button');
+      allBr.className = 'filter-btn active';
+      allBr.dataset.brand = 'all';
+      allBr.textContent = '全部';
+      brandContainer.appendChild(allBr);
+      brands.forEach(function (br, idx) {
+        var b = document.createElement('button');
+        b.className = 'filter-btn';
+        if (idx >= 10) b.classList.add('hidden-brand');
+        b.dataset.brand = br;
+        b.textContent = br;
+        brandContainer.appendChild(b);
+      });
+      brandContainer.appendChild(expandBtn);
+    }
+
+    categoryBtns = document.querySelectorAll('#categoryFilterButtons .filter-btn[data-category]');
+    brandBtns = document.querySelectorAll('#brandFilterButtons .filter-btn[data-brand]');
+    INITIAL_CATEGORY_ORDER = categories.slice();
+    INITIAL_BRAND_ORDER = brands.slice();
+    initialCategoryOrderChildren = categoryFilterButtons
+      ? Array.from(categoryFilterButtons.children)
+      : [];
+    initialBrandOrderChildren = brandFilterButtons ? Array.from(brandFilterButtons.children) : [];
+
+    setupGroupButtons(categoryBtns, 'category');
+    setupGroupButtons(brandBtns, 'brand');
+
+    if (!savedStateRaw) {
+      categoryBtns.forEach(function (b) {
+        b.classList.toggle('active', b.dataset.category === 'all');
+      });
+      brandBtns.forEach(function (b) {
+        b.classList.toggle('active', b.dataset.brand === 'all');
+      });
+    } else {
+      var syncBtns = function (btns, key, datasetAttr) {
+        btns.forEach(function (b) {
+          if (b.dataset[datasetAttr] === state[key]) b.classList.add('active');
+          else b.classList.remove('active');
+        });
+      };
+      syncBtns(categoryBtns, 'category', 'category');
+      syncBtns(brandBtns, 'brand', 'brand');
+    }
+
+    var comingGrid =
+      document.getElementById('comingSoonGrid') ||
+      (document.getElementById('comingSoonSection') &&
+        document.getElementById('comingSoonSection').querySelector('.car-grid'));
+    if (comingGrid) {
+      comingGrid.innerHTML = coming
+        .map(function (c) {
+          return buildCarCardHtml(c, { comingSoon: true });
+        })
+        .join('');
+    }
+
+    var root = document.getElementById('carparkBrandSectionsRoot');
+    if (!root) return;
+    root.innerHTML = '';
+    var byBrand = {};
+    main.forEach(function (c) {
+      var b = String(c.brand || '其他').trim() || '其他';
+      if (!byBrand[b]) byBrand[b] = [];
+      byBrand[b].push(c);
+    });
+    var brandKeys = Object.keys(byBrand).sort();
+    brandKeys.forEach(function (b) {
+      var sec = document.createElement('div');
+      sec.className = 'brand-section';
+      sec.dataset.brand = b;
+      sec.innerHTML =
+        '<h2 class="brand-title">' +
+        escHtml(b) +
+        '</h2><div class="car-grid">' +
+        byBrand[b]
+          .map(function (c) {
+            return buildCarCardHtml(c);
+          })
+          .join('') +
+        '</div>';
+      root.appendChild(sec);
+    });
+  }
+
+  function loadCatalogThenInit() {
+    var url = apiCatalogBase() + '/api/cars-catalog';
+    fetch(url, { credentials: 'omit' })
+      .then(function (r) {
+        return r.json().then(function (j) {
+          return { ok: r.ok, j: j };
+        });
+      })
+      .then(function (o) {
+        if (!o.ok || !o.j || !o.j.ok || !Array.isArray(o.j.cars)) {
+          throw new Error('cars-catalog failed');
+        }
+        applyCarsCatalog(o.j.cars);
+        initPrices();
+        refreshCars();
+        refreshTodayRecommend();
+      })
+      .catch(function (e) {
+        console.warn('[cars-catalog]', e);
+        var errEl = document.getElementById('carparkCatalogError');
+        if (errEl) {
+          errEl.textContent =
+            '无法加载车辆列表：请启动 member_api 并配置 database.mysql（含 cars 表），或将 window.MANGO_API_ORIGIN 指向 API 根地址。';
+          errEl.style.display = '';
+        }
+        initPrices();
+        refreshCars();
+      });
+  }
+
   setupGroupButtons(scenarioBtns, 'scenario');
-  setupGroupButtons(categoryBtns, 'category');
-  setupGroupButtons(brandBtns, 'brand');
+  /* category / brand 在 applyCarsCatalog 填充 DOM 后再 setupGroupButtons */
 
   // Reset logic
   resetBtn.addEventListener('click', () => {
@@ -433,8 +679,8 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     }
 
-    // Check Price
-    if (price < state.priceMin || price > state.priceMax) {
+    // Check Price（¥0 视为未定价，不参与区间过滤，避免默认滑块下限高于 0 时整批消失）
+    if (price > 0 && (price < state.priceMin || price > state.priceMax)) {
       return false;
     }
 
@@ -452,16 +698,16 @@ document.addEventListener('DOMContentLoaded', function() {
     if (state.scenario !== 'all') {
       switch (state.scenario) {
         case 'business':
-          if (!['商务车', '豪华轿车', '豪华suv', 'MPV'].includes(category)) return false;
+          if (!['商务车', '行政级轿车', '豪华SUV', '轿车'].includes(category)) return false;
           break;
         case 'wedding':
-          if (!['超跑', '豪华suv', '豪华轿车'].includes(category)) return false;
+          if (!['超跑', '豪华SUV', '行政级轿车'].includes(category)) return false;
           break;
         case 'event':
           if (!['超跑', '性能车'].includes(category)) return false;
           break;
         case 'self-drive':
-          if (!['越野车', '新能源', '豪华suv', '豪华轿车', 'SUV'].includes(category)) return false;
+          if (!['越野车', '新能源', '豪华SUV', '行政级轿车', '轿车', '皮卡'].includes(category)) return false;
           break;
       }
     }
@@ -735,7 +981,7 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   function collectRecommendCatalog() {
-    var links = document.querySelectorAll('#carGrid .brand-section .car-card-link');
+    var links = document.querySelectorAll('#carparkBrandSectionsRoot .brand-section .car-card-link');
     var list = [];
     var seen = new Set();
     links.forEach(function (link) {
@@ -746,7 +992,7 @@ document.addEventListener('DOMContentLoaded', function() {
       var sectionBrand = getCardBrand(link) || '';
       var bm = parseBrandModelFromCardName(nameEl.textContent.trim(), sectionBrand);
       if (!bm.brand) bm.brand = sectionBrand;
-      if (!bm.model) return;
+      if (!bm.model) bm.model = nameEl.textContent.trim();
       var nk = recommendNormKey(bm.brand, bm.model);
       if (seen.has(nk)) return;
       seen.add(nk);
@@ -1173,7 +1419,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // 遍历所有车辆，统计在当前对方过滤条件下的可用品牌和分类
     // 注意：不再受价格、场景、搜索框限制，只受彼此限制，这样标签不会莫名消失
-    carLinks.forEach(link => {
+    getCarLinks().forEach(link => {
       const category = getCardCategory(link) || '无';
       const brand = getCardBrand(link);
       
@@ -1233,7 +1479,7 @@ document.addEventListener('DOMContentLoaded', function() {
       comingSoonSection.style.display = showSpotlightBlocks ? '' : 'none';
     }
 
-    brandSections.forEach(section => {
+    getBrandSections().forEach(section => {
       const links = section.querySelectorAll('.car-card-link');
       let sectionVisibleCount = 0;
       
@@ -1265,22 +1511,15 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
 
-  // Initialize prices by scanning all cars
-  initPrices();
-  
-  
-  // 搜索框事件监听
+  // 搜索框
   const carSearchInput = document.getElementById('carSearchInput');
   if (carSearchInput) {
     carSearchInput.addEventListener('input', () => {
       refreshCars();
     });
   }
-  
-  // Apply saved filters after initialization
 
-  refreshCars();
-  refreshTodayRecommend();
+  loadCatalogThenInit();
 
   const backToCarsBtn = document.getElementById('backToCarsBtn');
   const heroEl = document.querySelector('.hero');
@@ -1352,7 +1591,4 @@ document.addEventListener('DOMContentLoaded', function() {
   requestAnimationFrame(function() {
     requestAnimationFrame(syncCarSectionSticky);
   });
-
-  // Initialize slider highlight
-  updatePriceSliders();
 });

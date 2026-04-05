@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-根据根目录 car.html 里每个车型的「车名 + 日租价」，同步到各详情页 cars/<车型>/car.html 的 <body> 上：
+根据根目录 car.html 里每个车型的「车名 + 日租价」，同步到各详情页 carpark/<车型>/car.html 的 <body> 上：
 
   data-daily-price="数字"
   data-car-display-name="与选车页 .car-name 完全一致"
@@ -33,7 +33,7 @@ def esc_attr(s: str) -> str:
 def parse_car_listing(html: str) -> dict[str, tuple[str, int | None]]:
     """folder -> (car_name, daily_price_or_none)"""
     folder_to: dict[str, tuple[str, int | None]] = {}
-    for m in re.finditer(r'<a class="car-card-link" href="\./cars/([^"]+)/car\.html">', html):
+    for m in re.finditer(r'<a class="car-card-link" href="\./carpark/([^"]+)/car\.html">', html):
         folder = m.group(1)
         chunk = html[m.end() : m.end() + 8000]
         ia = chunk.find("</a>")
@@ -61,7 +61,7 @@ def main() -> None:
 
     web = Path(__file__).resolve().parent.parent
     car_list = web / "car.html"
-    cars_dir = web / "cars"
+    carpark_dir = web / "carpark"
 
     if not car_list.is_file():
         raise SystemExit(f"找不到选车页: {car_list}")
@@ -76,7 +76,7 @@ def main() -> None:
     for folder, (name, price) in sorted(folder_map.items()):
         if "兰博基尼" in folder:
             continue
-        p = cars_dir / folder / "car.html"
+        p = carpark_dir / folder / "car.html"
         if not p.is_file():
             missing.append(folder)
             continue
@@ -103,7 +103,7 @@ def main() -> None:
 
     print(f"完成：写入 {updated} 个文件，未变化 {skipped} 个，跳过兰博基尼；选车页共 {len(folder_map)} 条链接。")
     if missing:
-        print("警告：以下文件夹在 cars/ 下没有 car.html：", ", ".join(missing))
+        print("警告：以下文件夹在 carpark/ 下没有 car.html：", ", ".join(missing))
 
 
 if __name__ == "__main__":
