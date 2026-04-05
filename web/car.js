@@ -372,6 +372,36 @@ document.addEventListener('DOMContentLoaded', function() {
     return '¥' + x.toLocaleString('zh-CN');
   }
 
+  /** 选车卡片副标题：优先 API card_tagline，其次 car_card_taglines.json，否则 brand + model */
+  function cardMetaLine(car) {
+    var apiTag = String(car.card_tagline || '').trim();
+    if (apiTag) return apiTag;
+    var map = typeof window.__mangoCardTaglines === 'object' && window.__mangoCardTaglines
+      ? window.__mangoCardTaglines
+      : {};
+    var k = String(car.car_name || '').trim();
+    if (map[k]) return map[k];
+    return (String(car.brand || '') + ' ' + String(car.model || '')).trim() || String(car.car_name || '');
+  }
+
+  function fetchCardTaglines() {
+    if (window.__mangoCardTaglinesPromise) return window.__mangoCardTaglinesPromise;
+    window.__mangoCardTaglinesPromise = fetch('./car_card_taglines.json', { credentials: 'omit' })
+      .then(function (r) {
+        if (!r.ok) throw new Error('taglines http');
+        return r.json();
+      })
+      .then(function (j) {
+        window.__mangoCardTaglines = j && typeof j === 'object' ? j : {};
+        return window.__mangoCardTaglines;
+      })
+      .catch(function () {
+        window.__mangoCardTaglines = {};
+        return window.__mangoCardTaglines;
+      });
+    return window.__mangoCardTaglinesPromise;
+  }
+
   function buildCarCardHtml(car, opts) {
     opts = opts || {};
     var href = './carpark/' + encodeURIComponent(car.car_name) + '/car.html';
@@ -382,7 +412,7 @@ document.addEventListener('DOMContentLoaded', function() {
     var priceHtml = opts.comingSoon
       ? '¥???<span class="car-price-unit">/天</span>'
       : formatPriceYuan(car.rent_price) + '<span class="car-price-unit">/天</span>';
-    var meta = escHtml((String(car.brand || '') + ' ' + String(car.model || '')).trim() || car.car_name);
+    var meta = escHtml(cardMetaLine(car));
     return (
       '<a class="car-card-link" href="' +
       escHtml(href) +
@@ -553,13 +583,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
   function loadCatalogThenInit() {
     var url = apiCatalogBase() + '/api/cars-catalog';
-    fetch(url, { credentials: 'omit' })
-      .then(function (r) {
+    Promise.all([
+      fetchCardTaglines(),
+      fetch(url, { credentials: 'omit' }).then(function (r) {
         return r.json().then(function (j) {
           return { ok: r.ok, j: j };
         });
-      })
-      .then(function (o) {
+      }),
+    ])
+      .then(function (arr) {
+        var o = arr[1];
         if (!o.ok || !o.j || !o.j.ok || !Array.isArray(o.j.cars)) {
           throw new Error('cars-catalog failed');
         }

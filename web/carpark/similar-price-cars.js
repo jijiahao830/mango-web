@@ -92,6 +92,43 @@ document.addEventListener('DOMContentLoaded', function () {
     return '¥' + x.toLocaleString('zh-CN');
   }
 
+  function taglinesJsonUrl() {
+    var path = typeof location !== 'undefined' ? String(location.pathname || '') : '';
+    return path.indexOf('/carpark/') !== -1 ? '../../car_card_taglines.json' : './car_card_taglines.json';
+  }
+
+  function ensureCardTaglines() {
+    if (window.__mangoCardTaglines && Object.keys(window.__mangoCardTaglines).length) {
+      return Promise.resolve(window.__mangoCardTaglines);
+    }
+    if (window.__mangoCardTaglinesPromise) return window.__mangoCardTaglinesPromise;
+    window.__mangoCardTaglinesPromise = fetch(taglinesJsonUrl(), { credentials: 'omit' })
+      .then(function (r) {
+        if (!r.ok) throw new Error('taglines');
+        return r.json();
+      })
+      .then(function (j) {
+        window.__mangoCardTaglines = j && typeof j === 'object' ? j : {};
+        return window.__mangoCardTaglines;
+      })
+      .catch(function () {
+        window.__mangoCardTaglines = {};
+        return window.__mangoCardTaglines;
+      });
+    return window.__mangoCardTaglinesPromise;
+  }
+
+  function cardMetaLine(car) {
+    var apiTag = String(car.card_tagline || '').trim();
+    if (apiTag) return apiTag;
+    var map = typeof window.__mangoCardTaglines === 'object' && window.__mangoCardTaglines
+      ? window.__mangoCardTaglines
+      : {};
+    var k = String(car.car_name || '').trim();
+    if (map[k]) return map[k];
+    return (String(car.brand || '') + ' ' + String(car.model || '')).trim() || String(car.car_name || '');
+  }
+
   /** 与选车页 car.js 卡片结构一致；链接与封面相对当前详情页（carpark/当前车/car.html） */
   function buildCarCardHtmlFromCatalog(car) {
     var folder = encodeURIComponent(car.car_name);
@@ -102,7 +139,7 @@ document.addEventListener('DOMContentLoaded', function () {
     var name = escHtml(car.car_name);
     var badge = categoryBadgeClass(car.category);
     var priceHtml = formatPriceYuan(car.rent_price) + '<span class="car-price-unit">/天</span>';
-    var meta = escHtml((String(car.brand || '') + ' ' + String(car.model || '')).trim() || car.car_name);
+    var meta = escHtml(cardMetaLine(car));
     return (
       '<a class="car-card-link" href="' +
       escHtml(href) +
@@ -303,24 +340,26 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   }
 
-  similarCarsSection.style.display = 'block';
-
-  fetchCarListHtml()
-    .then(function (html) {
-      var doc = new DOMParser().parseFromString(html, 'text/html');
-      if (doc.querySelector('.car-card-link')) {
-        collectSamePriceLinks(doc).forEach(function (link) {
-          appendSimilarCarCard(link);
+  ensureCardTaglines()
+    .then(function () {
+      similarCarsSection.style.display = 'block';
+      return fetchCarListHtml()
+        .then(function (html) {
+          var doc = new DOMParser().parseFromString(html, 'text/html');
+          if (doc.querySelector('.car-card-link')) {
+            collectSamePriceLinks(doc).forEach(function (link) {
+              appendSimilarCarCard(link);
+            });
+            return;
+          }
+          console.warn(
+            '[同价位] car.html 中无静态卡片（选车页由 car.js 动态渲染），改从 /api/cars-catalog 加载。'
+          );
+          return fetchCatalogCars().then(fillFromCatalog);
+        })
+        .catch(function () {
+          return fetchCatalogCars().then(fillFromCatalog);
         });
-        return;
-      }
-      console.warn(
-        '[同价位] car.html 中无静态卡片（选车页由 car.js 动态渲染），改从 /api/cars-catalog 加载。'
-      );
-      return fetchCatalogCars().then(fillFromCatalog);
-    })
-    .catch(function () {
-      return fetchCatalogCars().then(fillFromCatalog);
     })
     .then(function () {
       finishLayout();
