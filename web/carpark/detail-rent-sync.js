@@ -1,5 +1,6 @@
 /**
- * 详情页首屏加载：从 /api/cars-catalog 将当前车日租写入 body[data-daily-price]，
+ * 详情页首屏加载：从 /api/cars-catalog 按 body[data-car-display-name] 匹配 cars.car_name，
+ * 将日租写入 body[data-daily-price]，并把首屏 h1.hero-title 设为 brand + hero-title-highlight(model)。
  * 供同价位模块、vehicle-click 等与租金相关的逻辑统一使用。
  * 须在 car.js / similar-price-cars.js / vehicle-click.js 之前引入。
  */
@@ -37,6 +38,32 @@
     return;
   }
 
+  function applyHeroFromCatalog(brand, model) {
+    var h1 =
+      document.querySelector('.hero-detail h1.hero-title') ||
+      document.querySelector('h1.hero-title');
+    if (!h1) return;
+    var b = String(brand == null ? '' : brand).trim();
+    var m = String(model == null ? '' : model).trim();
+    if (!b && !m) return;
+    while (h1.firstChild) {
+      h1.removeChild(h1.firstChild);
+    }
+    if (b && m) {
+      h1.appendChild(document.createTextNode(b));
+      h1.appendChild(document.createElement('br'));
+      var span = document.createElement('span');
+      span.className = 'hero-title-highlight';
+      span.textContent = m;
+      h1.appendChild(span);
+      return;
+    }
+    var spanOnly = document.createElement('span');
+    spanOnly.className = 'hero-title-highlight';
+    spanOnly.textContent = b || m;
+    h1.appendChild(spanOnly);
+  }
+
   var target = normName(displayName);
   window.__mangoRentSyncPromise = fetch(base + '/api/cars-catalog', { credentials: 'omit' })
     .then(function (r) {
@@ -48,6 +75,7 @@
       for (i = 0; i < j.cars.length; i++) {
         var c = j.cars[i];
         if (normName(c.car_name) === target) {
+          applyHeroFromCatalog(c.brand, c.model);
           var p = parseInt(String(c.rent_price), 10);
           if (!isNaN(p) && p > 0) {
             body.setAttribute('data-daily-price', String(p));
