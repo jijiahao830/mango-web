@@ -392,6 +392,14 @@ body {
   margin-bottom: 6px;
 }
 
+/* 无点击数据时保留标题区高度，与有数据列对齐；不展示可读文字 */
+.gauge-card--vehicle-empty .gauge-title,
+.gauge-card--vehicle-empty .gauge-date {
+  color: transparent;
+  pointer-events: none;
+  user-select: none;
+}
+
 .gauge-svg-wrap {
   position: relative;
   width: 100%;

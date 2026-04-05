@@ -395,6 +395,48 @@
   }
 
   /**
+   * 车辆点击无数据时：仍显示仪表盘，指针 0，不展示车名（无标题/副标题）。
+   */
+  function renderVehicleEmptyGauge(container, opts) {
+    opts = opts || {};
+    var kind = opts.kind || 'today';
+    var badge = kind === 'week' ? '本周' : kind === 'month' ? '本月' : kind === 'custom' ? '自定义' : '今日';
+    var idPx = idPrefixFor(kind, 'vehicle');
+    var maxScale = gaugeMaxFromValue(0, kind);
+    var frac = 0;
+    var unit = '次';
+    var gid = idPx + '-0';
+    var html = '<div class="dashboard-grid dashboard-grid--single">';
+    html += '<div class="gauge-card gauge-card--vehicle-empty">';
+    html += '<span class="gauge-rank-badge">' + escapeHtml(badge) + '</span>';
+    /* 占位：与有数据时的 .gauge-title + .gauge-date 同高，避免「今日」列矮于本周/本月 */
+    html += '<div class="gauge-title" aria-hidden="true"></div>';
+    html += '<div class="gauge-date" aria-hidden="true">&nbsp;</div>';
+    html += '<div class="gauge-svg-wrap">';
+    html += '<svg class="gauge-svg" viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">';
+    html += '<defs>';
+    html += '<linearGradient id="' + gid + '-arc" x1="0%" y1="0%" x2="100%" y2="0%">';
+    html += '<stop offset="0%" stop-color="#1e6b3a"/>';
+    html += '<stop offset="45%" stop-color="#c9a227"/>';
+    html += '<stop offset="100%" stop-color="#c03018"/>';
+    html += '</linearGradient>';
+    html += '</defs>';
+    html += '<path class="gauge-arc-bg" d="M 30 100 A 70 70 0 0 1 170 100" fill="none" stroke="rgba(255,255,255,0.14)" stroke-width="10" stroke-linecap="round"/>';
+    html += '<path class="gauge-arc-glow" d="M 30 100 A 70 70 0 0 1 170 100" fill="none" stroke="url(#' + gid + '-arc)" stroke-width="3" stroke-linecap="round" opacity="0.4"/>';
+    html += '<text x="28" y="112" fill="rgba(139,147,167,0.9)" font-size="9" text-anchor="middle">0</text>';
+    html += '<text x="172" y="112" fill="rgba(139,147,167,0.9)" font-size="9" text-anchor="middle">' + escapeHtml(String(maxScale)) + '</text>';
+    html += '<g class="gauge-needle-group" data-target-frac="' + frac + '" transform="rotate(180 100 100)">';
+    html += '<line class="gauge-needle" x1="100" y1="100" x2="168" y2="100" stroke="#ff6b35" stroke-width="4" stroke-linecap="round"/>';
+    html += '</g>';
+    html += '<circle class="gauge-hub" cx="100" cy="100" r="7"/>';
+    html += '</svg>';
+    html += '</div>';
+    html += '<div class="gauge-readout"><span class="val">0</span><span class="unit">' + unit + '</span></div>';
+    html += '</div></div>';
+    container.innerHTML = html;
+  }
+
+  /**
    * opts.kind: today | week | month | custom
    * opts.metric: vehicle | store
    */
@@ -406,6 +448,10 @@
     var idPx = idPrefixFor(kind, metric);
 
     if (!rows || !rows.length) {
+      if (metric === 'vehicle') {
+        renderVehicleEmptyGauge(container, { kind: kind });
+        return;
+      }
       container.innerHTML = '<p class="rank-empty">' + emptyMessage(kind, metric) + '</p>';
       return;
     }
