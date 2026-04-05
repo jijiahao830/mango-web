@@ -1,20 +1,69 @@
 /* cardata.html — 数据后台（依赖 login.css 中的 CSS 变量） */
 
-body {
-  overflow: auto;
-  min-height: 100vh;
-  height: auto;
+/*
+ * 滚动条抖动：根节点 html/body 与内容同时参与滚动时，条会在不同层切换。
+ * 做法：html/body 固定视口高度且不滚动，仅 .login-container 纵向滚动（overflow-y: scroll 常占槽位）。
+ * 横向：裁剪 .bg-fx 的 100vw + scale 溢出。
+ */
+html {
+  height: 100%;
+  overflow: hidden;
+  scrollbar-gutter: stable;
 }
 
+body {
+  box-sizing: border-box;
+  min-height: 100%;
+  height: 100%;
+  max-height: 100%;
+  margin: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+}
+
+/* 动态视口：避免 100vh 与地址栏伸缩导致高度来回变 */
+@supports (height: 100dvh) {
+  html {
+    height: 100dvh;
+    max-height: 100dvh;
+  }
+  body {
+    min-height: 100dvh;
+    max-height: 100dvh;
+  }
+}
+
+/*
+ * login.css 中 body 为 flex 且垂直居中；数据面板打开后由下方 :has 覆盖为顶对齐。
+ * 唯一纵向滚动层，scrollbar 始终占用，避免略高/略低于视口时 auto 反复切换。
+ */
 .login-container {
-  min-height: 100vh;
+  position: relative;
+  /* 覆盖 login.css 的 height:100%，与 flex 父级配合成唯一滚动层 */
+  flex: 1 1 0%;
+  width: 100%;
+  min-height: 0;
+  max-height: 100%;
   height: auto;
+  overflow-y: scroll;
+  overflow-x: hidden;
+  overscroll-behavior-y: contain;
   padding: 48px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
 /* 数据面板打开时减少外圈留白，便于两板块一屏展示 */
-.login-container:has(#dataPanel.visible) {
+.login-container:has(#dataPanel.visible),
+.login-container.cardata-data-visible {
   padding: 20px 12px 24px;
+  justify-content: flex-start;
+  align-items: stretch;
 }
 
 .cardata-panel {
@@ -42,13 +91,38 @@ body {
   border-top: none;
 }
 
-/* 大标题与紧跟其后的刷新图标同一行 */
+/* 大标题、刷新、自定义日期菜单同一行；菜单靠右；与下方指标行无额外间距 */
 .cardata-section-title--with-refresh {
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 8px 10px;
-  margin-bottom: 10px;
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: 0;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+/* 标题 + 刷新紧挨；整块与右侧菜单拉开 */
+.cardata-section-title-lead {
+  display: flex;
+  align-items: center;
+  gap: 8px 10px;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.cardata-section-title-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cardata-section-title--with-refresh .cardata-range-menu-btn--header {
+  margin-left: auto;
+  flex-shrink: 0;
 }
 
 .cardata-refresh-icon-btn {
@@ -104,10 +178,17 @@ body {
 }
 
 .cardata-section-title {
-  font-size: 1.05rem;
+  font-size: 1.32rem;
   font-weight: 600;
   margin: 32px 0 16px;
   letter-spacing: 0.02em;
+}
+
+.cardata-section-title.cardata-block-heading.cardata-section-title--with-refresh {
+  margin-top: 0;
+  margin-bottom: 0;
+  padding-bottom: 0;
+  line-height: 1.3;
 }
 
 .cardata-block {
@@ -119,32 +200,17 @@ body {
 .cardata-block-heading {
   margin-top: 0;
   margin-bottom: 0;
-  font-size: 1.05rem;
+  font-size: 1.32rem;
   color: rgba(255, 255, 255, 0.95);
 }
 
-.cardata-block-heading.cardata-section-title--with-refresh {
-  margin-bottom: 10px;
-}
-
-.cardata-subsection-title {
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: var(--text-muted);
-  margin: 24px 0 10px;
-  letter-spacing: 0.04em;
-}
-
-.cardata-block .cardata-subsection-title:first-of-type {
-  margin-top: 0;
-}
-
-/* 今日 / 本周 / 本月 / 自定义 同一行四列；仪表区域下对齐 */
+/* 四列指标同一行；各列不再显示「今日/本周」等灰字标题 */
 .cardata-metrics-row {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 8px 8px;
   align-items: stretch;
+  margin-top: 0;
 }
 
 .cardata-metric-cell {
@@ -154,25 +220,16 @@ body {
   min-height: 0;
 }
 
-/* 四个格子里的仪表卡统一贴在列底部 */
+.cardata-metric-cell--custom {
+  position: relative;
+  z-index: 0;
+}
+
+/* 仪表与表格在列内自顶向下排列（勿用 margin-top:auto，否则整块被压到列底） */
 .cardata-metric-cell > .rank-table-wrap--metric {
-  margin-top: auto;
-}
-
-.cardata-metric-cell .cardata-subsection-title {
   margin-top: 0;
-  font-size: 0.88rem;
-}
-
-/* 与自定义列工具栏同高，标题垂直居中，四列首行水平对齐 */
-.cardata-metric-cell > .cardata-subsection-title {
-  display: flex;
-  align-items: center;
-  min-height: 28px;
-  margin-bottom: 4px;
-  flex-shrink: 0;
-  line-height: 1.2;
-  box-sizing: border-box;
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 .hint-in-cell {
@@ -181,42 +238,6 @@ body {
   margin-top: 0;
   margin-bottom: 8px !important;
   color: var(--text-muted);
-}
-
-/* 自定义：标题、日期、菜单同行；高度与「今日」等列标题带一致 */
-.cardata-custom-toolbar {
-  display: flex;
-  align-items: center;
-  gap: 6px 8px;
-  min-height: 28px;
-  margin-bottom: 4px;
-  min-width: 0;
-  flex-shrink: 0;
-  box-sizing: border-box;
-}
-
-.cardata-custom-toolbar .cardata-subsection-title {
-  margin-top: 0;
-  margin-bottom: 0;
-  flex-shrink: 0;
-  font-size: 0.88rem;
-  line-height: 1.2;
-}
-
-.cardata-metric-cell--custom > .cardata-range-panel:not([hidden]) {
-  flex-shrink: 0;
-}
-
-.cardata-custom-toolbar .cardata-range-summary {
-  flex: 1;
-  min-width: 0;
-  align-self: center;
-  font-size: 0.72rem;
-  color: rgba(255, 255, 255, 0.55);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  line-height: 1.2;
 }
 
 .cardata-range-menu-btn {
@@ -259,9 +280,24 @@ body {
   margin-bottom: 6px;
   padding: 10px 12px 12px;
   border-radius: 12px;
-  border: 1px solid rgba(255, 107, 53, 0.22);
-  background: rgba(0, 0, 0, 0.28);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 107, 53, 0.35);
+  background: linear-gradient(165deg, #1a1e28 0%, #14161d 100%);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+}
+
+/* 浮在自定义列卡片上方，不占文档流高度，避免把仪表区下移 */
+.cardata-metric-cell--custom > .cardata-range-panel:not([hidden]) {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  z-index: 30;
+  margin-bottom: 0;
+}
+
+.cardata-metric-cell--custom > .rank-table-wrap--metric {
+  position: relative;
+  z-index: 1;
 }
 
 .cardata-range-panel[hidden] {
@@ -281,9 +317,45 @@ body {
   justify-content: space-between;
 }
 
-.cardata-range-form--compact .btn-refresh {
+.cardata-range-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
   width: 100%;
   margin-top: 2px;
+}
+
+.cardata-range-actions .btn-refresh,
+.cardata-range-actions .btn-cardata-reset {
+  flex: 1 1 0;
+  min-width: 0;
+  margin-top: 0;
+}
+
+.btn-cardata-reset {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: rgba(255, 255, 255, 0.88);
+  padding: 8px 16px;
+  border-radius: 10px;
+  font-size: 0.875rem;
+  cursor: pointer;
+  font-family: inherit;
+  transition:
+    background 0.15s,
+    border-color 0.15s,
+    color 0.15s;
+}
+
+.btn-cardata-reset:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.28);
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.btn-cardata-reset:focus-visible {
+  outline: 2px solid rgba(255, 107, 53, 0.45);
+  outline-offset: 2px;
 }
 
 @media (max-width: 1279px) {
@@ -337,7 +409,7 @@ body {
 
 /* 仅展示「第一名」时单卡居中 */
 .dashboard-grid--single {
-  max-width: 320px;
+  max-width: 300px;
   margin: 0 auto;
 }
 
@@ -407,7 +479,123 @@ body {
   margin: 0 auto;
 }
 
-.gauge-svg {
+/* —— 科技感橙色圆环仪表（数据后台） —— */
+
+.gauge-svg-wrap--cyber {
+  position: relative;
+  max-width: 248px;
+  margin: 4px auto 0;
+  isolation: isolate;
+  overflow: visible;
+}
+
+/* 与 viewBox 1:1 同框：SVG 铺满，数字层叠在上面用 flex 对准几何中心 (100,100) */
+.gauge-cyber-face {
+  position: relative;
+  width: 100%;
+  max-width: 220px;
+  margin: 0 auto;
+  aspect-ratio: 1 / 1;
+}
+
+.gauge-cyber-face::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 118%;
+  height: 118%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 50% 50%,
+    rgba(255, 110, 45, 0.16) 0%,
+    rgba(255, 60, 20, 0.06) 42%,
+    transparent 68%
+  );
+  pointer-events: none;
+  z-index: 0;
+}
+
+.gauge-cyber-face > .gauge-svg--cyber {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  display: block;
+  overflow: visible;
+  filter: drop-shadow(0 0 32px rgba(255, 95, 40, 0.22)) drop-shadow(0 0 2px rgba(255, 200, 160, 0.12));
+}
+
+.gauge-cyber-scale {
+  font-family: 'Rajdhani', system-ui, sans-serif;
+}
+
+.gauge-hub--cyber {
+  fill: #0a0c12;
+  stroke: rgba(255, 170, 110, 0.65);
+  stroke-width: 1.2;
+  filter: drop-shadow(0 0 8px rgba(255, 130, 55, 0.65));
+}
+
+/* 细长条指针，无转轴；由内圆盖住圆心端，数字层叠在 SVG 之上 */
+.gauge-svg--cyber .gauge-needle-bar {
+  filter: drop-shadow(0 0 4px rgba(255, 120, 60, 0.55));
+}
+
+.gauge-readout--cyber {
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  pointer-events: none;
+  font-variant-numeric: tabular-nums;
+  width: auto;
+  margin: 0;
+  transform: none;
+}
+
+.gauge-readout-value-row {
+  line-height: 1;
+}
+
+.gauge-readout--cyber .val {
+  font-family: 'Orbitron', 'Rajdhani', system-ui, sans-serif;
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: 0.06em;
+}
+
+.gauge-readout--cyber .unit {
+  font-family: 'Rajdhani', system-ui, sans-serif;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: rgba(255, 200, 150, 0.98);
+  margin-left: 5px;
+  text-shadow: 0 0 14px rgba(255, 140, 80, 0.4);
+}
+
+.gauge-readout-sub {
+  margin-top: 7px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(160, 200, 230, 0.5);
+  font-family: 'Rajdhani', system-ui, sans-serif;
+}
+
+/* 非 cyber 仪表用默认投影；含 .gauge-svg--cyber 时仅用上方 cyber 规则，避免 filter 被覆盖 */
+.gauge-svg:not(.gauge-svg--cyber) {
   display: block;
   width: 100%;
   height: auto;

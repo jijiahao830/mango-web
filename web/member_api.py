@@ -539,17 +539,26 @@ def _cardata_query_view(cfg: dict[str, Any], view_name: str) -> tuple[list[dict[
     if not database:
         return [], "no_database"
 
-    conn = pymysql.connect(
-        host=host,
-        port=port,
-        user=user,
-        password=password,
-        database=database,
-        charset="utf8mb4",
-        cursorclass=DictCursor,
-        autocommit=True,
-        client_flag=CLIENT.FOUND_ROWS,
-    )
+    try:
+        _ct = mq.get("connect_timeout")
+        connect_timeout = int(_ct) if _ct is not None else 10
+    except (TypeError, ValueError):
+        connect_timeout = 10
+    try:
+        conn = pymysql.connect(
+            host=host,
+            port=port,
+            user=user,
+            password=password,
+            database=database,
+            charset="utf8mb4",
+            cursorclass=DictCursor,
+            autocommit=True,
+            client_flag=CLIENT.FOUND_ROWS,
+            connect_timeout=connect_timeout,
+        )
+    except Exception as e:
+        return [], str(e)
     try:
         with conn.cursor() as cur:
             cur.execute(f"SELECT * FROM `{view_ident}`")

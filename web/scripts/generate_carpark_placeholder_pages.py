@@ -11,6 +11,9 @@
 用法（在 web 目录下）：
   python3 scripts/generate_carpark_placeholder_pages.py
 
+新车入库后（cars.car_name 与文件夹名须完全一致）：
+  python3 scripts/generate_carpark_placeholder_pages.py --ensure-names "宾利飞驰" "坦克 700"
+
 可选：
   python3 scripts/generate_carpark_placeholder_pages.py --dry-run
   python3 scripts/generate_carpark_placeholder_pages.py --no-db   # 不连库，租金占位 888
@@ -418,6 +421,25 @@ def infer_profile(name: str) -> dict:
             "dim_wheel": "以实车为准",
             "dim_mass": "含电池组（以实车为准）",
         }
+    if any(k in n for k in ("C63", "AMG GT", "宝马 M2", "宝马 M3", "宝马 M4", "宝马 M5", "奥迪 RS", "黑翼")):
+        return {
+            "kind": "performance",
+            "s0": "4.0s",
+            "vmax": "280km/h",
+            "hp": "450马力级",
+            "eng": "高性能涡轮 / V8（以实车为准）",
+            "spec_eng": "大排量涡轮 / 高功率调校（以实车为准）",
+            "spec_pw": "以实车为准",
+            "spec_torque": "以实车为准",
+            "spec_gear": "双离合 / 9AT（以实车为准）",
+            "spec_0100": "以实车为准",
+            "spec_top": "以实车为准",
+            "spec_drive": "后驱 / 四驱（以实车为准）",
+            "spec_susp": "运动悬挂（以实车为准）",
+            "dim_line": "轿跑 / 性能轿车（以实车为准）",
+            "dim_wheel": "以实车为准",
+            "dim_mass": "以实车为准",
+        }
     if any(k in n for k in ("奔驰 S", "迈巴赫", "古思特", "幻影", "慕尚", "A8", "帕拉梅拉", "奥迪 A6", "宝马 7", "宾利", "总裁")):
         return {
             "kind": "lux_sedan",
@@ -614,6 +636,7 @@ def build_html(folder_name: str, row: dict | None = None) -> str:
 
   <title>{esc(display_name)} · 芒果超跑</title>
   <link rel="stylesheet" href="./car.css">
+  <link rel="stylesheet" href="../detail-other-models.css">
   <link rel="stylesheet" href="../similar-price-cars.css">
   <link rel="stylesheet" href="../scenario-showcase.css">
 </head>
@@ -1100,6 +1123,13 @@ def main() -> None:
         action="store_true",
         help="忽略占位标记，强制重写该目录下已有 car.html（会覆盖手改页面，慎用）",
     )
+    ap.add_argument(
+        "--ensure-names",
+        nargs="*",
+        metavar="CAR_NAME",
+        default=[],
+        help="与 cars.car_name 完全一致的名称：若 carpark 下尚无该目录则创建，再生成 car.html（便于新车入库后一键建站）",
+    )
     args = ap.parse_args()
 
     if not TEMPLATE_DIR.is_dir():
@@ -1120,6 +1150,17 @@ def main() -> None:
             print(f"警告：无法读取 cars 表（{e}），将使用占位租金与启发式文案。可使用 --no-db 跳过连接。")
             cars_map = {}
 
+    ensure = [x.strip() for x in (args.ensure_names or []) if x.strip()]
+    for name in ensure:
+        d = CARPARK / name
+        if d.is_dir():
+            continue
+        if args.dry_run:
+            print(f"  [dry-run] 将创建目录: {name}")
+        else:
+            d.mkdir(parents=True)
+            print(f"  已创建目录: {name}")
+
     missing: list[Path] = []
     for p in sorted(CARPARK.iterdir()):
         if not p.is_dir():
@@ -1139,6 +1180,16 @@ def main() -> None:
                     print(f"  跳过（无占位标记，加 --force-any 可强制）: {p.name}")
                     continue
         missing.append(p)
+
+    if ensure:
+        want = set(ensure)
+        missing = [p for p in missing if p.name in want]
+        not_found = sorted(want - {p.name for p in missing})
+        if not_found:
+            print(
+                "提示：以下名称不在待处理列表（可能已有 car.html 且未加 --force，或目录名与 --ensure-names 不一致）："
+                + ", ".join(not_found)
+            )
 
     if args.force and not args.force_any:
         print(

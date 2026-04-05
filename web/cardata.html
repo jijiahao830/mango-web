@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" type="image/png" href="./logo/logo2.png">
   <title>数据后台 · 芒果超跑</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./login.css">
   <link rel="stylesheet" href="./cardata.css">
   <!-- 若用 Live Server 等打开，请填写与 member_api.py 一致的根地址，例如 http://127.0.0.1:8765 -->
@@ -38,63 +41,61 @@
     <div class="cardata-panel" id="dataPanel" aria-hidden="true">
       <section class="cardata-block cardata-block--first">
         <h2 class="cardata-section-title cardata-block-heading cardata-section-title--with-refresh">
-          车辆点击次数最多
+          <span class="cardata-section-title-lead">
+            <span class="cardata-section-title-text">车辆点击次数最多</span>
+            <button
+              type="button"
+              class="cardata-refresh-icon-btn"
+              id="btnRefreshVehicle"
+              aria-label="刷新车辆点击板块（今日/本周/本月/自定义）"
+            >
+              <svg class="cardata-icon-refresh" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+                <path
+                  fill="currentColor"
+                  d="M17.65 6.35A7.958 7.958 0 0012 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0112 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"
+                />
+              </svg>
+            </button>
+          </span>
           <button
             type="button"
-            class="cardata-refresh-icon-btn"
-            id="btnRefreshVehicle"
-            aria-label="刷新车辆点击板块（今日/本周/本月/自定义）"
+            class="cardata-range-menu-btn cardata-range-menu-btn--header"
+            id="btnCustomRangeMenu"
+            aria-expanded="false"
+            aria-controls="customRangePanel"
+            aria-label="打开车辆自定义时间范围"
           >
-            <svg class="cardata-icon-refresh" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
-              <path
-                fill="currentColor"
-                d="M17.65 6.35A7.958 7.958 0 0012 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0112 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"
-              />
+            <svg class="cardata-icon-menu" viewBox="0 0 24 24" aria-hidden="true">
+              <path fill="currentColor" d="M4 6h16v2H4V6zm0 5h16v2H4v-2zm0 5h16v2H4v-2z" />
             </svg>
           </button>
         </h2>
         <div class="cardata-metrics-row" role="presentation">
           <div class="cardata-metric-cell">
-            <h3 class="cardata-subsection-title">今日</h3>
             <div class="rank-table-wrap rank-table-wrap--metric" id="rankTableWrapToday">
               <p class="rank-loading">加载中…</p>
             </div>
           </div>
           <div class="cardata-metric-cell">
-            <h3 class="cardata-subsection-title">本周</h3>
             <div class="rank-table-wrap rank-table-wrap--metric" id="rankTableWrapWeek">
               <p class="rank-loading">加载中…</p>
             </div>
           </div>
           <div class="cardata-metric-cell">
-            <h3 class="cardata-subsection-title">本月</h3>
             <div class="rank-table-wrap rank-table-wrap--metric" id="rankTableWrapMonth">
               <p class="rank-loading">加载中…</p>
             </div>
           </div>
           <div class="cardata-metric-cell cardata-metric-cell--custom">
-            <div class="cardata-custom-toolbar">
-              <h3 class="cardata-subsection-title">自定义</h3>
-              <span class="cardata-range-summary" id="customRangeSummary" title="当前查询区间"></span>
-              <button
-                type="button"
-                class="cardata-range-menu-btn"
-                id="btnCustomRangeMenu"
-                aria-expanded="false"
-                aria-controls="customRangePanel"
-                aria-label="打开车辆自定义时间范围"
-              >
-                <svg class="cardata-icon-menu" viewBox="0 0 24 24" aria-hidden="true">
-                  <path fill="currentColor" d="M4 6h16v2H4V6zm0 5h16v2H4v-2zm0 5h16v2H4v-2z" />
-                </svg>
-              </button>
-            </div>
             <div class="cardata-range-panel" id="customRangePanel" hidden>
               <p class="hint hint-in-cell">最长 730 天，按车汇总。改期后点查询。</p>
               <div class="cardata-range-form cardata-range-form--compact" id="customRangeForm">
                 <label>开始 <input type="date" id="customRangeStart" autocomplete="off"></label>
                 <label>结束 <input type="date" id="customRangeEnd" autocomplete="off"></label>
-                <button type="button" class="btn-refresh" id="btnCustomRangeQuery">查询</button>
+                <div class="cardata-range-actions">
+                  <button type="button" class="btn-refresh" id="btnCustomRangeQuery">查询</button>
+                  <button type="button" class="btn-cardata-reset" id="btnCustomRangeReset">重置</button>
+                </div>
               </div>
             </div>
             <div class="rank-table-wrap rank-table-wrap--metric" id="rankTableWrapCustom">
@@ -106,63 +107,61 @@
 
       <section class="cardata-block">
         <h2 class="cardata-section-title cardata-block-heading cardata-section-title--with-refresh">
-          访问人数
+          <span class="cardata-section-title-lead">
+            <span class="cardata-section-title-text">访问人数</span>
+            <button
+              type="button"
+              class="cardata-refresh-icon-btn"
+              id="btnRefreshStore"
+              aria-label="刷新访问人数板块（今日/本周/本月/自定义）"
+            >
+              <svg class="cardata-icon-refresh" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+                <path
+                  fill="currentColor"
+                  d="M17.65 6.35A7.958 7.958 0 0012 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0112 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"
+                />
+              </svg>
+            </button>
+          </span>
           <button
             type="button"
-            class="cardata-refresh-icon-btn"
-            id="btnRefreshStore"
-            aria-label="刷新访问人数板块（今日/本周/本月/自定义）"
+            class="cardata-range-menu-btn cardata-range-menu-btn--header"
+            id="btnStoreRangeMenu"
+            aria-expanded="false"
+            aria-controls="storeRangePanel"
+            aria-label="打开访问数据自定义时间范围"
           >
-            <svg class="cardata-icon-refresh" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
-              <path
-                fill="currentColor"
-                d="M17.65 6.35A7.958 7.958 0 0012 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0112 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"
-              />
+            <svg class="cardata-icon-menu" viewBox="0 0 24 24" aria-hidden="true">
+              <path fill="currentColor" d="M4 6h16v2H4V6zm0 5h16v2H4v-2zm0 5h16v2H4v-2z" />
             </svg>
           </button>
         </h2>
         <div class="cardata-metrics-row" role="presentation">
           <div class="cardata-metric-cell">
-            <h3 class="cardata-subsection-title">今日</h3>
             <div class="rank-table-wrap rank-table-wrap--metric" id="rankTableWrapStoreToday">
               <p class="rank-loading">加载中…</p>
             </div>
           </div>
           <div class="cardata-metric-cell">
-            <h3 class="cardata-subsection-title">本周</h3>
             <div class="rank-table-wrap rank-table-wrap--metric" id="rankTableWrapStoreWeek">
               <p class="rank-loading">加载中…</p>
             </div>
           </div>
           <div class="cardata-metric-cell">
-            <h3 class="cardata-subsection-title">本月</h3>
             <div class="rank-table-wrap rank-table-wrap--metric" id="rankTableWrapStoreMonth">
               <p class="rank-loading">加载中…</p>
             </div>
           </div>
           <div class="cardata-metric-cell cardata-metric-cell--custom">
-            <div class="cardata-custom-toolbar">
-              <h3 class="cardata-subsection-title">自定义</h3>
-              <span class="cardata-range-summary" id="storeRangeSummary" title="当前查询区间"></span>
-              <button
-                type="button"
-                class="cardata-range-menu-btn"
-                id="btnStoreRangeMenu"
-                aria-expanded="false"
-                aria-controls="storeRangePanel"
-                aria-label="打开访问数据自定义时间范围"
-              >
-                <svg class="cardata-icon-menu" viewBox="0 0 24 24" aria-hidden="true">
-                  <path fill="currentColor" d="M4 6h16v2H4V6zm0 5h16v2H4v-2zm0 5h16v2H4v-2z" />
-                </svg>
-              </button>
-            </div>
             <div class="cardata-range-panel" id="storeRangePanel" hidden>
               <p class="hint hint-in-cell">最长 730 天，会员去重。改期后点查询。</p>
               <div class="cardata-range-form cardata-range-form--compact" id="storeRangeForm">
                 <label>开始 <input type="date" id="storeRangeStart" autocomplete="off"></label>
                 <label>结束 <input type="date" id="storeRangeEnd" autocomplete="off"></label>
-                <button type="button" class="btn-refresh" id="btnStoreRangeQuery">查询</button>
+                <div class="cardata-range-actions">
+                  <button type="button" class="btn-refresh" id="btnStoreRangeQuery">查询</button>
+                  <button type="button" class="btn-cardata-reset" id="btnStoreRangeReset">重置</button>
+                </div>
               </div>
             </div>
             <div class="rank-table-wrap rank-table-wrap--metric" id="rankTableWrapStoreCustom">

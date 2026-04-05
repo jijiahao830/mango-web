@@ -123,6 +123,9 @@
 
   function showPanel() {
     document.getElementById('gateCard').classList.add('hidden');
+    document.body.classList.add('cardata-data-visible');
+    var loginWrap = document.querySelector('.login-container');
+    if (loginWrap) loginWrap.classList.add('cardata-data-visible');
     var panel = document.getElementById('dataPanel');
     panel.classList.add('visible');
     panel.setAttribute('aria-hidden', 'false');
@@ -248,6 +251,74 @@
     return t * t * t;
   }
 
+  /**
+   * 仪表盘弧：圆心 (100,100)、r=70、270° 大弧在「上方」（开口朝下 90°）。
+   * 端点 225°→315°（弦在下方），指针沿弧从 225° 顺时针扫向 315°（数学角递减）。
+   */
+  var GAUGE_CX = 100;
+  var GAUGE_CY = 100;
+  var GAUGE_ARC_R = 70;
+  /** 内圆（数字区）半径，略小于刻度弧以留出环带 */
+  var GAUGE_INNER_R = 36;
+  var GAUGE_ARC_START_DEG = 225;
+  var GAUGE_SWEEP_DEG = 270;
+
+  function needleRotateDegForFrac(frac) {
+    frac = Math.max(0, Math.min(1, frac));
+    var t = GAUGE_ARC_START_DEG - frac * GAUGE_SWEEP_DEG;
+    var rad = (t * Math.PI) / 180;
+    var px = GAUGE_CX + GAUGE_ARC_R * Math.cos(rad);
+    var py = GAUGE_CY - GAUGE_ARC_R * Math.sin(rad);
+    return (Math.atan2(py - GAUGE_CY, px - GAUGE_CX) * 180) / Math.PI;
+  }
+
+  /**
+   * 用折线沿圆描 270° 大弧（与刻度/指针同参），避免 SVG 椭圆弧 A 在部分环境下误选底部 90° 短弧。
+   * 返回 path 的 d 与真实折线长度（供 stroke-dasharray 与进度一致）。
+   */
+  function cyberGaugeArcPathDAndLen(cx, cy, r, startDeg, sweepDeg, steps) {
+    var d = '';
+    var len = 0;
+    var i;
+    var st = steps || 72;
+    var prevX;
+    var prevY;
+    for (i = 0; i <= st; i++) {
+      var t = i / st;
+      var angDeg = startDeg - t * sweepDeg;
+      var ang = (angDeg * Math.PI) / 180;
+      var x = cx + r * Math.cos(ang);
+      var y = cy - r * Math.sin(ang);
+      d += (i === 0 ? 'M ' : ' L ') + x.toFixed(3) + ' ' + y.toFixed(3);
+      if (i > 0) {
+        len += Math.hypot(x - prevX, y - prevY);
+      }
+      prevX = x;
+      prevY = y;
+    }
+    return { d: d, len: len };
+  }
+
+  /** 橙色：frac=0 亮度 60%，frac=1 亮度 100%（基准 #ff7a1a） */
+  function gaugeOrangeHex(frac) {
+    frac = Math.max(0, Math.min(1, frac));
+    var br = 0.6 + 0.4 * frac;
+    function h(n) {
+      var s = Math.round(Math.max(0, Math.min(255, n))).toString(16);
+      return s.length === 1 ? '0' + s : s;
+    }
+    return '#' + h(255 * br) + h(122 * br) + h(26 * br);
+  }
+
+  function gaugeOrangeRgba(frac, alpha) {
+    frac = Math.max(0, Math.min(1, frac));
+    var br = 0.6 + 0.4 * frac;
+    var R = Math.round(255 * br);
+    var G = Math.round(122 * br);
+    var B = Math.round(26 * br);
+    return 'rgba(' + R + ',' + G + ',' + B + ',' + alpha + ')';
+  }
+
   function getGaugeReadoutVal(wrap) {
     var el = wrap.querySelector('.gauge-readout .val');
     if (!el) return 0;
@@ -289,8 +360,10 @@
         var eased = useEaseIn ? easeInCubic(p) : easeOutCubic(p);
         groups.forEach(function (g, i) {
           var frac = fromFracs[i] + (targetFrac - fromFracs[i]) * eased;
-          var deg = (180 + frac * 180) % 360;
+          var deg = needleRotateDegForFrac(frac);
           g.setAttribute('transform', 'rotate(' + deg + ' 100 100)');
+          var blade = g.querySelector('.gauge-needle-bar');
+          if (blade) blade.setAttribute('fill', gaugeOrangeHex(frac));
         });
         if (targetFrac === 0) {
           setGaugeReadoutVal(wrap, v0 * (1 - eased));
@@ -340,7 +413,9 @@
       if (isNaN(targetFrac)) targetFrac = 0;
       targetFrac = Math.max(0, Math.min(1, targetFrac));
       var delay = idx * STAGGER;
-      group.setAttribute('transform', 'rotate(180 100 100)');
+      group.setAttribute('transform', 'rotate(' + needleRotateDegForFrac(0) + ' 100 100)');
+      var bladeInit = group.querySelector('.gauge-needle-bar');
+      if (bladeInit) bladeInit.setAttribute('fill', gaugeOrangeHex(0));
       var start = null;
       function step(ts) {
         if (start === null) start = ts;
@@ -352,8 +427,10 @@
         var p = Math.min(1, elapsed / DURATION);
         var eased = easeOutCubic(p);
         var frac = targetFrac * eased;
-        var deg = (180 + frac * 180) % 360;
+        var deg = needleRotateDegForFrac(frac);
         group.setAttribute('transform', 'rotate(' + deg + ' 100 100)');
+        var blade = group.querySelector('.gauge-needle-bar');
+        if (blade) blade.setAttribute('fill', gaugeOrangeHex(frac));
         if (p < 1) requestAnimationFrame(step);
       }
       requestAnimationFrame(step);
@@ -395,6 +472,197 @@
   }
 
   /**
+   * 科技感圆环仪表盘：>180° 弧（270°）、内圈；无刻度线；指针与弧同色一体造型（旋转中心 100,100）。
+   * 仅中间显示当前数值；无刻度端点数字、无「满刻度」、无单位（人/次）。
+   */
+  function buildCyberGaugeBlock(gid, frac, _maxScale, valStr, _unit) {
+    var cx = GAUGE_CX;
+    var cy = GAUGE_CY;
+    var arcR = GAUGE_ARC_R;
+    var arcGeom = cyberGaugeArcPathDAndLen(cx, cy, arcR, GAUGE_ARC_START_DEG, GAUGE_SWEEP_DEG, 72);
+    var arcD = arcGeom.d;
+    var arcLen = arcGeom.len;
+    var dashProg = frac * arcLen + ' ' + arcLen;
+    var gradA0 = (GAUGE_ARC_START_DEG * Math.PI) / 180;
+    var gradA1 = ((GAUGE_ARC_START_DEG - GAUGE_SWEEP_DEG) * Math.PI) / 180;
+    var gArcX0 = cx + arcR * Math.cos(gradA0);
+    var gArcY0 = cy - arcR * Math.sin(gradA0);
+    var gArcX1 = cx + arcR * Math.cos(gradA1);
+    var gArcY1 = cy - arcR * Math.sin(gradA1);
+    var cArc0 = gaugeOrangeHex(0);
+    var cArc1 = gaugeOrangeHex(1);
+    var needleRot = needleRotateDegForFrac(frac);
+    return (
+      '<div class="gauge-svg-wrap gauge-svg-wrap--cyber">' +
+      '<div class="gauge-cyber-face">' +
+      '<svg class="gauge-svg gauge-svg--cyber" viewBox="0 0 200 200" overflow="visible" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
+      '<defs>' +
+      '<radialGradient id="' +
+      gid +
+      '-inner" cx="50%" cy="42%" r="68%">' +
+      '<stop offset="0%" stop-color="#152032"/>' +
+      '<stop offset="55%" stop-color="#0a0d14"/>' +
+      '<stop offset="100%" stop-color="#040508"/>' +
+      '</radialGradient>' +
+      '<radialGradient id="' +
+      gid +
+      '-ambient" cx="50%" cy="50%" r="50%">' +
+      '<stop offset="0%" stop-color="rgba(255,95,40,0.14)"/>' +
+      '<stop offset="45%" stop-color="rgba(255,60,20,0.04)"/>' +
+      '<stop offset="100%" stop-color="rgba(0,0,0,0)"/>' +
+      '</radialGradient>' +
+      '<linearGradient id="' +
+      gid +
+      '-arcTone" gradientUnits="userSpaceOnUse" ' +
+      'x1="' +
+      gArcX0.toFixed(2) +
+      '" y1="' +
+      gArcY0.toFixed(2) +
+      '" x2="' +
+      gArcX1.toFixed(2) +
+      '" y2="' +
+      gArcY1.toFixed(2) +
+      '">' +
+      '<stop offset="0%" stop-color="' +
+      cArc0 +
+      '"/>' +
+      '<stop offset="100%" stop-color="' +
+      cArc1 +
+      '"/>' +
+      '</linearGradient>' +
+      '<linearGradient id="' +
+      gid +
+      '-arcToneDim" gradientUnits="userSpaceOnUse" ' +
+      'x1="' +
+      gArcX0.toFixed(2) +
+      '" y1="' +
+      gArcY0.toFixed(2) +
+      '" x2="' +
+      gArcX1.toFixed(2) +
+      '" y2="' +
+      gArcY1.toFixed(2) +
+      '">' +
+      '<stop offset="0%" stop-color="' +
+      gaugeOrangeRgba(0, 0.4) +
+      '"/>' +
+      '<stop offset="100%" stop-color="' +
+      gaugeOrangeRgba(1, 0.26) +
+      '"/>' +
+      '</linearGradient>' +
+      '<filter id="' +
+      gid +
+      '-glow" x="-50%" y="-50%" width="200%" height="200%">' +
+      '<feGaussianBlur in="SourceGraphic" stdDeviation="1.9" result="b"/>' +
+      '<feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>' +
+      '</filter>' +
+      '<filter id="' +
+      gid +
+      '-bloom" x="-80%" y="-80%" width="260%" height="260%">' +
+      '<feGaussianBlur stdDeviation="3.5" result="bl"/>' +
+      '<feMerge><feMergeNode in="bl"/><feMergeNode in="SourceGraphic"/></feMerge>' +
+      '</filter>' +
+      '</defs>' +
+      '<circle cx="' +
+      cx +
+      '" cy="' +
+      cy +
+      '" r="99" fill="url(#' +
+      gid +
+      '-ambient)"/>' +
+      '<circle cx="' +
+      cx +
+      '" cy="' +
+      cy +
+      '" r="96" fill="none" stroke="rgba(255,130,70,0.2)" stroke-width="1" stroke-dasharray="5 11" stroke-linecap="round"/>' +
+      '<circle cx="' +
+      cx +
+      '" cy="' +
+      cy +
+      '" r="91" fill="none" stroke="rgba(255,160,100,0.12)" stroke-width="0.8" stroke-dasharray="2 8"/>' +
+      '<circle cx="' +
+      cx +
+      '" cy="' +
+      cy +
+      '" r="93" fill="none" stroke="rgba(255,110,55,0.18)" stroke-width="1"/>' +
+      '<circle cx="' +
+      cx +
+      '" cy="' +
+      cy +
+      '" r="88" fill="none" stroke="rgba(255,90,40,0.08)" stroke-width="1"/>' +
+      '<path d="' +
+      arcD +
+      '" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="10" stroke-linecap="round"/>' +
+      '<path class="gauge-cyber-arc-bloom" d="' +
+      arcD +
+      '" fill="none" stroke="url(#' +
+      gid +
+      '-arcToneDim)" stroke-width="12" stroke-linecap="round" stroke-dasharray="' +
+      dashProg +
+      '" opacity="0.45"/>' +
+      '<path d="' +
+      arcD +
+      '" fill="none" stroke="url(#' +
+      gid +
+      '-arcTone)" stroke-width="6.5" stroke-linecap="round" stroke-dasharray="' +
+      dashProg +
+      '" filter="url(#' +
+      gid +
+      '-glow)">' +
+      '</path>' +
+      '<path d="' +
+      arcD +
+      '" fill="none" stroke="url(#' +
+      gid +
+      '-arcTone)" stroke-width="2" stroke-linecap="round" stroke-dasharray="' +
+      dashProg +
+      '" opacity="0.55" filter="url(#' +
+      gid +
+      '-bloom)"/>' +
+      '<g class="gauge-needle-group" data-target-frac="' +
+      frac +
+      '" transform="rotate(' +
+      needleRot +
+      ' ' +
+      cx +
+      ' ' +
+      cy +
+      ')">' +
+      '<path class="gauge-needle gauge-needle-bar" d="M ' +
+      cx +
+      ' 99.1 L 169 99.1 L 169 100.9 L ' +
+      cx +
+      ' 100.9 Z" fill="' +
+      gaugeOrangeHex(0) +
+      '" opacity="0.98"/>' +
+      '</g>' +
+      '<circle cx="' +
+      cx +
+      '" cy="' +
+      cy +
+      '" r="' +
+      GAUGE_INNER_R +
+      '" fill="url(#' +
+      gid +
+      '-inner)" stroke="rgba(255,140,80,0.42)" stroke-width="1"/>' +
+      '<circle cx="' +
+      cx +
+      '" cy="' +
+      cy +
+      '" r="' +
+      GAUGE_INNER_R +
+      '" fill="none" stroke="rgba(255,180,120,0.15)" stroke-width="0.5" class="gauge-cyber-inner-ring"/>' +
+      '</svg>' +
+      '<div class="gauge-readout gauge-readout--cyber" aria-live="polite">' +
+      '<div class="gauge-readout-value-row"><span class="val">' +
+      escapeHtml(valStr) +
+      '</span></div>' +
+      '</div>' +
+      '</div>' +
+      '</div>'
+    );
+  }
+
+  /**
    * 车辆点击无数据时：仍显示仪表盘，指针 0，不展示车名（无标题/副标题）。
    */
   function renderVehicleEmptyGauge(container, opts) {
@@ -409,29 +677,10 @@
     var html = '<div class="dashboard-grid dashboard-grid--single">';
     html += '<div class="gauge-card gauge-card--vehicle-empty">';
     html += '<span class="gauge-rank-badge">' + escapeHtml(badge) + '</span>';
-    /* 占位：与有数据时的 .gauge-title + .gauge-date 同高，避免「今日」列矮于本周/本月 */
+    /* 占位：与有数据时的 .gauge-title + .gauge-date 同高，避免空列矮于有数据列 */
     html += '<div class="gauge-title" aria-hidden="true"></div>';
     html += '<div class="gauge-date" aria-hidden="true">&nbsp;</div>';
-    html += '<div class="gauge-svg-wrap">';
-    html += '<svg class="gauge-svg" viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">';
-    html += '<defs>';
-    html += '<linearGradient id="' + gid + '-arc" x1="0%" y1="0%" x2="100%" y2="0%">';
-    html += '<stop offset="0%" stop-color="#1e6b3a"/>';
-    html += '<stop offset="45%" stop-color="#c9a227"/>';
-    html += '<stop offset="100%" stop-color="#c03018"/>';
-    html += '</linearGradient>';
-    html += '</defs>';
-    html += '<path class="gauge-arc-bg" d="M 30 100 A 70 70 0 0 1 170 100" fill="none" stroke="rgba(255,255,255,0.14)" stroke-width="10" stroke-linecap="round"/>';
-    html += '<path class="gauge-arc-glow" d="M 30 100 A 70 70 0 0 1 170 100" fill="none" stroke="url(#' + gid + '-arc)" stroke-width="3" stroke-linecap="round" opacity="0.4"/>';
-    html += '<text x="28" y="112" fill="rgba(139,147,167,0.9)" font-size="9" text-anchor="middle">0</text>';
-    html += '<text x="172" y="112" fill="rgba(139,147,167,0.9)" font-size="9" text-anchor="middle">' + escapeHtml(String(maxScale)) + '</text>';
-    html += '<g class="gauge-needle-group" data-target-frac="' + frac + '" transform="rotate(180 100 100)">';
-    html += '<line class="gauge-needle" x1="100" y1="100" x2="168" y2="100" stroke="#ff6b35" stroke-width="4" stroke-linecap="round"/>';
-    html += '</g>';
-    html += '<circle class="gauge-hub" cx="100" cy="100" r="7"/>';
-    html += '</svg>';
-    html += '</div>';
-    html += '<div class="gauge-readout"><span class="val">0</span><span class="unit">' + unit + '</span></div>';
+    html += buildCyberGaugeBlock(gid, frac, maxScale, '0', unit);
     html += '</div></div>';
     container.innerHTML = html;
   }
@@ -464,7 +713,6 @@
     var frac = maxScale > 0 ? Math.min(1, val / maxScale) : 0;
 
     var title = '';
-    var subLine = '';
     var storeSk = findStoreTitleKey(keys);
     var vehicleSk = findVehicleTitleKey(keys);
     var isStoreAggregateNoDim =
@@ -477,17 +725,43 @@
     if (isStoreAggregateNoDim) {
       if (kind === 'today') {
         title = '今日访问人数';
-        var sdk = findStatDateKey(keys) || findDateKey(keys);
-        if (sdk && row[sdk] != null) subLine = String(row[sdk]);
       } else {
         title = kind === 'week' ? '本周访问人数' : '本月访问人数';
-        var pkAgg = findStatPeriodKey(keys) || findPeriodKey(keys);
-        if (pkAgg && row[pkAgg] != null) subLine = String(row[pkAgg]);
       }
     } else {
       var titleKey = metric === 'store' ? (storeSk || vehicleSk) : vehicleSk;
       title = titleKey ? (row[titleKey] != null ? String(row[titleKey]) : '') : '';
       if (!title) title = '—';
+    }
+
+    var subLine = '';
+    if (kind === 'custom') {
+      if (metric === 'store') {
+        var sEl = document.getElementById('storeRangeStart');
+        var eEl = document.getElementById('storeRangeEnd');
+        if (sEl && eEl && sEl.value && eEl.value) {
+          subLine = sEl.value + ' ~ ' + eEl.value;
+        }
+      } else {
+        var vs = document.getElementById('customRangeStart');
+        var ve = document.getElementById('customRangeEnd');
+        if (vs && ve && vs.value && ve.value) {
+          subLine = vs.value + ' ~ ' + ve.value;
+        }
+      }
+      if (!subLine) {
+        var dkC = findDateKey(keys) || findStatDateKey(keys) || findPeriodKey(keys);
+        if (dkC && row[dkC] != null) subLine = String(row[dkC]);
+      }
+    } else if (isStoreAggregateNoDim) {
+      if (kind === 'today') {
+        var sdkAgg = findStatDateKey(keys) || findDateKey(keys);
+        if (sdkAgg && row[sdkAgg] != null) subLine = String(row[sdkAgg]);
+      } else {
+        var pkAgg = findStatPeriodKey(keys) || findPeriodKey(keys);
+        if (pkAgg && row[pkAgg] != null) subLine = String(row[pkAgg]);
+      }
+    } else {
       if (kind === 'today') {
         var dateKey =
           findDateKey(keys) || findStatDateKey(keys) || findPeriodKey(keys);
@@ -505,26 +779,7 @@
     html += '<span class="gauge-rank-badge">' + escapeHtml(badge) + '</span>';
     html += '<div class="gauge-title">' + escapeHtml(title) + '</div>';
     if (subLine) html += '<div class="gauge-date">' + escapeHtml(subLine) + '</div>';
-    html += '<div class="gauge-svg-wrap">';
-    html += '<svg class="gauge-svg" viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">';
-    html += '<defs>';
-    html += '<linearGradient id="' + gid + '-arc" x1="0%" y1="0%" x2="100%" y2="0%">';
-    html += '<stop offset="0%" stop-color="#1e6b3a"/>';
-    html += '<stop offset="45%" stop-color="#c9a227"/>';
-    html += '<stop offset="100%" stop-color="#c03018"/>';
-    html += '</linearGradient>';
-    html += '</defs>';
-    html += '<path class="gauge-arc-bg" d="M 30 100 A 70 70 0 0 1 170 100" fill="none" stroke="rgba(255,255,255,0.14)" stroke-width="10" stroke-linecap="round"/>';
-    html += '<path class="gauge-arc-glow" d="M 30 100 A 70 70 0 0 1 170 100" fill="none" stroke="url(#' + gid + '-arc)" stroke-width="3" stroke-linecap="round" opacity="0.4"/>';
-    html += '<text x="28" y="112" fill="rgba(139,147,167,0.9)" font-size="9" text-anchor="middle">0</text>';
-    html += '<text x="172" y="112" fill="rgba(139,147,167,0.9)" font-size="9" text-anchor="middle">' + escapeHtml(String(maxScale)) + '</text>';
-    html += '<g class="gauge-needle-group" data-target-frac="' + frac + '" transform="rotate(180 100 100)">';
-    html += '<line class="gauge-needle" x1="100" y1="100" x2="168" y2="100" stroke="#ff6b35" stroke-width="4" stroke-linecap="round"/>';
-    html += '</g>';
-    html += '<circle class="gauge-hub" cx="100" cy="100" r="7"/>';
-    html += '</svg>';
-    html += '</div>';
-    html += '<div class="gauge-readout"><span class="val">' + escapeHtml(String(Math.round(val))) + '</span><span class="unit">' + unit + '</span></div>';
+    html += buildCyberGaugeBlock(gid, frac, maxScale, String(Math.round(val)), unit);
     html += '</div></div>';
     container.innerHTML = html;
   }
@@ -878,6 +1133,24 @@
   document.getElementById('btnStoreRangeQuery').addEventListener('click', function () {
     loadCustomRangeStore();
   });
+
+  var btnCustomRangeReset = document.getElementById('btnCustomRangeReset');
+  if (btnCustomRangeReset) {
+    btnCustomRangeReset.addEventListener('click', function () {
+      initRangeDefaults('customRangeStart', 'customRangeEnd');
+      syncAllRangeSummaries();
+      loadCustomRangeVehicle();
+    });
+  }
+
+  var btnStoreRangeReset = document.getElementById('btnStoreRangeReset');
+  if (btnStoreRangeReset) {
+    btnStoreRangeReset.addEventListener('click', function () {
+      initRangeDefaults('storeRangeStart', 'storeRangeEnd');
+      syncAllRangeSummaries();
+      loadCustomRangeStore();
+    });
+  }
 
   bindCustomRangeMenus();
 
