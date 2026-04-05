@@ -1,5 +1,5 @@
-// 经典使用场景：摆展 / 出行 切换
-(function () {
+// 经典使用场景：摆展 / 出行 切换（与 car.html data-scenario="chuxing" 一致）
+function initScenarioShowcase570() {
   var scenarioPictureSource = document.getElementById('scenarioPictureSource');
   var scenarioPictureImg = document.getElementById('scenarioPictureImg');
   var scenarioShowcaseDesc = document.getElementById('scenarioShowcaseDesc');
@@ -27,12 +27,12 @@
       webp: './场景-出行.webp',
       jpg: './场景-出行.jpg',
       alt: '经典使用场景 · 出行',
-      desc: '华灯初上，按下启动键——V10 自吸的轰鸣在楼宇间回荡。这台橙色 Huracán 天生适合「出行」：不必刻意摆拍，油门一给，整条街的注意力都会向你聚拢。',
+      desc: '公路巡航、周末短途或山路驾驶——Huracán 570-4 的中置 V10 与四驱抓地让每一段路程都充满驾驶乐趣。开阔视野与超跑坐姿，让「出行」本身充满仪式感。',
       features: [
-        '✓ V10 高亢声浪，气场全开',
-        '✓ 夜色灯光下回头率拉满',
-        '✓ 城市巡游、聚会出场的焦点座驾',
-        '✓ 随手一拍就是大片质感'
+        '✓ V10 自吸线性爆发，声浪高亢',
+        '✓ 四驱稳健，晴雨路况更安心',
+        '✓ 公路巡航与跑山皆宜',
+        '✓ 超跑出街，回头率拉满'
       ]
     }
   };
@@ -62,7 +62,13 @@
       if (key) applyScenario(key);
     });
   });
-})();
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initScenarioShowcase570);
+} else {
+  initScenarioShowcase570();
+}
 
 // Hero Video Control
 document.addEventListener('DOMContentLoaded', function() {
@@ -142,26 +148,26 @@ allThumbnails.forEach((thumb, index) => {
   });
 });
 
-// Previous button
-prevBtn.addEventListener('click', function() {
-  const newIndex = (currentIndex - 1 + imageSources.length) % imageSources.length;
-  updateGallery(newIndex);
-});
+// Previous / Next（缺省时不绑定，避免整段脚本中断）
+if (prevBtn && nextBtn && featuredImage) {
+  prevBtn.addEventListener('click', function() {
+    const newIndex = (currentIndex - 1 + imageSources.length) % imageSources.length;
+    updateGallery(newIndex);
+  });
 
-// Next button
-nextBtn.addEventListener('click', function() {
-  const newIndex = (currentIndex + 1) % imageSources.length;
-  updateGallery(newIndex);
-});
+  nextBtn.addEventListener('click', function() {
+    const newIndex = (currentIndex + 1) % imageSources.length;
+    updateGallery(newIndex);
+  });
 
-// Keyboard navigation
-document.addEventListener('keydown', function(e) {
-  if (e.key === 'ArrowLeft') {
-    prevBtn.click();
-  } else if (e.key === 'ArrowRight') {
-    nextBtn.click();
-  }
-});
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'ArrowLeft') {
+      prevBtn.click();
+    } else if (e.key === 'ArrowRight') {
+      nextBtn.click();
+    }
+  });
+}
 
 // Smooth scroll for internal links
 document.querySelectorAll('a[href^="#"]').forEach(anchor => {

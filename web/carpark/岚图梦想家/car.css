@@ -4,8 +4,8 @@
   --panel: #171a21;
   --muted: #8b93a7;
   --text: #e8ecf8;
-  --brand: #059669;
-  --brand-light: #34d399;
+  --brand: #ff6b35;
+  --brand-light: #ff8c69;
   --accent: #3b82f6;
   --border: #2a2f3a;
 }
@@ -28,8 +28,7 @@ html::-webkit-scrollbar {
 }
 
 body {
-  background: radial-gradient(ellipse 1400px 800px at 50% 0%, #1a2420 0%, var(--bg) 52%);
-  background: radial-gradient(ellipse 1400px 800px at 50% 0%, color-mix(in srgb, var(--brand) 18%, #1a1d29) 0%, var(--bg) 52%);
+  background: radial-gradient(ellipse 1400px 800px at 50% 0%, #1a1d29 0%, var(--bg) 50%);
   color: var(--text);
   font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
   overflow-x: hidden;
@@ -55,34 +54,310 @@ body {
   background: rgba(10, 11, 15, 0.9);
   backdrop-filter: blur(20px);
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  width: 100%;
 }
+
+.header-left-btn {
+  flex: 1;
+  display: flex;
+  justify-content: flex-start;
+}
+
+/* --- Dropdown Navigation --- */
+.header-center-nav {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.dropdown-container {
+  position: static; /* 修改为 static，使 dropdown-menu 相对于 header 定位 */
+  display: inline-block;
+  height: 100%; /* 让容器撑满 header 高度，方便 hover 触发 */
+  display: flex;
+  align-items: center;
+}
+
+.dropdown-trigger {
+  color: var(--text);
+  font-weight: 600;
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 16px;
+  transition: color 0.3s;
+  height: 100%;
+}
+
+.dropdown-trigger:hover {
+  color: var(--brand);
+}
+
+.dropdown-trigger svg {
+  transition: transform 0.3s;
+}
+
+/* 当鼠标悬停在触发器上，或悬停在菜单上时，保持图标旋转和菜单显示 */
+.dropdown-trigger:hover svg,
+.dropdown-menu:hover ~ .dropdown-trigger svg,
+.dropdown-container:hover .dropdown-trigger svg {
+  transform: rotate(180deg);
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: 100%; /* 紧贴 header 下边缘 */
+  left: 0;
+  width: 100%; /* 宽度与 header（banner）一样 */
+  background: rgba(10, 11, 15, 0.95); /* 背景更暗，增加不透明度 */
+  backdrop-filter: blur(30px); /* 增加磨砂模糊度 */
+  -webkit-backdrop-filter: blur(30px);
+  border-top: none; /* 移除原来的边框，用发光线代替 */
+  border-bottom: none;
+  padding: 30px clamp(16px, 6vw, 64px); /* 内边距与 header 保持一致对齐 */
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.95); /* 加深阴影 */
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* 让 dropdown-menu 的 hover 区域无缝衔接 header */
+.dropdown-menu::before {
+  content: '';
+  position: absolute;
+  top: -20px; /* 向上延伸一块透明区域，防止鼠标滑出触发器时断开 */
+  left: 0;
+  width: 100%;
+  height: 20px;
+  background: transparent;
+}
+
+/* 顶部发光线条 (改用另外的伪元素或者容器，因为 ::before 被用来做桥接了，这里把线放到内部) */
+.dropdown-menu-inner {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.dropdown-menu-inner::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 6px;
+  transform: translateY(-100%);
+  background: linear-gradient(to top, rgba(255, 107, 53, 0.4), transparent);
+  mask-image: linear-gradient(90deg, transparent, black 10%, black 90%, transparent);
+  -webkit-mask-image: linear-gradient(90deg, transparent, black 10%, black 90%, transparent);
+}
+
+.dropdown-menu-inner::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 6px;
+  transform: translateY(100%);
+  background: linear-gradient(to bottom, rgba(255, 107, 53, 0.4), transparent);
+  mask-image: linear-gradient(90deg, transparent, black 10%, black 90%, transparent);
+  -webkit-mask-image: linear-gradient(90deg, transparent, black 10%, black 90%, transparent);
+}
+
+/* 当鼠标悬停在触发器上，或者悬停在整个容器上时显示菜单 */
+.dropdown-container:hover .dropdown-menu,
+.dropdown-trigger:hover + .dropdown-menu,
+.dropdown-menu:hover {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+.dropdown-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); /* 修改为匹配首页卡片大小 */
+  gap: 24px;
+  max-width: 1200px;
+  margin: 0 auto; /* 居中对齐 */
+}
+
+/* 移除旧的 dropdown-card 样式，我们将直接复用全局或添加类似首页的卡片样式 */
+.car-card-link {
+  text-decoration: none;
+  display: block;
+}
+
+.car-card {
+  position: relative;
+  background: transparent;
+  border-radius: 16px;
+  overflow: hidden;
+  border: none;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.car-card:hover {
+}
+
+.car-image {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  transition: transform 0.5s ease;
+}
+
+.car-card:hover .car-image {
+  transform: scale(1.05);
+}
+
+.car-badge {
+  position: static;
+  display: inline-block;
+  margin: 0;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.35;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.card-badge-overlay {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 10;
+}
+
+.title-badge {
+  color: var(--text);
+  font-size: 16px;
+  font-weight: 600;
+  padding: 6px 12px;
+  background: transparent;
+  border: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  transition: transform 0.3s ease;
+}
+
+
+
+.car-badge-inline {
+  flex-shrink: 0;
+  white-space: nowrap;
+  text-align: center;
+}
+
+.supercar-badge {
+  background: rgba(239, 68, 68, 0.8);
+  color: white;
+}
+
+.car-info {
+  padding: 14px 18px 18px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-rows: auto auto;
+  align-items: center;
+  column-gap: 12px;
+  row-gap: 8px;
+  flex-grow: 1;
+}
+
+.car-info .car-name {
+  grid-column: 1 / -1;
+  grid-row: 1;
+  min-width: 0;
+}
+
+/* 无价格字段：标签独占「价格行」并靠右，与首页价格+标签同一视觉层级 */
+.car-info .car-badge {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  justify-self: end;
+  align-self: center;
+}
+
+.car-name {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 0;
+  line-height: 1.3;
+  color: var(--text);
+}
+
+.car-price {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--brand);
+  margin-bottom: 12px;
+}
+
+.car-price-unit {
+  font-size: 0.875rem;
+  color: var(--muted);
+  font-weight: normal;
+}
+
+.car-meta {
+  color: var(--muted);
+  font-size: 0.875rem;
+  margin-top: auto;
+}
+/* --------------------------- */
 
 .back-btn {
   color: var(--text);
   text-decoration: none;
   font-weight: 600;
   padding: 8px 16px;
-  border: 1px solid var(--border);
+  border: none;
   border-radius: 8px;
   transition: all 0.2s ease;
 }
 
 .back-btn:hover {
-  border-color: var(--brand);
+  
   color: var(--brand);
   transform: translateX(-4px);
 }
 
 .header-logo {
+  flex: 1;
   display: flex;
-  align-items: center;
   justify-content: center;
+  align-items: center;
 }
 
 .header-logo-img {
-  height: 32px;
+  height: 28px;
   width: auto;
-  display: block;
+}
+
+.header-right-logo {
+  flex: 1;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.header-right-logo-img {
+  height: 36px;
+  width: auto;
+  object-fit: contain;
 }
 
 .btn-reserve {
@@ -184,7 +459,7 @@ body {
   font-size: clamp(48px, 6vw, 64px);
   font-weight: 900;
   color: var(--brand);
-  text-shadow: 0 0 30px color-mix(in srgb, var(--brand) 30%, transparent);
+  text-shadow: 0 0 30px rgba(28, 105, 212, 0.3);
 }
 
 .price-unit {
@@ -196,6 +471,11 @@ body {
 .hero-image-main {
   position: relative;
   z-index: 2;
+}
+
+.hero-image-main picture {
+  display: block;
+  width: 100%;
 }
 
 .hero-image-main img {
@@ -212,7 +492,7 @@ body {
 
 .stats-section {
   padding: 80px 0;
-  background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--brand) 5%, transparent), transparent);
+  background: linear-gradient(180deg, transparent, rgba(28, 105, 212, 0.05), transparent);
 }
 
 .stats-grid {
@@ -223,7 +503,7 @@ body {
 
 .stat-card {
   background: linear-gradient(145deg, #1e2329, #181c24);
-  border: 1px solid var(--border);
+  border: none;
   border-radius: 16px;
   padding: 32px 24px;
   text-align: center;
@@ -250,7 +530,7 @@ body {
 
 .stat-card:hover {
   transform: translateY(-8px);
-  border-color: var(--brand);
+  
   box-shadow: 0 20px 40px color-mix(in srgb, var(--brand) 20%, transparent);
 }
 
@@ -314,6 +594,11 @@ body {
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
 }
 
+.feature-image picture {
+  display: block;
+  width: 100%;
+}
+
 .feature-image img {
   width: 100%;
   height: auto;
@@ -355,7 +640,7 @@ body {
 
 .spec-group {
   background: linear-gradient(145deg, #1e2329, #181c24);
-  border: 1px solid var(--border);
+  border: none;
   border-radius: 16px;
   padding: 32px;
 }
@@ -393,7 +678,7 @@ body {
 
 .gallery-section {
   padding: 80px 0;
-  background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--brand) 3%, transparent), transparent);
+  background: linear-gradient(180deg, transparent, rgba(28, 105, 212, 0.03), transparent);
 }
 
 .gallery-main {
@@ -408,6 +693,11 @@ body {
   margin-bottom: 24px;
   box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5);
   cursor: pointer;
+}
+
+.gallery-featured picture {
+  display: block;
+  width: 100%;
 }
 
 .featured-image {
@@ -426,7 +716,7 @@ body {
   top: 50%;
   transform: translateY(-50%);
   background: rgba(0, 0, 0, 0.6);
-  border: 2px solid color-mix(in srgb, var(--brand) 50%, transparent);
+  border: 2px solid rgba(28, 105, 212, 0.5);
   color: white;
   width: 50px;
   height: 50px;
@@ -441,8 +731,8 @@ body {
 }
 
 .gallery-arrow:hover {
-  background: color-mix(in srgb, var(--brand) 90%, transparent);
-  border-color: var(--brand);
+  background: rgba(28, 105, 212, 0.9);
+  
   transform: translateY(-50%) scale(1.1);
   box-shadow: 0 0 20px color-mix(in srgb, var(--brand) 50%, transparent);
 }
@@ -494,6 +784,12 @@ body {
   aspect-ratio: 16/10;
 }
 
+.thumbnail-item picture {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
 .thumbnail-item img {
   width: 100% !important;
   height: 100% !important;
@@ -512,7 +808,7 @@ body {
 }
 
 .thumbnail-item.active {
-  border-color: var(--brand);
+  
   box-shadow: 0 0 20px color-mix(in srgb, var(--brand) 50%, transparent);
 }
 
@@ -600,7 +896,7 @@ body {
 }
 
 .btn-ghost:hover {
-  border-color: var(--brand);
+  
   color: var(--brand);
   transform: translateY(-2px);
 }
@@ -608,6 +904,63 @@ body {
 .btn-lg {
   padding: 18px 40px;
   font-size: 18px;
+}
+
+/* 详情页右侧悬浮预约 / 客服（Hero 在视口内隐藏，其余区域显示） */
+.detail-fab-actions {
+  position: fixed;
+  right: max(16px, env(safe-area-inset-right));
+  top: 50%;
+  z-index: 90;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: stretch;
+  width: min(152px, calc(100vw - 32px));
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-50%) translateX(calc(100% + 24px));
+  transition: opacity 0.4s ease, visibility 0.4s ease, transform 0.4s ease;
+}
+
+.detail-fab-actions.is-visible {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateY(-50%) translateX(0);
+}
+
+.detail-fab-actions .detail-fab-btn {
+  width: 100%;
+  text-align: center;
+  white-space: nowrap;
+  box-sizing: border-box;
+  padding: 14px 12px;
+  font-size: 15px;
+}
+
+@media (max-width: 480px) {
+  .detail-fab-actions {
+    width: min(138px, calc(100vw - 28px));
+    gap: 10px;
+  }
+
+  .detail-fab-actions .btn-lg {
+    padding: 12px 10px;
+    font-size: 14px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .detail-fab-actions {
+    transition: opacity 0.2s ease, visibility 0.2s ease;
+    transform: translateY(-50%);
+  }
+
+  .detail-fab-actions.is-visible {
+    transform: translateY(-50%);
+  }
 }
 
 .detail-footer {
@@ -813,7 +1166,7 @@ body {
 
 .service-card {
   background: linear-gradient(145deg, #1e2329, #181c24);
-  border: 1px solid var(--border);
+  border: none;
   border-radius: 16px;
   padding: 40px 32px;
   text-align: center;
@@ -822,7 +1175,7 @@ body {
 
 .service-card:hover {
   transform: translateY(-8px);
-  border-color: var(--brand);
+  
   box-shadow: 0 20px 40px color-mix(in srgb, var(--brand) 20%, transparent);
 }
 
@@ -1118,7 +1471,7 @@ body {
 .ignition-hint {
   color: #666;
   font-size: 13px;
-  margin-top: 16px;
+  margin-top: 26px;
   font-weight: 500;
   letter-spacing: 0.5px;
 }
@@ -1132,26 +1485,67 @@ body {
   .ignition-hint { font-size: 12px; }
 }
 
-/* WebP picture wrappers */
-.hero-image-main picture {
-  display: block;
-  width: 100%;
+.hero-detail {
+  display: flex !important;
+  align-items: flex-end !important;
+  padding-bottom: 12vh !important;
 }
-.feature-image picture {
-  display: block;
-  width: 100%;
+
+.hero-image-main {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-45%, -50%);
+  width: 90%;
+  z-index: 1;
 }
-.scenario-showcase-image picture {
-  display: block;
+
+.hero-content-wrapper {
+  z-index: 3 !important;
   width: 100%;
-  height: 100%;
+  padding-left: clamp(80px, 20vw, 300px) !important;
 }
-.gallery-featured picture {
-  display: block;
-  width: 100%;
+
+.hero-title {
+  font-size: clamp(24px, 3vw, 36px) !important;
+  font-weight: 600 !important;
+  letter-spacing: 8px !important;
+  text-transform: uppercase !important;
+  color: #ffffff !important;
+  margin-bottom: 8px !important;
 }
-.thumbnail-item picture {
+
+.hero-title-highlight {
+  font-size: clamp(48px, 8vw, 96px) !important;
+  font-weight: 900 !important;
+  letter-spacing: 8px !important;
+  background: none !important;
+  -webkit-background-clip: unset !important;
+  background-clip: unset !important;
+  color: #ffffff !important;
+  text-shadow: 0 4px 20px rgba(0,0,0,0.5);
+  font-family: 'Impact', 'Arial Black', sans-serif !important;
   display: block;
-  width: 100%;
-  height: 100%;
+  margin-top: 24px;
+}
+
+@media (max-width: 1024px) {
+  .hero-content-wrapper {
+    padding-left: clamp(40px, 8vw, 120px) !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .hero-content-wrapper {
+    padding-left: clamp(20px, 5vw, 60px) !important;
+  }
+  .header-logo {
+    display: none; /* 在移动端隐藏中间的文字 logo 以免拥挤 */
+  }
+  .header-center-nav {
+    display: none; /* 在移动端隐藏下拉菜单以免拥挤 */
+  }
+  .header-right-logo-img {
+    height: 28px;
+  }
 }
