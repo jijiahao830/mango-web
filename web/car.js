@@ -343,8 +343,9 @@ document.addEventListener('DOMContentLoaded', function() {
       .replace(/"/g, '&quot;');
   }
 
-  function coverWulingUrls() {
-    var base = './carpark/' + encodeURIComponent('五菱宏光') + '/';
+  /** 选车卡片封面：与详情页一致，使用该车型 carpark 目录下素材；有 webp 时浏览器优先用 source，缺失则仅用 jpg */
+  function coverUrlsForCar(carName) {
+    var base = './carpark/' + encodeURIComponent(String(carName || '').trim()) + '/';
     return { webp: base + '封面.webp', jpg: base + '封面.jpg' };
   }
 
@@ -405,7 +406,7 @@ document.addEventListener('DOMContentLoaded', function() {
   function buildCarCardHtml(car, opts) {
     opts = opts || {};
     var href = './carpark/' + encodeURIComponent(car.car_name) + '/car.html';
-    var cov = coverWulingUrls();
+    var cov = coverUrlsForCar(car.car_name);
     var cat = escHtml(car.category);
     var name = escHtml(car.car_name);
     var badge = categoryBadgeClass(car.category);
