@@ -23,6 +23,178 @@
   --sticky-offset: 280px;
 }
 
+/* 开屏动画 */
+.splash-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  animation: splashFadeOut 0.8s ease-in-out 3.7s forwards;
+}
+
+.splash-screen.splash-hidden {
+  display: none;
+}
+
+.splash-content {
+  position: relative;
+  animation: splashContentFade 4s ease-in-out forwards;
+}
+
+/* Logo光效容器 */
+.splash-content::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(255, 107, 53, 0.15) 0%, rgba(255, 107, 53, 0.05) 40%, transparent 70%);
+  border-radius: 50%;
+  animation: glowPulse 4s ease-in-out forwards;
+  pointer-events: none;
+  opacity: 0;
+}
+
+/* 旋转光环 */
+.splash-content::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 350px;
+  height: 350px;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    rgba(255, 140, 105, 0.15) 60deg,
+    rgba(255, 107, 53, 0.25) 120deg,
+    rgba(255, 140, 105, 0.15) 180deg,
+    transparent 240deg,
+    transparent 360deg
+  );
+  border-radius: 50%;
+  animation: rotateGlowCombined 4s linear forwards;
+  pointer-events: none;
+  filter: blur(25px);
+  opacity: 0;
+}
+
+.splash-logo {
+  position: relative;
+  z-index: 1;
+  width: 180px;
+  height: auto;
+  opacity: 0;
+  animation: logoFadeInOut 4s ease-in-out forwards;
+}
+
+@keyframes logoFadeInOut {
+  0% {
+    opacity: 0;
+    transform: scale(0.8);
+    filter: drop-shadow(0 0 0px rgba(255, 107, 53, 0));
+  }
+  15% {
+    opacity: 1;
+    transform: scale(1);
+    filter: drop-shadow(0 0 8px rgba(255, 107, 53, 0.2))
+            drop-shadow(0 0 15px rgba(255, 107, 53, 0.1));
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1);
+    filter: drop-shadow(0 0 18px rgba(255, 107, 53, 0.4))
+            drop-shadow(0 0 35px rgba(255, 107, 53, 0.25))
+            drop-shadow(0 0 50px rgba(255, 107, 53, 0.15));
+  }
+  85% {
+    opacity: 1;
+    transform: scale(1);
+    filter: drop-shadow(0 0 8px rgba(255, 107, 53, 0.2))
+            drop-shadow(0 0 15px rgba(255, 107, 53, 0.1));
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.1);
+    filter: drop-shadow(0 0 0px rgba(255, 107, 53, 0));
+  }
+}
+
+@keyframes splashFadeOut {
+  0% {
+    opacity: 1;
+    visibility: visible;
+  }
+  100% {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+
+@keyframes splashContentFade {
+  0%, 100% {
+    opacity: 0;
+  }
+  20%, 80% {
+    opacity: 1;
+  }
+}
+
+@keyframes glowPulse {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.8);
+  }
+  15% {
+    opacity: 0.2;
+    transform: translate(-50%, -50%) scale(0.95);
+  }
+  50% {
+    opacity: 0.5;
+    transform: translate(-50%, -50%) scale(1.1);
+  }
+  85% {
+    opacity: 0.2;
+    transform: translate(-50%, -50%) scale(0.95);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.8);
+  }
+}
+
+@keyframes rotateGlowCombined {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+  15% {
+    opacity: 0.15;
+    transform: translate(-50%, -50%) rotate(54deg);
+  }
+  50% {
+    opacity: 0.35;
+    transform: translate(-50%, -50%) rotate(180deg);
+  }
+  85% {
+    opacity: 0.15;
+    transform: translate(-50%, -50%) rotate(306deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
 * {
   box-sizing: border-box;
   -webkit-tap-highlight-color: transparent;

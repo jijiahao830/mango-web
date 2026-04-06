@@ -1736,3 +1736,40 @@ document.addEventListener('DOMContentLoaded', function() {
     requestAnimationFrame(syncCarSectionSticky);
   });
 });
+
+// 开屏动画控制
+(function() {
+  var splashScreen = document.getElementById('splashScreen');
+  if (!splashScreen) return;
+
+  // 检查是否已经显示过开屏动画（本次会话）
+  var hasShownSplash = sessionStorage.getItem('mango_splash_shown');
+  
+  if (hasShownSplash === 'true') {
+    // 已经显示过，直接隐藏开屏动画
+    splashScreen.classList.add('splash-hidden');
+    if (splashScreen.parentNode) {
+      splashScreen.parentNode.removeChild(splashScreen);
+    }
+    return;
+  }
+
+  // 第一次显示，标记为已显示
+  sessionStorage.setItem('mango_splash_shown', 'true');
+
+  // 防止页面滚动
+  document.body.style.overflow = 'hidden';
+
+  // 4.5秒后移除开屏动画并恢复滚动
+  setTimeout(function() {
+    splashScreen.classList.add('splash-hidden');
+    document.body.style.overflow = '';
+    
+    // 完全移除DOM元素
+    setTimeout(function() {
+      if (splashScreen && splashScreen.parentNode) {
+        splashScreen.parentNode.removeChild(splashScreen);
+      }
+    }, 800);
+  }, 4500);
+})();
