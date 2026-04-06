@@ -1,6 +1,6 @@
 /**
  * 详情页首屏加载：从 /api/cars-catalog 按 body[data-car-display-name] 匹配 cars.car_name，
- * 将日租写入 body[data-daily-price]；首屏标题用 brand / model；主题色 --brand / --brand-light
+ * 将日租写入 body[data-daily-price]；首屏标题：上行品牌（小字）、下行型号（大字 .hero-title-highlight）；主题色 --brand / --brand-light
  * 与选车页分类标签渐变一致（见 car.css 中各 *-badge 与 car.js categoryBadgeClass）。
  * 须在 car.js / similar-price-cars.js / vehicle-click.js 之前引入。
  */

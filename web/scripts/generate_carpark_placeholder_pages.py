@@ -1096,6 +1096,7 @@ def build_html(folder_name: str, row: dict | None = None) -> str:
     </div>
   </footer>
 
+  <script src="../detail-other-models.js"></script>
   <script src="./car.js"></script>
   <script src="../detail-fab.js"></script>
   <script src="../similar-price-cars.js"></script>
