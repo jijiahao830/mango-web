@@ -539,16 +539,16 @@ document.addEventListener('DOMContentLoaded', function() {
       '">' +
       '</picture>' +
       '<div class="car-info">' +
-      '<div class="car-badge car-badge-inline ' +
-      badge +
-      '">' +
-      cat +
-      '</div>' +
       '<div class="car-name">' +
       name +
       '</div>' +
       '<div class="car-price">' +
       priceHtml +
+      '</div>' +
+      '<div class="car-badge car-badge-inline ' +
+      badge +
+      '">' +
+      cat +
       '</div>' +
       '<div class="car-meta">' +
       meta +

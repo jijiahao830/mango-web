@@ -632,6 +632,17 @@ a.btn-primary {
   display: none;
 }
 
+/* 默认品牌筛选区域：固定4行，避免点击时下方内容上移 */
+#brandFilterButtons:not(.brand-filter--category-mode) {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(4, var(--filter-chip-row, 40px));
+  gap: var(--filter-chip-gap, 9px);
+  min-height: calc(4 * var(--filter-chip-row, 40px) + 3 * var(--filter-chip-gap, 9px));
+  align-items: stretch;
+  contain: layout;
+}
+
 /* 需高于 .sidebar-filter .filter-buttons .filter-btn:not(.hidden-brand) 的 display，否则展开后仍被盖住 */
 #brandFilterButtons.brand-expanded .filter-btn.hidden-brand {
   display: inline-flex;
@@ -669,7 +680,7 @@ a.btn-primary {
   grid-template-rows: unset;
   grid-auto-rows: minmax(var(--filter-chip-row, 40px), auto);
   align-items: start;
-  min-height: 0;
+  min-height: calc(4 * var(--filter-chip-row, 40px) + 3 * var(--filter-chip-gap, 9px));
 }
 
 #brandFilterButtons.brand-filter--category-mode .filter-btn.hidden-brand {
@@ -684,14 +695,25 @@ a.btn-primary {
   display: block !important;
 }
 
-/* 选品牌后：分类区固定 3 行 × 3 列（全部 + 8 个分类，无「...」） */
+/* 默认分类筛选区域：固定4行，避免点击品牌时下方内容上移 */
+#categoryFilterButtons:not(.category-filter--brand-mode) {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(4, var(--filter-chip-row, 40px));
+  gap: var(--filter-chip-gap, 9px);
+  align-items: stretch;
+  min-height: calc(4 * var(--filter-chip-row, 40px) + 3 * var(--filter-chip-gap, 9px));
+  contain: layout;
+}
+
+/* 选品牌后：分类区固定 4 行 × 3 列（全部 + 8 个分类，无「...」） */
 #categoryFilterButtons.category-filter--brand-mode {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  grid-template-rows: repeat(3, var(--filter-chip-row, 40px));
+  grid-template-rows: repeat(4, var(--filter-chip-row, 40px));
   gap: var(--filter-chip-gap, 9px);
   align-items: stretch;
-  min-height: calc(3 * var(--filter-chip-row, 40px) + 2 * var(--filter-chip-gap, 9px));
+  min-height: calc(4 * var(--filter-chip-row, 40px) + 3 * var(--filter-chip-gap, 9px));
   contain: layout;
 }
 
