@@ -1,6 +1,114 @@
 document.addEventListener('DOMContentLoaded', function() {
   const CAR_FILTER_STORAGE_KEY = 'mangoCarFilterState';
   const CAR_FILTER_OWNER_KEY = 'mango_filter_saved_for_driver';
+  /** 从详情返回选车页时恢复列表滚动位置（与 sessionStorage 配合） */
+  const CAR_LIST_SCROLL_KEY = 'mango_car_list_scroll_y';
+
+  function saveCarListScrollBeforeDetailNav() {
+    document.addEventListener(
+      'click',
+      function (e) {
+        var a = e.target.closest && e.target.closest('a.car-card-link');
+        if (!a) return;
+        var href = a.getAttribute('href') || '';
+        if (href.indexOf('carpark') === -1 || href.indexOf('car.html') === -1) return;
+        try {
+          var y =
+            window.scrollY ||
+            window.pageYOffset ||
+            (document.documentElement && document.documentElement.scrollTop) ||
+            0;
+          sessionStorage.setItem(CAR_LIST_SCROLL_KEY, String(y));
+        } catch (err) {}
+      },
+      true
+    );
+  }
+
+  function shouldRestoreCarListScroll() {
+    try {
+      if (sessionStorage.getItem(CAR_LIST_SCROLL_KEY) == null) return false;
+      var nav = performance.getEntriesByType && performance.getEntriesByType('navigation')[0];
+      if (nav && nav.type === 'back_forward') return true;
+      var ref = document.referrer || '';
+      if (ref.indexOf('/carpark/') !== -1 && ref.indexOf('car.html') !== -1) return true;
+      var h = location.hash || '';
+      if (h === '#carGrid' || h === '#carSection') return true;
+    } catch (e) {}
+    return false;
+  }
+
+  function clearCarListScrollKeyIfStale() {
+    if (!shouldRestoreCarListScroll()) {
+      try {
+        sessionStorage.removeItem(CAR_LIST_SCROLL_KEY);
+      } catch (e) {}
+    }
+  }
+
+  function scheduleRestoreCarListScrollAfterLayout() {
+    if (!shouldRestoreCarListScroll()) {
+      clearCarListScrollKeyIfStale();
+      return;
+    }
+    var raw = sessionStorage.getItem(CAR_LIST_SCROLL_KEY);
+    var y = parseInt(raw, 10);
+    if (isNaN(y) || y < 0) {
+      try {
+        sessionStorage.removeItem(CAR_LIST_SCROLL_KEY);
+      } catch (e) {}
+      return;
+    }
+    function applyScroll() {
+      try {
+        window.scrollTo(0, y);
+      } catch (e1) {
+        try {
+          document.documentElement.scrollTop = y;
+          document.body.scrollTop = y;
+        } catch (e2) {}
+      }
+    }
+    function finishRestore() {
+      try {
+        sessionStorage.removeItem(CAR_LIST_SCROLL_KEY);
+      } catch (e3) {}
+    }
+    /* 列表与「今日推荐」异步渲染会改变文档高度，多次对齐滚动位置 */
+    function onWindowLoadOnce() {
+      window.removeEventListener('load', onWindowLoadOnce);
+      applyScroll();
+    }
+    if (document.readyState === 'complete') {
+      setTimeout(applyScroll, 0);
+    } else {
+      window.addEventListener('load', onWindowLoadOnce);
+    }
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () {
+        applyScroll();
+        setTimeout(applyScroll, 0);
+        setTimeout(applyScroll, 80);
+        setTimeout(applyScroll, 200);
+        setTimeout(applyScroll, 450);
+        setTimeout(function () {
+          applyScroll();
+          finishRestore();
+        }, 700);
+      });
+    });
+  }
+
+  saveCarListScrollBeforeDetailNav();
+  clearCarListScrollKeyIfStale();
+
+  window.addEventListener('pageshow', function (e) {
+    if (e.persisted) {
+      try {
+        sessionStorage.removeItem(CAR_LIST_SCROLL_KEY);
+      } catch (err) {}
+    }
+  });
 
   /** sessionStorage 在部分环境/双开页面下不可靠，localStorage 作镜像，刷新后仍能恢复价格等筛选 */
   function readPersistedFilterJson() {
@@ -601,6 +709,7 @@ document.addEventListener('DOMContentLoaded', function() {
         initPrices();
         refreshCars();
         refreshTodayRecommend();
+        scheduleRestoreCarListScrollAfterLayout();
       })
       .catch(function (e) {
         console.warn('[cars-catalog]', e);
@@ -612,6 +721,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         initPrices();
         refreshCars();
+        scheduleRestoreCarListScrollAfterLayout();
       });
   }
 
