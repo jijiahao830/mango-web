@@ -408,6 +408,17 @@
     var groups = wrap.querySelectorAll('.gauge-needle-group');
     var DURATION = 1400;
     var STAGGER = 95;
+    
+    // 获取目标数值
+    var readoutEl = wrap.querySelector('.gauge-readout .val');
+    var targetValue = 0;
+    if (readoutEl) {
+      targetValue = parseInt(String(readoutEl.textContent).replace(/,/g, ''), 10);
+      if (isNaN(targetValue)) targetValue = 0;
+      // 初始设置为0
+      readoutEl.textContent = '0';
+    }
+    
     groups.forEach(function (group, idx) {
       var targetFrac = parseFloat(group.getAttribute('data-target-frac'), 10);
       if (isNaN(targetFrac)) targetFrac = 0;
@@ -431,6 +442,13 @@
         group.setAttribute('transform', 'rotate(' + deg + ' 100 100)');
         var blade = group.querySelector('.gauge-needle-bar');
         if (blade) blade.setAttribute('fill', gaugeOrangeHex(frac));
+        
+        // 同步更新数字
+        if (readoutEl && targetValue > 0) {
+          var currentValue = Math.round(targetValue * eased);
+          readoutEl.textContent = String(currentValue);
+        }
+        
         if (p < 1) requestAnimationFrame(step);
       }
       requestAnimationFrame(step);
