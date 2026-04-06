@@ -216,6 +216,11 @@
   background: linear-gradient(135deg, #0ea5e9, #38bdf8);
 }
 
+.similar-cars-carousel .car-info .car-badge.pickup-badge {
+  background: linear-gradient(135deg, #b45309, #fbbf24);
+  color: #fff;
+}
+
 .similar-cars-carousel .car-info .car-badge.off-badge {
   background: #a8b4c4;
   color: #0f172a;

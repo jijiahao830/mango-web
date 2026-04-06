@@ -13,11 +13,17 @@ document.addEventListener('DOMContentLoaded', function() {
         var href = a.getAttribute('href') || '';
         if (href.indexOf('carpark') === -1 || href.indexOf('car.html') === -1) return;
         try {
-          var y =
-            window.scrollY ||
-            window.pageYOffset ||
-            (document.documentElement && document.documentElement.scrollTop) ||
-            0;
+          var root = document.getElementById('carSection');
+          var y = 0;
+          if (root) {
+            y = root.scrollTop;
+          } else {
+            y =
+              window.scrollY ||
+              window.pageYOffset ||
+              (document.documentElement && document.documentElement.scrollTop) ||
+              0;
+          }
           sessionStorage.setItem(CAR_LIST_SCROLL_KEY, String(y));
         } catch (err) {}
       },
@@ -61,6 +67,11 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     function applyScroll() {
       try {
+        var root = document.getElementById('carSection');
+        if (root) {
+          root.scrollTop = y;
+          return;
+        }
         window.scrollTo(0, y);
       } catch (e1) {
         try {
@@ -164,6 +175,29 @@ document.addEventListener('DOMContentLoaded', function() {
   const sidebar = document.querySelector('.sidebar-filter');
   const carGridEl = document.getElementById('carGrid');
 
+  /** 鼠标在筛选侧栏上时，滚轮只滚动侧栏：在 #carSection 捕获阶段拦截，阻止主区域默认滚动（避免轻微联动） */
+  function bindFilterSidebarWheelOnly(sidebarEl, sectionEl) {
+    if (!sidebarEl || !sectionEl) return;
+    sectionEl.addEventListener(
+      'wheel',
+      function (e) {
+        var t = e.target;
+        if (!t || (t !== sidebarEl && !sidebarEl.contains(t))) return;
+        var el = sidebarEl;
+        var max = Math.max(0, el.scrollHeight - el.clientHeight);
+        var dy = e.deltaY;
+        if (e.deltaMode === 1) dy *= 16;
+        else if (e.deltaMode === 2) dy *= el.clientHeight || 1;
+        var next = Math.max(0, Math.min(max, el.scrollTop + dy));
+        el.scrollTop = Math.round(next);
+        e.preventDefault();
+        e.stopImmediatePropagation();
+      },
+      { passive: false, capture: true }
+    );
+  }
+  bindFilterSidebarWheelOnly(sidebar, document.getElementById('carSection'));
+
   const expandBrandBtn = document.getElementById('expandBrandBtn');
   const brandFilterButtons = document.getElementById('brandFilterButtons');
   let initialBrandOrderChildren = brandFilterButtons
@@ -196,13 +230,28 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   function scrollToCarSectionTop() {
-    if (!carGridEl) return;
-    carGridEl.scrollIntoView({ block: 'start', behavior: 'smooth' });
+    var root = document.getElementById('carSection');
+    if (root && typeof root.scrollTo === 'function') {
+      try {
+        root.scrollTo({ top: 0, behavior: 'smooth' });
+        return;
+      } catch (e) {
+        root.scrollTop = 0;
+        return;
+      }
+    }
+    if (carGridEl) {
+      carGridEl.scrollIntoView({ block: 'start', behavior: 'smooth' });
+    }
   }
 
   if (expandBrandBtn && brandFilterButtons) {
     expandBrandBtn.addEventListener('click', () => {
       brandFilterButtons.classList.add('brand-expanded');
+      // 给侧边栏添加class，允许滚动
+      if (sidebar) {
+        sidebar.classList.add('brand-expanded-scroll');
+      }
       scrollToCarSectionTop();
     });
   }
@@ -251,7 +300,10 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     const searchEl = document.getElementById('carSearchInput');
     if (searchEl) searchEl.value = '';
-    if (brandFilterButtons) brandFilterButtons.classList.remove('brand-expanded');
+    if (brandFilterButtons) {
+      brandFilterButtons.classList.remove('brand-expanded');
+      if (sidebar) sidebar.classList.remove('brand-expanded-scroll');
+    }
   }
 
   function saveState() {
@@ -461,15 +513,17 @@ document.addEventListener('DOMContentLoaded', function() {
     var c = String(cat || '');
     var m = {
       行政级轿车: 'exec-badge',
+      豪华轿车: 'luxsedan-badge',
       豪华SUV: 'luxsuv-badge',
       豪华suv: 'luxsuv-badge',
       超跑: 'perf-badge',
+      超级跑车: 'perf-badge',
       性能车: 'perf-badge',
       新能源: 'ev-badge',
       商务车: 'biz-badge',
       轿车: 'sedan-badge',
       越野车: 'off-badge',
-      皮卡: 'suv-badge',
+      皮卡: 'pickup-badge',
       即将上新: 'biz-badge',
     };
     return m[c] || 'car-badge-inline';
@@ -766,6 +820,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     if (brandFilterButtons) {
       brandFilterButtons.classList.remove('brand-expanded');
+      if (sidebar) sidebar.classList.remove('brand-expanded-scroll');
     }
 
     scenarioBtns.forEach(b => {
@@ -1440,8 +1495,10 @@ document.addEventListener('DOMContentLoaded', function() {
       // 选了「...」之后的品牌则保持全部展开，直到改选「...」之前的品牌或「全部」
       if (isBrandAfterEllipsisInDefaultMode(state.brand)) {
         container.classList.add('brand-expanded');
+        if (sidebar) sidebar.classList.add('brand-expanded-scroll');
       } else {
         container.classList.remove('brand-expanded');
+        if (sidebar) sidebar.classList.remove('brand-expanded-scroll');
       }
       return;
     }
@@ -1468,8 +1525,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
     if (keepExpanded) {
       container.classList.add('brand-expanded');
+      if (sidebar) sidebar.classList.add('brand-expanded-scroll');
     } else {
       container.classList.remove('brand-expanded');
+      if (sidebar) sidebar.classList.remove('brand-expanded-scroll');
     }
 
     container.appendChild(allBtn);
@@ -1709,32 +1768,11 @@ document.addEventListener('DOMContentLoaded', function() {
     setTimeout(syncBackToCarsFromHero, 300);
   }
 
-  // 选车区（#carSection）：滚入时 body.car-section-active 侧栏 sticky；上滑离开则移除
+  // 选车页：列表在 #carSection 内滚动，侧栏样式依赖 body.car-section-active（移动端抽屉等）
   var carSectionEl = document.getElementById('carSection');
-  function syncCarSectionSticky() {
-    if (!carSectionEl) return;
-    var header = document.querySelector('.site-header');
-    var headerH = header ? header.getBoundingClientRect().height : 72;
-    var top = carSectionEl.getBoundingClientRect().top;
-    var active = top <= headerH + 4;
-    document.body.classList.toggle('car-section-active', active);
+  if (carSectionEl) {
+    document.body.classList.add('car-section-active');
   }
-  syncCarSectionSticky();
-  window.addEventListener('scroll', syncCarSectionSticky, { passive: true, capture: true });
-  document.addEventListener('scroll', syncCarSectionSticky, { passive: true, capture: true });
-  window.addEventListener('resize', syncCarSectionSticky, { passive: true });
-  if (typeof IntersectionObserver !== 'undefined' && carSectionEl) {
-    var carSectionIo = new IntersectionObserver(
-      function() {
-        syncCarSectionSticky();
-      },
-      { root: null, threshold: [0, 0.01, 0.05, 0.1, 0.5, 1], rootMargin: '0px' }
-    );
-    carSectionIo.observe(carSectionEl);
-  }
-  requestAnimationFrame(function() {
-    requestAnimationFrame(syncCarSectionSticky);
-  });
 });
 
 // 开屏动画控制
@@ -1742,11 +1780,30 @@ document.addEventListener('DOMContentLoaded', function() {
   var splashScreen = document.getElementById('splashScreen');
   if (!splashScreen) return;
 
+  // 检查是否是从详情页返回的
+  var referrer = document.referrer || '';
+  var isFromCarDetail = referrer.indexOf('/carpark/') !== -1 && referrer.indexOf('car.html') !== -1;
+
+  // 从服务页、关于页进入选车页不播放开屏（与站内导航一致）
+  var refLower = referrer.toLowerCase();
+  var isFromServicesOrAbout =
+    refLower.indexOf('services.html') !== -1 || refLower.indexOf('about.html') !== -1;
+  
+  var navigation = performance.getEntriesByType && performance.getEntriesByType('navigation')[0];
+  var isReload = navigation && navigation.type === 'reload';
+  var isBackForward = navigation && navigation.type === 'back_forward';
+
   // 检查是否已经显示过开屏动画（本次会话）
   var hasShownSplash = sessionStorage.getItem('mango_splash_shown');
-  
-  if (hasShownSplash === 'true') {
-    // 已经显示过，直接隐藏开屏动画
+
+  // 浏览器刷新：在选车页也要重新播放开屏（reload 时不走下方跳过逻辑）
+  var shouldSkipSplash =
+    !isReload &&
+    (isFromCarDetail ||
+      isFromServicesOrAbout ||
+      (isBackForward && hasShownSplash === 'true'));
+
+  if (shouldSkipSplash) {
     splashScreen.classList.add('splash-hidden');
     if (splashScreen.parentNode) {
       splashScreen.parentNode.removeChild(splashScreen);
@@ -1754,7 +1811,7 @@ document.addEventListener('DOMContentLoaded', function() {
     return;
   }
 
-  // 第一次显示，标记为已显示
+  // 显示动画并标记为已显示
   sessionStorage.setItem('mango_splash_shown', 'true');
 
   // 防止页面滚动

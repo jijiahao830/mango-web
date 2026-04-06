@@ -21,111 +21,313 @@
   --warning: #f59e0b;
   --danger: #ef4444;
   --sticky-offset: 280px;
+  /* 选车页侧栏：与顶栏下沿至屏幕底的可视高度一致（切换筛选展示时高度不变） */
+  --car-sidebar-viewport-height: calc(100vh - 56px);
 }
 
-/* 开屏动画 */
+/* 开屏动画：苹果发布会风（纯黑场、Logo 由虚到实「对焦」、舞台柔光、倒影、克制缓动） */
+.splash-screen--apple {
+  background: #000000;
+  animation: splashFadeOut 0.85s cubic-bezier(0.25, 0.1, 0.25, 1) 3.65s forwards;
+}
+
 .splash-screen {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: #000;
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 9999;
-  animation: splashFadeOut 0.8s ease-in-out 3.7s forwards;
+  overflow: hidden;
 }
 
 .splash-screen.splash-hidden {
   display: none;
 }
 
-.splash-content {
-  position: relative;
-  animation: splashContentFade 4s ease-in-out forwards;
+.splash-bg-apple {
+  position: absolute;
+  inset: 0;
+  background: #000000;
+  pointer-events: none;
 }
 
-/* Logo光效容器 */
-.splash-content::before {
+/* 近年发布会常见：极淡冷暖光晕层（慢显，不抢 Logo） */
+.splash-bg-apple::before {
   content: '';
   position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 300px;
-  height: 300px;
-  background: radial-gradient(circle, rgba(255, 107, 53, 0.15) 0%, rgba(255, 107, 53, 0.05) 40%, transparent 70%);
-  border-radius: 50%;
-  animation: glowPulse 4s ease-in-out forwards;
-  pointer-events: none;
+  inset: -5%;
+  background:
+    radial-gradient(ellipse 70% 55% at 45% 42%, rgba(45, 78, 120, 0.12) 0%, transparent 55%),
+    radial-gradient(ellipse 55% 45% at 62% 58%, rgba(95, 40, 65, 0.08) 0%, transparent 50%);
   opacity: 0;
+  animation: appleAmbientMesh 4s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
 }
 
-/* 旋转光环 */
-.splash-content::after {
-  content: '';
+@keyframes appleAmbientMesh {
+  0%,
+  12% {
+    opacity: 0;
+  }
+  38% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.85;
+  }
+}
+
+/* 顶部柔光（略带动，接近盘点片里的舞台灯感） */
+.splash-spotlight {
   position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 350px;
-  height: 350px;
-  background: conic-gradient(
-    from 0deg,
-    transparent 0deg,
-    rgba(255, 140, 105, 0.15) 60deg,
-    rgba(255, 107, 53, 0.25) 120deg,
-    rgba(255, 140, 105, 0.15) 180deg,
-    transparent 240deg,
-    transparent 360deg
-  );
-  border-radius: 50%;
-  animation: rotateGlowCombined 4s linear forwards;
+  inset: -20%;
+  background: radial-gradient(ellipse 58% 48% at 50% 38%, rgba(55, 55, 58, 0.5) 0%, transparent 58%);
   pointer-events: none;
-  filter: blur(25px);
   opacity: 0;
+  animation: appleSpotlightIn 3.8s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
 }
 
-.splash-logo {
-  position: relative;
-  z-index: 1;
-  width: 180px;
-  height: auto;
-  opacity: 0;
-  animation: logoFadeInOut 4s ease-in-out forwards;
-}
-
-@keyframes logoFadeInOut {
+@keyframes appleSpotlightIn {
   0% {
     opacity: 0;
-    transform: scale(0.8);
-    filter: drop-shadow(0 0 0px rgba(255, 107, 53, 0));
+    transform: translate(0, 0) scale(1);
   }
-  15% {
+  28% {
     opacity: 1;
-    transform: scale(1);
-    filter: drop-shadow(0 0 8px rgba(255, 107, 53, 0.2))
-            drop-shadow(0 0 15px rgba(255, 107, 53, 0.1));
   }
-  50% {
-    opacity: 1;
-    transform: scale(1);
-    filter: drop-shadow(0 0 18px rgba(255, 107, 53, 0.4))
-            drop-shadow(0 0 35px rgba(255, 107, 53, 0.25))
-            drop-shadow(0 0 50px rgba(255, 107, 53, 0.15));
+  55% {
+    transform: translate(-1.5%, 0.8%) scale(1.02);
   }
-  85% {
+  100% {
+    opacity: 0.92;
+    transform: translate(0.5%, -0.3%) scale(1);
+  }
+}
+
+.splash-vignette-apple {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  box-shadow:
+    inset 0 0 100px rgba(0, 0, 0, 0.85),
+    inset 0 -80px 140px rgba(0, 0, 0, 0.55);
+}
+
+.splash-floor-glow {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: 150%;
+  max-width: 1000px;
+  height: 46vh;
+  transform: translateX(-50%);
+  background: radial-gradient(ellipse 48% 36% at 50% 100%, rgba(255, 255, 255, 0.09) 0%, transparent 70%);
+  pointer-events: none;
+  opacity: 0;
+  animation: appleFloorGlow 3.9s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
+}
+
+@keyframes appleFloorGlow {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) scale(0.88);
+  }
+  32% {
     opacity: 1;
-    transform: scale(1);
-    filter: drop-shadow(0 0 8px rgba(255, 107, 53, 0.2))
-            drop-shadow(0 0 15px rgba(255, 107, 53, 0.1));
+    transform: translateX(-50%) scale(1);
+  }
+  100% {
+    opacity: 0.92;
+    transform: translateX(-50%) scale(1);
+  }
+}
+
+/* 中心扩散环（历年 Keynote / 盘点类视频里常见的 ripple） */
+.splash-pulse-rings {
+  position: absolute;
+  left: 50%;
+  top: 38%;
+  z-index: 1;
+  width: min(300px, 78vw);
+  height: min(300px, 78vw);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.splash-pulse-ring {
+  position: absolute;
+  inset: 0;
+  box-sizing: border-box;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 50%;
+  opacity: 0;
+  animation: appleRipple 2.2s cubic-bezier(0.25, 0.1, 0.25, 1) 0.15s forwards;
+}
+
+.splash-pulse-ring--delayed {
+  animation-delay: 0.45s;
+}
+
+@keyframes appleRipple {
+  0% {
+    opacity: 0;
+    transform: scale(0.72);
+  }
+  12% {
+    opacity: 0.55;
   }
   100% {
     opacity: 0;
-    transform: scale(1.1);
-    filter: drop-shadow(0 0 0px rgba(255, 107, 53, 0));
+    transform: scale(1.4);
+  }
+}
+
+.splash-content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(18px, 4vh, 28px);
+  animation: splashContentFade 4s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
+}
+
+/* Logo + 倒影：整体做「对焦」模糊 → 清晰（类 AE / Keynote） */
+.splash-logo-stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  will-change: transform, filter, opacity;
+  animation: appleLogoStage 4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.splash-logo-img {
+  display: block;
+  width: min(200px, 48vw);
+  height: auto;
+  position: relative;
+  z-index: 1;
+}
+
+/* Logo 与倒影之间的细亮缝（舞台边缘感） */
+.splash-stage-line {
+  width: min(200px, 48vw);
+  height: 1px;
+  margin-top: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.12) 20%,
+    rgba(255, 255, 255, 0.22) 50%,
+    rgba(255, 255, 255, 0.12) 80%,
+    transparent 100%
+  );
+  opacity: 0;
+  animation: appleStageLine 4s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
+}
+
+@keyframes appleStageLine {
+  0%,
+  20% {
+    opacity: 0;
+    transform: scaleX(0.6);
+  }
+  32%,
+  72% {
+    opacity: 1;
+    transform: scaleX(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scaleX(1);
+  }
+}
+
+.splash-reflection {
+  width: min(200px, 48vw);
+  margin-top: 0;
+  height: clamp(52px, 15vw, 76px);
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.5) 0%, transparent 90%);
+  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.5) 0%, transparent 90%);
+  pointer-events: none;
+}
+
+.splash-logo-img--mirror {
+  width: 100%;
+  height: auto;
+  transform: scaleY(-1);
+  opacity: 0.32;
+  filter: blur(0.3px);
+}
+
+.splash-tagline {
+  margin: 0;
+  font-size: clamp(12px, 2.8vw, 14px);
+  font-weight: 400;
+  letter-spacing: 0.28em;
+  text-indent: 0.28em;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Helvetica, Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
+  color: rgba(255, 255, 255, 0.38);
+  opacity: 0;
+  transform: translateY(12px);
+  animation: appleTagline 4s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
+}
+
+/* 两段式「对焦」：强模糊 → 中间态 → 清晰，末段略收焦淡出（接近 AE 教程节奏） */
+@keyframes appleLogoStage {
+  0% {
+    opacity: 0;
+    filter: blur(32px) brightness(1.15);
+    transform: scale(1.2);
+  }
+  14% {
+    opacity: 0.45;
+    filter: blur(14px) brightness(1.08);
+    transform: scale(1.08);
+  }
+  28% {
+    opacity: 1;
+    filter: blur(0) brightness(1);
+    transform: scale(1);
+  }
+  38% {
+    filter: blur(0) brightness(1);
+    transform: scale(1.014);
+  }
+  42% {
+    transform: scale(1);
+  }
+  72% {
+    opacity: 1;
+    filter: blur(0) brightness(1);
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    filter: blur(14px) brightness(1.05);
+    transform: scale(1.05);
+  }
+}
+
+@keyframes appleTagline {
+  0%,
+  18% {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  32%,
+  68% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-8px);
   }
 }
 
@@ -141,57 +343,417 @@
 }
 
 @keyframes splashContentFade {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 0;
   }
-  20%, 80% {
+  6%,
+  90% {
     opacity: 1;
   }
 }
 
-@keyframes glowPulse {
-  0% {
+@media (prefers-reduced-motion: reduce) {
+  .splash-bg-apple::before {
+    animation: none;
+    opacity: 0.6;
+  }
+  .splash-bg-apple,
+  .splash-spotlight,
+  .splash-floor-glow,
+  .splash-stage-line,
+  .splash-pulse-ring {
+    animation: none;
+  }
+  .splash-pulse-ring,
+  .splash-pulse-ring--delayed {
     opacity: 0;
-    transform: translate(-50%, -50%) scale(0.8);
   }
-  15% {
-    opacity: 0.2;
-    transform: translate(-50%, -50%) scale(0.95);
+  .splash-spotlight {
+    opacity: 0.9;
+    transform: none;
   }
-  50% {
+  .splash-floor-glow {
+    opacity: 0.85;
+    transform: translateX(-50%) scale(1);
+  }
+  .splash-stage-line {
     opacity: 0.5;
-    transform: translate(-50%, -50%) scale(1.1);
+    transform: none;
   }
-  85% {
-    opacity: 0.2;
-    transform: translate(-50%, -50%) scale(0.95);
+  .splash-logo-stage {
+    opacity: 1;
+    filter: none;
+    transform: none;
+    animation: none;
   }
-  100% {
-    opacity: 0;
-    transform: translate(-50%, -50%) scale(0.8);
+  .splash-tagline {
+    opacity: 1;
+    transform: none;
+    animation: none;
+  }
+  .splash-content {
+    animation: none;
+  }
+  .splash-screen--apple {
+    animation: splashFadeOut 0.5s ease-out 1s forwards;
   }
 }
 
-@keyframes rotateGlowCombined {
+/* ─── Pro 片头结构 + 品牌橙（--brand / --brand-light）影棚光与车漆高光 ─── */
+.splash-screen--keynote-pro {
+  background: #000000;
+  animation: splashFadeOut 0.85s cubic-bezier(0.25, 0.1, 0.25, 1) 3.65s forwards;
+}
+
+.splash-screen--keynote-pro .splash-pulse-rings {
+  display: none;
+}
+
+.splash-screen--keynote-pro .splash-bg-apple,
+.splash-screen--keynote-pro .splash-bg-apple::before {
+  background: #000000;
+  animation: none;
+  opacity: 0;
+}
+
+/* 顶光：暖橙柔光（品牌色） */
+.splash-screen--keynote-pro .splash-spotlight {
+  background: radial-gradient(
+    ellipse 52% 44% at 50% 36%,
+    color-mix(in srgb, var(--brand) 22%, transparent) 0%,
+    color-mix(in srgb, var(--brand-light) 8%, transparent) 40%,
+    transparent 62%
+  );
+  animation: keynoteSpotlightIn 4.4s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
+}
+
+@keyframes keynoteSpotlightIn {
   0% {
     opacity: 0;
-    transform: translate(-50%, -50%) rotate(0deg);
+    transform: translate(0, 0) scale(1);
   }
-  15% {
-    opacity: 0.15;
-    transform: translate(-50%, -50%) rotate(54deg);
+  26% {
+    opacity: 1;
   }
-  50% {
-    opacity: 0.35;
-    transform: translate(-50%, -50%) rotate(180deg);
+  72% {
+    opacity: 0.62;
+    transform: translate(0.2%, -0.15%) scale(1.008);
   }
-  85% {
-    opacity: 0.15;
-    transform: translate(-50%, -50%) rotate(306deg);
+  100% {
+    opacity: 0.52;
+    transform: translate(0.15%, -0.1%) scale(1);
+  }
+}
+
+.splash-screen--keynote-pro .splash-vignette-apple {
+  box-shadow:
+    inset 0 0 140px rgba(0, 0, 0, 0.94),
+    inset 0 -120px 200px rgba(12, 4, 0, 0.55),
+    inset 0 -40px 80px color-mix(in srgb, var(--brand) 12%, transparent);
+}
+
+.splash-screen--keynote-pro .splash-floor-glow {
+  background: radial-gradient(
+    ellipse 48% 34% at 50% 100%,
+    color-mix(in srgb, var(--brand) 28%, transparent) 0%,
+    color-mix(in srgb, var(--brand-light) 6%, transparent) 45%,
+    transparent 76%
+  );
+  animation: keynoteFloorGlow 4.3s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
+}
+
+@keyframes keynoteFloorGlow {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) scale(0.92);
+  }
+  30% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.72;
+    transform: translateX(-50%) scale(1.015);
+  }
+}
+
+/* 与 car.js 4.5s 对齐；Pro 片头常见极轻 dolly-in */
+.splash-screen--keynote-pro .splash-content {
+  animation: keynoteSplashContent 4.5s cubic-bezier(0.2, 0.08, 0.2, 1) forwards;
+}
+
+@keyframes keynoteSplashContent {
+  0% {
+    opacity: 0;
+    transform: scale(0.988);
+  }
+  10% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  80% {
+    opacity: 1;
+    transform: scale(1.022);
+  }
+  92% {
+    opacity: 0.88;
+    transform: scale(1.026);
   }
   100% {
     opacity: 0;
-    transform: translate(-50%, -50%) rotate(360deg);
+    transform: scale(1.03);
+  }
+}
+
+.splash-screen--keynote-pro .splash-logo-stage {
+  animation: keynoteLogoStage 4.5s cubic-bezier(0.18, 1, 0.3, 1) forwards;
+}
+
+.splash-screen--keynote-pro .splash-logo-rim {
+  position: relative;
+  width: min(200px, 48vw);
+  line-height: 0;
+}
+
+.splash-screen--keynote-pro .splash-logo-img {
+  position: relative;
+  z-index: 0;
+  display: block;
+  width: 100%;
+  height: auto;
+  filter: brightness(0)
+    drop-shadow(0 0 0.5px color-mix(in srgb, var(--brand-light) 95%, white))
+    drop-shadow(0 0 2px color-mix(in srgb, var(--brand) 75%, transparent))
+    drop-shadow(0 0 5px color-mix(in srgb, var(--brand) 55%, transparent))
+    drop-shadow(-1px -2px 7px color-mix(in srgb, var(--brand) 40%, transparent))
+    drop-shadow(2px 2px 12px color-mix(in srgb, var(--gold-end) 35%, var(--brand) 65%))
+    drop-shadow(0 0 28px color-mix(in srgb, var(--brand) 28%, transparent));
+}
+
+.splash-screen--keynote-pro .splash-logo-rim-sheen {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  overflow: hidden;
+  pointer-events: none;
+  -webkit-mask-image: url('./logo/logo2.png');
+  mask-image: url('./logo/logo2.png');
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  mix-blend-mode: screen;
+  opacity: 0.92;
+}
+
+/* 横向高光：金橙掠过高光（品牌漆） */
+.splash-screen--keynote-pro .splash-logo-rim-sheen-inner {
+  position: absolute;
+  left: -30%;
+  top: -35%;
+  width: 55%;
+  height: 200%;
+  margin: 0;
+  background: linear-gradient(
+    105deg,
+    transparent 0%,
+    transparent 28%,
+    color-mix(in srgb, var(--brand) 18%, transparent) 40%,
+    color-mix(in srgb, var(--gold-end) 45%, white) 48%,
+    color-mix(in srgb, var(--brand-light) 70%, white) 52%,
+    color-mix(in srgb, var(--brand) 35%, transparent) 60%,
+    transparent 72%,
+    transparent 100%
+  );
+  filter: blur(0.35px);
+  transform: translateX(-120%) skewX(-10deg);
+  opacity: 0;
+  animation: keynoteSpecularSweep 4.5s cubic-bezier(0.33, 0, 0.2, 1) forwards;
+}
+
+@keyframes keynoteSpecularSweep {
+  0% {
+    transform: translateX(-130%) skewX(-10deg);
+    opacity: 0;
+  }
+  8% {
+    opacity: 1;
+  }
+  42% {
+    transform: translateX(42%) skewX(-10deg);
+    opacity: 1;
+  }
+  68% {
+    opacity: 0.35;
+  }
+  100% {
+    transform: translateX(130%) skewX(-10deg);
+    opacity: 0;
+  }
+}
+
+.splash-screen--keynote-pro .splash-logo-rim--reflect {
+  width: 100%;
+}
+
+.splash-screen--keynote-pro .splash-logo-rim-sheen--reflect {
+  opacity: 0.42;
+}
+
+.splash-screen--keynote-pro .splash-logo-rim-sheen--reflect .splash-logo-rim-sheen-inner {
+  animation: keynoteSpecularSweepReflect 4.5s cubic-bezier(0.33, 0, 0.2, 1) 0.12s forwards;
+}
+
+@keyframes keynoteSpecularSweepReflect {
+  0% {
+    transform: translateX(125%) skewX(10deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.85;
+  }
+  48% {
+    transform: translateX(-38%) skewX(10deg);
+    opacity: 0.55;
+  }
+  100% {
+    transform: translateX(-125%) skewX(10deg);
+    opacity: 0;
+  }
+}
+
+.splash-screen--keynote-pro .splash-logo-img--mirror {
+  opacity: 0.44;
+  filter: brightness(0)
+    drop-shadow(0 0 0.5px color-mix(in srgb, var(--brand-light) 80%, transparent))
+    drop-shadow(0 0 3px color-mix(in srgb, var(--brand) 45%, transparent))
+    drop-shadow(0 0 10px color-mix(in srgb, var(--brand) 25%, transparent));
+}
+
+.splash-screen--keynote-pro .splash-reflection {
+  width: min(200px, 48vw);
+}
+
+@keyframes keynoteLogoStage {
+  0% {
+    opacity: 0;
+    filter: blur(22px);
+  }
+  12% {
+    opacity: 0.5;
+    filter: blur(9px);
+  }
+  24% {
+    opacity: 1;
+    filter: blur(0);
+  }
+  78% {
+    opacity: 1;
+    filter: blur(0);
+  }
+  100% {
+    opacity: 0;
+    filter: blur(10px);
+  }
+}
+
+.splash-screen--keynote-pro .splash-stage-line {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    color-mix(in srgb, var(--brand) 22%, transparent) 22%,
+    color-mix(in srgb, var(--brand-light) 55%, white) 50%,
+    color-mix(in srgb, var(--brand) 22%, transparent) 78%,
+    transparent 100%
+  );
+  animation: keynoteStageLine 4.5s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
+}
+
+@keyframes keynoteStageLine {
+  0%,
+  18% {
+    opacity: 0;
+    transform: scaleX(0.58);
+  }
+  28%,
+  76% {
+    opacity: 1;
+    transform: scaleX(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scaleX(1);
+  }
+}
+
+.splash-screen--keynote-pro .splash-tagline {
+  color: color-mix(in srgb, var(--brand-light) 72%, rgba(255, 248, 245, 0.9));
+  font-weight: 400;
+  letter-spacing: 0.32em;
+  text-indent: 0.32em;
+  animation: keynoteTagline 4.5s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
+}
+
+@keyframes keynoteTagline {
+  0%,
+  15% {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  26%,
+  75% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .splash-screen--keynote-pro .splash-logo-rim-sheen-inner {
+    animation: none;
+    opacity: 0;
+    transform: none;
+  }
+  .splash-screen--keynote-pro .splash-spotlight,
+  .splash-screen--keynote-pro .splash-floor-glow,
+  .splash-screen--keynote-pro .splash-stage-line {
+    animation: none;
+  }
+  .splash-screen--keynote-pro .splash-spotlight {
+    opacity: 0.42;
+    transform: none;
+  }
+  .splash-screen--keynote-pro .splash-floor-glow {
+    opacity: 0.48;
+    transform: translateX(-50%) scale(1);
+  }
+  .splash-screen--keynote-pro .splash-stage-line {
+    opacity: 0.4;
+    transform: none;
+  }
+  .splash-screen--keynote-pro .splash-logo-stage {
+    animation: none;
+    opacity: 1;
+    filter: none;
+    transform: none;
+  }
+  .splash-screen--keynote-pro .splash-content {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+  .splash-screen--keynote-pro .splash-tagline {
+    opacity: 1;
+    transform: none;
+    animation: none;
+  }
+  .splash-screen--keynote-pro {
+    animation: splashFadeOut 0.5s ease-out 1s forwards;
   }
 }
 
@@ -202,20 +764,18 @@
 
 html {
   scroll-behavior: smooth;
-  min-height: 100%;
-  overflow-y: auto;
-  /* clip 不建立横向滚动条，且不会像 hidden 那样把 overflow-y 算成 auto，避免 sticky 失效 */
-  overflow-x: clip;
+  height: 100%;
+  overflow: hidden;
 }
 
 html, body {
-  min-height: 100%;
+  height: 100%;
   background-color: var(--bg);
   background-image: radial-gradient(ellipse 1400px 800px at 50% 0%, #1a1d29 0%, var(--bg) 50%);
   color: var(--text);
   font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
   margin: 0;
-  overflow-x: clip;
+  overflow: hidden;
   scrollbar-width: none;
   -ms-overflow-style: none;
   -webkit-text-size-adjust: 100%;
@@ -630,9 +1190,46 @@ a.btn-primary {
 /* Content Layout */
 .content-wrapper {
   display: flex;
-  min-height: 100vh;
+  height: calc(100vh - 64px);
   padding: 0 clamp(20px, 8vw, 120px);
   margin-top: 64px; /* header 是 16px padding + 32px logo + 16px padding = 64px */
+  overflow: hidden;
+}
+
+/* 选车页：整区纵向滚动（列表到底后再滚出现 footer）；侧栏见下方 sticky */
+#carSection.content-wrapper {
+  flex-direction: column;
+  align-items: stretch;
+  height: calc(100vh - 56px);
+  margin-top: 56px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  box-sizing: border-box;
+  scroll-padding-bottom: calc(88px + env(safe-area-inset-bottom, 0px));
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+#carSection.content-wrapper::-webkit-scrollbar {
+  display: none;
+}
+
+#carSection .car-row {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  flex: 1 0 auto;
+  width: 100%;
+  min-height: calc(100vh - 56px);
+  min-width: 0;
+}
+
+/* 选车主栏：仅横向占满，高度随列表增高，不再单独纵向滚动 */
+#carSection .main-content {
+  flex: 1;
+  min-width: 0;
+  height: auto;
   overflow: visible;
 }
 
@@ -646,33 +1243,43 @@ a.btn-primary {
   flex-shrink: 0;
   scrollbar-width: none;
   -ms-overflow-style: none;
+  /* 滚轮/触控链式滚动不冒泡到 #carSection；与 car.js 侧栏 wheel 配合 */
+  overscroll-behavior: contain;
   /* 筛选芯片行高：分类/品牌网格用固定行高，避免切换筛选时上下抖动 */
   --filter-chip-row: 40px;
   /* 侧栏标签网格行列间距（芯片之间留白） */
   --filter-chip-gap: 9px;
 }
 
-/* 桌面端：选车区侧栏高度与视口剩余高度一致；内容块竖直居中，略增上下内边距使视觉略下移 */
+/* 桌面端：侧栏 sticky，随 #carSection 滚动；列表滚到底后再滚 footer 时整行上移 */
 @media (min-width: 769px) {
   #carSection .sidebar-filter {
-    height: var(--sidebar-filter-fill-height);
-    min-height: var(--sidebar-filter-fill-height);
-    max-height: var(--sidebar-filter-fill-height);
+    position: sticky;
+    top: 0;
+    align-self: flex-start;
+    width: 280px;
+    flex-shrink: 0;
+    height: var(--car-sidebar-viewport-height);
+    min-height: var(--car-sidebar-viewport-height);
+    max-height: var(--car-sidebar-viewport-height);
     overflow-y: auto;
     overflow-x: hidden;
+    overflow-anchor: none;
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
-    justify-content: center;
-    justify-content: safe center;
+    justify-content: flex-start;
     align-items: stretch;
     padding: clamp(10px, 2vh, 22px) 12px clamp(12px, 2.5vh, 26px);
+    z-index: 2;
+  }
+
+  #carSection .sidebar-filter.brand-expanded-scroll {
+    overflow-y: auto;
+    justify-content: flex-start;
   }
 
   body.car-section-active #carSection .sidebar-filter {
-    position: sticky;
-    top: var(--header-sticky-offset);
-    z-index: 48;
     align-self: flex-start;
   }
 }
@@ -815,6 +1422,13 @@ a.btn-primary {
   contain: layout;
 }
 
+/* 默认模式展开时，自然展开 */
+#brandFilterButtons:not(.brand-filter--category-mode).brand-expanded {
+  grid-template-rows: unset;
+  grid-auto-rows: minmax(var(--filter-chip-row, 40px), auto);
+  min-height: 0;
+}
+
 /* 需高于 .sidebar-filter .filter-buttons .filter-btn:not(.hidden-brand) 的 display，否则展开后仍被盖住 */
 #brandFilterButtons.brand-expanded .filter-btn.hidden-brand {
   display: inline-flex;
@@ -852,7 +1466,7 @@ a.btn-primary {
   grid-template-rows: unset;
   grid-auto-rows: minmax(var(--filter-chip-row, 40px), auto);
   align-items: start;
-  min-height: calc(4 * var(--filter-chip-row, 40px) + 3 * var(--filter-chip-gap, 9px));
+  min-height: 0;
 }
 
 #brandFilterButtons.brand-filter--category-mode .filter-btn.hidden-brand {
@@ -1000,6 +1614,15 @@ a.btn-primary {
   flex: 1;
   padding: 40px;
   background: transparent;
+  overflow-y: auto;
+  overflow-x: hidden;
+  height: 100%;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.main-content::-webkit-scrollbar {
+  display: none;
 }
 
 #carGrid {
@@ -1130,6 +1753,32 @@ a.btn-primary {
     display: flex;
     align-items: center;
     justify-content: center;
+  }
+
+  /* 选车页 769–1024：保留左侧筛选列 + sticky，不占用侧滑抽屉布局 */
+  @media (min-width: 769px) {
+    #carSection .sidebar-filter {
+      position: sticky;
+      top: 0;
+      right: auto;
+      left: auto;
+      width: 240px;
+      height: var(--car-sidebar-viewport-height);
+      min-height: var(--car-sidebar-viewport-height);
+      max-height: var(--car-sidebar-viewport-height);
+      background: transparent;
+      z-index: 2;
+      transition: none;
+      border-left: none;
+      border-right: 1px solid var(--border);
+      overflow-y: auto;
+    }
+    body:has(#carSection) .mobile-filter-btn {
+      display: none !important;
+    }
+    body:has(#carSection) .close-filter-btn {
+      display: none !important;
+    }
   }
 }
 
@@ -1451,7 +2100,14 @@ a.btn-primary {
 }
 
 .suv-badge {
+  /* 保留：若仍有旧数据或城市 SUV 扩展可用；与轿车蓝区分 */
   background: linear-gradient(135deg, #0ea5e9, #38bdf8);
+}
+
+.pickup-badge {
+  /* 皮卡：琥珀→金黄，与轿车蓝、默认橙、越野灰、新能源绿均不混淆 */
+  background: linear-gradient(135deg, #b45309, #fbbf24);
+  color: #fff;
 }
 
 .off-badge {
@@ -1622,6 +2278,17 @@ a.btn-primary {
   padding-bottom: calc(40px + env(safe-area-inset-bottom));
 }
 
+/* 选车页 footer 在文档最底部；拉通与页面/视口同宽（突破 content-wrapper 左右 padding） */
+#carSection > .site-footer {
+  flex-shrink: 0;
+  width: 100vw;
+  max-width: 100vw;
+  position: relative;
+  left: 50%;
+  transform: translateX(-50%);
+  box-sizing: border-box;
+}
+
 .footer-inner {
   display: flex;
   justify-content: space-between;
@@ -1665,7 +2332,7 @@ a.btn-primary {
 
 @media (max-width: 768px) {
   :root { 
-    --sticky-offset: 360px; 
+    --sticky-offset: 360px;
   }
   .header-nav {
     display: none;

@@ -14,6 +14,13 @@ document.addEventListener('DOMContentLoaded', function () {
       .trim();
   }
 
+  function carNameMatchKey(s) {
+    return String(s || '')
+      .replace(/[\s\u00a0\u3000\u200b-\u200d\ufeff]+/g, '')
+      .replace(/：/g, ':')
+      .trim();
+  }
+
   function apiCatalogBase() {
     var o =
       typeof window.MANGO_API_ORIGIN !== 'undefined'
@@ -26,7 +33,7 @@ document.addEventListener('DOMContentLoaded', function () {
   function syncDailyPriceFromCatalog() {
     var base = apiCatalogBase();
     if (!base || typeof fetch === 'undefined') return Promise.resolve();
-    var target = normName(currentCarName);
+    var target = carNameMatchKey(currentCarName);
     return fetch(base + '/api/cars-catalog', { credentials: 'omit' })
       .then(function (r) {
         return r.json();
@@ -36,7 +43,7 @@ document.addEventListener('DOMContentLoaded', function () {
         var i;
         for (i = 0; i < j.cars.length; i++) {
           var c = j.cars[i];
-          if (normName(c.car_name) === target) {
+          if (carNameMatchKey(c.car_name) === target) {
             var p = parseInt(String(c.rent_price), 10);
             if (!isNaN(p) && p > 0) {
               body.setAttribute('data-daily-price', String(p));
@@ -59,7 +66,7 @@ document.addEventListener('DOMContentLoaded', function () {
     var currentPrice = parseInt(body.getAttribute('data-daily-price'), 10);
     if (!currentPrice || isNaN(currentPrice)) return;
 
-    var currentCarNameNorm = normName(currentCarName);
+    var currentCarNameKey = carNameMatchKey(currentCarName);
 
   function escHtml(s) {
     return String(s == null ? '' : s)
@@ -72,15 +79,17 @@ document.addEventListener('DOMContentLoaded', function () {
     var c = String(cat || '');
     var m = {
       行政级轿车: 'exec-badge',
+      豪华轿车: 'luxsedan-badge',
       豪华SUV: 'luxsuv-badge',
       豪华suv: 'luxsuv-badge',
       超跑: 'perf-badge',
+      超级跑车: 'perf-badge',
       性能车: 'perf-badge',
       新能源: 'ev-badge',
       商务车: 'biz-badge',
       轿车: 'sedan-badge',
       越野车: 'off-badge',
-      皮卡: 'suv-badge',
+      皮卡: 'pickup-badge',
       即将上新: 'biz-badge',
     };
     return m[c] || 'car-badge-inline';
@@ -235,8 +244,8 @@ document.addEventListener('DOMContentLoaded', function () {
       var nameElem = link.querySelector('.car-name');
       if (!priceElem || !nameElem) return;
       var price = parseInt(priceElem.textContent.replace(/[^0-9]/g, ''), 10);
-      var name = normName(nameElem.textContent);
-      if (name === currentCarNameNorm) return;
+      var name = carNameMatchKey(nameElem.textContent);
+      if (name === currentCarNameKey) return;
       if (price !== currentPrice) return;
       var href = (link.getAttribute('href') || '').trim();
       if (!href || seenHref[href]) return;
@@ -303,7 +312,7 @@ document.addEventListener('DOMContentLoaded', function () {
     cars.forEach(function (car) {
       var price = parseInt(String(car.rent_price), 10);
       if (isNaN(price) || price !== currentPrice) return;
-      if (normName(car.car_name) === currentCarNameNorm) return;
+      if (carNameMatchKey(car.car_name) === currentCarNameKey) return;
       var html = buildCarCardHtmlFromCatalog(car);
       var t = document.createElement('template');
       t.innerHTML = html.trim();

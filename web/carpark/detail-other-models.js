@@ -27,6 +27,13 @@
       .trim();
   }
 
+  function carNameMatchKey(s) {
+    return String(s || '')
+      .replace(/[\s\u00a0\u3000\u200b-\u200d\ufeff]+/g, '')
+      .replace(/：/g, ':')
+      .trim();
+  }
+
   function normBrand(s) {
     return String(s || '').trim();
   }
@@ -47,6 +54,27 @@
       .replace(/"/g, '&quot;');
   }
 
+  /** 与选车页 car.js categoryBadgeClass 一致 */
+  function categoryBadgeClass(cat) {
+    var c = String(cat || '');
+    var m = {
+      行政级轿车: 'exec-badge',
+      豪华轿车: 'luxsedan-badge',
+      豪华SUV: 'luxsuv-badge',
+      豪华suv: 'luxsuv-badge',
+      超跑: 'perf-badge',
+      超级跑车: 'perf-badge',
+      性能车: 'perf-badge',
+      新能源: 'ev-badge',
+      商务车: 'biz-badge',
+      轿车: 'sedan-badge',
+      越野车: 'off-badge',
+      皮卡: 'pickup-badge',
+      即将上新: 'biz-badge',
+    };
+    return m[c] || 'car-badge-inline';
+  }
+
   function siblingBase(carName) {
     return '../' + encodeURIComponent(String(carName).trim()) + '/';
   }
@@ -61,15 +89,15 @@
   }
 
   function findSelfCar(cars, displayName, folder) {
-    var d = normName(displayName);
-    var f = normName(folder);
+    var dk = carNameMatchKey(displayName);
+    var fk = folder ? carNameMatchKey(folder) : '';
     var i;
     for (i = 0; i < cars.length; i++) {
-      if (normName(cars[i].car_name) === d) return cars[i];
+      if (carNameMatchKey(cars[i].car_name) === dk) return cars[i];
     }
-    if (f) {
+    if (fk) {
       for (i = 0; i < cars.length; i++) {
-        if (normName(cars[i].car_name) === f) return cars[i];
+        if (carNameMatchKey(cars[i].car_name) === fk) return cars[i];
       }
     }
     return null;
@@ -131,6 +159,8 @@
             var title = escHtml(shortTitle(c));
             var alt = escHtml(name);
             var cat = escHtml(String(c.category || ''));
+            var rawCat = String(c.category || '');
+            var badgeCls = categoryBadgeClass(rawCat);
             return (
               '<a href="' +
               escHtml(href) +
@@ -148,7 +178,9 @@
               alt +
               '" loading="lazy">' +
               '</picture>' +
-              '<div class="car-badge card-badge-overlay title-badge">' +
+              '<div class="car-badge card-badge-overlay title-badge ' +
+              escHtml(badgeCls) +
+              '">' +
               title +
               '</div>' +
               '</div></a>'

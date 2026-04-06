@@ -192,16 +192,80 @@
   z-index: 10;
 }
 
+/* 顶栏「其他车型」角标：与选车页分类标签同色（见 car.js categoryBadgeClass） */
 .dropdown-grid .title-badge {
-  color: var(--text);
-  font-size: 16px;
+  font-size: 12px;
   font-weight: 600;
-  padding: 6px 12px;
-  background: transparent;
+  padding: 5px 11px;
+  border-radius: 999px;
+  line-height: 1.35;
+  color: #fff;
   border: none;
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
   transition: transform 0.3s ease;
+  background: linear-gradient(135deg, var(--brand, #ff6b35), var(--brand-light, #ff8c69));
+}
+
+.dropdown-grid .title-badge.car-badge-inline {
+  background: linear-gradient(135deg, var(--brand, #ff6b35), var(--brand-light, #ff8c69));
+}
+
+.dropdown-grid .title-badge.sedan-badge {
+  background: linear-gradient(135deg, #3b82f6, #60a5fa);
+}
+
+.dropdown-grid .title-badge.luxsedan-badge {
+  background: linear-gradient(135deg, #f7a614, #ffcc6a);
+}
+
+.dropdown-grid .title-badge.perf-badge {
+  background: linear-gradient(135deg, #be123c, #fb7185);
+}
+
+.dropdown-grid .title-badge.biz-badge {
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+}
+
+.dropdown-grid .title-badge.ev-badge {
+  background: linear-gradient(135deg, #059669, #34d399);
+}
+
+.dropdown-grid .title-badge.exec-badge {
+  background: linear-gradient(135deg, #f7a614, #ffcc6a);
+}
+
+.dropdown-grid .title-badge.lux-badge,
+.dropdown-grid .title-badge.luxsuv-badge {
+  background: linear-gradient(135deg, #ec4899, #f472b6);
+}
+
+.dropdown-grid .title-badge.mpv-badge {
+  background: linear-gradient(135deg, #7c3aed, #a78bfa);
+}
+
+.dropdown-grid .title-badge.suv-badge {
+  background: linear-gradient(135deg, #0ea5e9, #38bdf8);
+}
+
+.dropdown-grid .title-badge.pickup-badge {
+  background: linear-gradient(135deg, #b45309, #fbbf24);
+  color: #fff;
+}
+
+.dropdown-grid .title-badge.off-badge {
+  background: #a8b4c4;
+  color: #0f172a;
+}
+
+/* 静态顶栏卡片只写了 data-category、未加角标 class 时与分类色一致 */
+.dropdown-grid .car-card[data-category="超级跑车"] .title-badge {
+  background: linear-gradient(135deg, #be123c, #fb7185);
+}
+
+.dropdown-grid .car-card[data-category="皮卡"] .title-badge {
+  background: linear-gradient(135deg, #b45309, #fbbf24);
+  color: #fff;
 }
 
 .header-right-logo {

@@ -10,10 +10,35 @@
 </head>
 <body>
 
-  <!-- 开屏动画 -->
-  <div class="splash-screen" id="splashScreen">
+  <!-- 开屏：Pro 片头式动效 + 品牌橙（--brand / --gold-end）；总时长与 car.js 4.5s 一致 -->
+  <div class="splash-screen splash-screen--apple splash-screen--keynote-pro" id="splashScreen" aria-hidden="true">
+    <div class="splash-bg-apple" aria-hidden="true"></div>
+    <div class="splash-spotlight" aria-hidden="true"></div>
+    <div class="splash-vignette-apple" aria-hidden="true"></div>
+    <div class="splash-floor-glow" aria-hidden="true"></div>
+    <div class="splash-pulse-rings" aria-hidden="true">
+      <span class="splash-pulse-ring"></span>
+      <span class="splash-pulse-ring splash-pulse-ring--delayed"></span>
+    </div>
     <div class="splash-content">
-      <img src="./logo/logo2.png" alt="芒果超跑" class="splash-logo">
+      <div class="splash-logo-stage">
+        <div class="splash-logo-rim">
+          <img src="./logo/logo2.png" alt="" class="splash-logo-img" decoding="async">
+          <div class="splash-logo-rim-sheen" aria-hidden="true">
+            <div class="splash-logo-rim-sheen-inner"></div>
+          </div>
+        </div>
+        <div class="splash-stage-line" aria-hidden="true"></div>
+        <div class="splash-reflection" aria-hidden="true">
+          <div class="splash-logo-rim splash-logo-rim--reflect">
+            <img src="./logo/logo2.png" alt="" class="splash-logo-img splash-logo-img--mirror" decoding="async">
+            <div class="splash-logo-rim-sheen splash-logo-rim-sheen--reflect" aria-hidden="true">
+              <div class="splash-logo-rim-sheen-inner"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p class="splash-tagline">芒果超跑 · 极速出行</p>
     </div>
   </div>
 
@@ -45,7 +70,8 @@
   </header>
 
   <!-- 将选车区域顶上去，移除 Hero 相关的 margin -->
-  <div class="content-wrapper" id="carSection" style="margin-top: 56px;">
+  <div class="content-wrapper" id="carSection">
+    <div class="car-row">
     <!-- Category Nav -->
     <aside class="sidebar-filter" aria-label="汽车分类">
       <div class="filter-header" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
@@ -145,6 +171,14 @@
       <div id="carparkBrandSectionsRoot"></div>
 
     </main>
+    </div>
+
+    <footer class="site-footer">
+      <div class="footer-inner">
+        <div class="footer-brand">芒果超跑</div>
+        <div class="footer-copy">© 2026 芒果超跑租车公司 · 极速出行，从这里开始</div>
+      </div>
+    </footer>
   </div>
 
 
@@ -155,13 +189,6 @@
     </svg>
     <span class="back-to-cars-label">返回顶部</span>
   </button>
-
-  <footer class="site-footer">
-    <div class="footer-inner">
-      <div class="footer-brand">芒果超跑</div>
-      <div class="footer-copy">© 2026 芒果超跑租车公司 · 极速出行，从这里开始</div>
-    </div>
-  </footer>
 
   <!-- 与 login.html 一致：填写 member_api 根地址后「今日推荐」才能拉取个人点击汇总（留空则仅用价差兜底） -->
   <script>window.MANGO_API_ORIGIN = "";</script>
