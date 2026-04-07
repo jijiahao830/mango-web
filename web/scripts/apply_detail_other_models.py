@@ -40,35 +40,17 @@ def build_mapping():
 
 
 def make_dropdown(current_folder: str, folder_to_info, brand_to_folders) -> str:
-    if current_folder not in folder_to_info:
-        return '    <div class="header-center-nav" aria-hidden="true"></div>\n'
-    brand, _ = folder_to_info[current_folder]
-    others = [f for f in brand_to_folders.get(brand, []) if f != current_folder]
-    if not others:
-        return '    <div class="header-center-nav" aria-hidden="true"></div>\n'
-    cards = []
-    for o in others:
-        _, disp = folder_to_info[o]
-        ef = enc_folder(o)
-        cards.append(
-            f"""            <a href="../{ef}/car.html" class="car-card-link">
-              <div class="car-card" data-category="">
-                <picture>
-                  <source srcset="../{ef}/详情页-banner.webp" type="image/webp">
-                  <img class="car-image car-image-photo" src="../{ef}/封面.jpg" alt="{disp}">
-                </picture>
-                <div class="car-badge card-badge-overlay title-badge">{disp}</div>
-              </div>
-            </a>"""
-        )
-    cards_joined = "\n".join(cards)
-    return f"""    <div class="header-center-nav">
+    """
+    顶栏始终展示「其他车型」下拉壳子；列表由 detail-other-models.js 从 /api/cars-catalog 填充。
+    （不再因「同品牌无其它车」或未出现在 car.html 映射中而隐藏整段顶栏。）
+    """
+    return """    <div class="header-center-nav">
       <div class="dropdown-container">
         <span class="dropdown-trigger">其他车型 <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><polyline points="6 9 12 15 18 9"></polyline></svg></span>
         <div class="dropdown-menu">
           <div class="dropdown-menu-inner"></div>
           <div class="dropdown-grid">
-{cards_joined}
+            <!-- 同品牌车型由 detail-other-models.js 填充 -->
           </div>
         </div>
       </div>

@@ -18,6 +18,13 @@
     '其他'
   ].sort(function (a, b) { return b.length - a.length; });
 
+  function carNameMatchKey(s) {
+    return String(s || '')
+      .replace(/[\s\u00a0\u3000\u200b-\u200d\ufeff]+/g, '')
+      .replace(/：/g, ':')
+      .trim();
+  }
+
   function parseBrandModel(displayName) {
     var s = (displayName || '').trim();
     if (!s) return { brand: '', model: '' };
@@ -42,6 +49,14 @@
     if (!member || !String(member).trim()) return;
 
     var display = document.body.getAttribute('data-car-display-name') || '';
+    try {
+      var skipKey = sessionStorage.getItem('mango_vehicle_click_done_for_nav');
+      if (skipKey && carNameMatchKey(display) === skipKey) {
+        sessionStorage.removeItem('mango_vehicle_click_done_for_nav');
+        return;
+      }
+    } catch (e) {}
+
     var bm = parseBrandModel(display);
     if (!bm.brand || !bm.model) return;
 

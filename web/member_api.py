@@ -12,6 +12,7 @@ import re
 import secrets
 import sqlite3
 import sys
+import unicodedata
 from datetime import date, datetime
 from decimal import Decimal
 from http import HTTPStatus
@@ -1608,6 +1609,42 @@ def index():
     return send_from_directory(ROOT, "index.html")
 
 
+def _carpark_folder_key(name: str) -> str:
+    """与前端 encodeURIComponent(car_name) 常见差异容错：去空白、NFKC，用于匹配 carpark 子目录名。"""
+    s = unicodedata.normalize("NFKC", str(name or ""))
+    return "".join(s.split())
+
+
+def _resolve_carpark_detail_path(filename: str) -> Path | None:
+    """
+    请求 carpark/<车名>/car.html 时，若与磁盘目录名不完全一致（如库表为「坦克700」、文件夹为「坦克 700」），
+    按去掉空白后的键匹配唯一子目录。
+    """
+    parts = filename.replace("\\", "/").split("/")
+    if len(parts) != 3 or parts[0] != "carpark" or parts[2] != "car.html":
+        return None
+    carpark = ROOT / "carpark"
+    if not carpark.is_dir():
+        return None
+    want = _carpark_folder_key(parts[1])
+    if not want:
+        return None
+    matches: list[Path] = []
+    try:
+        for d in carpark.iterdir():
+            if not d.is_dir():
+                continue
+            if _carpark_folder_key(d.name) == want:
+                p = d / "car.html"
+                if p.is_file():
+                    matches.append(p)
+    except OSError:
+        return None
+    if len(matches) == 1:
+        return matches[0]
+    return None
+
+
 @app.get("/<path:filename>")
 def static_files(filename: str):
     if ".." in filename or filename.startswith("/"):
@@ -1615,6 +1652,10 @@ def static_files(filename: str):
     target = ROOT / filename
     if target.is_file():
         return send_from_directory(ROOT, filename)
+    alt = _resolve_carpark_detail_path(filename)
+    if alt is not None:
+        rel = alt.relative_to(ROOT)
+        return send_from_directory(ROOT, rel.as_posix())
     abort(404)
 
 
