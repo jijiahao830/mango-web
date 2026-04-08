@@ -19,7 +19,17 @@
       <a href="../../car.html#carGrid" class="back-btn">← 返回车库</a>
     </div>
 
-    <div class="header-center-nav" aria-hidden="true"></div>
+    <div class="header-center-nav">
+      <div class="dropdown-container">
+        <span class="dropdown-trigger">其他车型 <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><polyline points="6 9 12 15 18 9"></polyline></svg></span>
+        <div class="dropdown-menu">
+          <div class="dropdown-menu-inner"></div>
+          <div class="dropdown-grid">
+            <!-- 同品牌车型由 detail-other-models.js 填充 -->
+          </div>
+        </div>
+      </div>
+    </div>
     <div class="header-right-logo">
       <a href="../../car.html">
         <img src="../../logo/logo2.png" alt="芒果超跑" class="header-right-logo-img">
@@ -366,6 +376,7 @@
   </footer>
 
   <script src="../detail-rent-sync.js"></script>
+  <script src="../detail-other-models.js"></script>
   <script src="./car.js"></script>
   <script src="../detail-fab.js"></script>
   <script src="../similar-price-cars.js"></script>
