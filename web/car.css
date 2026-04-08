@@ -278,25 +278,25 @@
   animation: appleTagline 4s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
 }
 
-/* 两段式「对焦」：强模糊 → 中间态 → 清晰，末段略收焦淡出（接近 AE 教程节奏） */
+/* 淡入 + 轻微缩放，无「对焦」模糊（末段仅透明度淡出） */
 @keyframes appleLogoStage {
   0% {
     opacity: 0;
-    filter: blur(32px) brightness(1.15);
-    transform: scale(1.2);
+    filter: brightness(1.12);
+    transform: scale(1.12);
   }
   14% {
-    opacity: 0.45;
-    filter: blur(14px) brightness(1.08);
-    transform: scale(1.08);
+    opacity: 0.5;
+    filter: brightness(1.06);
+    transform: scale(1.05);
   }
   28% {
     opacity: 1;
-    filter: blur(0) brightness(1);
+    filter: brightness(1);
     transform: scale(1);
   }
   38% {
-    filter: blur(0) brightness(1);
+    filter: brightness(1);
     transform: scale(1.014);
   }
   42% {
@@ -304,13 +304,13 @@
   }
   72% {
     opacity: 1;
-    filter: blur(0) brightness(1);
+    filter: brightness(1);
     transform: scale(1);
   }
   100% {
     opacity: 0;
-    filter: blur(14px) brightness(1.05);
-    transform: scale(1.05);
+    filter: brightness(1.04);
+    transform: scale(1.04);
   }
 }
 
@@ -639,23 +639,23 @@
 @keyframes keynoteLogoStage {
   0% {
     opacity: 0;
-    filter: blur(22px);
+    filter: brightness(1.06);
   }
   12% {
-    opacity: 0.5;
-    filter: blur(9px);
+    opacity: 0.88;
+    filter: brightness(1);
   }
   24% {
     opacity: 1;
-    filter: blur(0);
+    filter: brightness(1);
   }
   78% {
     opacity: 1;
-    filter: blur(0);
+    filter: brightness(1);
   }
   100% {
     opacity: 0;
-    filter: blur(10px);
+    filter: brightness(1.02);
   }
 }
 
