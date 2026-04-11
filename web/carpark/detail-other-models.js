@@ -30,6 +30,44 @@
     .catch(function () {});
 })();
 
+/** 实车图赏：移除误放的「详情页-banner」「*透明图*」缩略图并修正主图（与 rebuild_gallery_unused 规则一致） */
+(function () {
+  function shouldStripGalleryImage(u) {
+    if (typeof u !== 'string') return false;
+    if (u.indexOf('详情页-banner') !== -1) return true;
+    if (u.indexOf('透明图') !== -1) return true;
+    return false;
+  }
+  function run() {
+    var sec = document.querySelector('section.gallery-section');
+    if (!sec) return;
+    sec.querySelectorAll('.thumbnail-item').forEach(function (el) {
+      if (shouldStripGalleryImage(el.getAttribute('data-image'))) el.remove();
+    });
+    var thumbs = sec.querySelectorAll('.thumbnail-item');
+    var featSrc = sec.querySelector('#featuredSource');
+    var featImg = document.getElementById('featuredImage');
+    if (featImg && shouldStripGalleryImage(featImg.getAttribute('src'))) {
+      if (thumbs.length) {
+        var first = thumbs[0].getAttribute('data-image') || '';
+        var webp = /\.webp$/i.test(first) ? first : first.replace(/\.(jpe?g|png)$/i, '.webp');
+        if (featSrc) featSrc.setAttribute('srcset', webp.replace(/ /g, '%20'));
+        featImg.setAttribute('src', webp);
+      } else {
+        sec.style.setProperty('display', 'none', 'important');
+      }
+    }
+    thumbs.forEach(function (t, i) {
+      t.classList.toggle('active', i === 0);
+    });
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', run);
+  } else {
+    run();
+  }
+})();
+
 (function () {
   var PLACEHOLDER_IMG =
     'data:image/svg+xml,' +
