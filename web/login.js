@@ -2,6 +2,28 @@
  * login.html — 会员登录、欢迎卡片与进入车库
  * 依赖 head：./members.js（可选 membersData）、window.MANGO_API_ORIGIN
  */
+
+/** 移动端：禁止整页跟手滚动（CSS 在 iOS 上仍可能穿透时兜底；欢迎卡区域除外） */
+(function () {
+  document.addEventListener(
+    'touchmove',
+    function (e) {
+      var n = e.target;
+      while (n && n.nodeType === 1) {
+        if (n.id === 'welcomeCards' || (n.classList && n.classList.contains('welcome-cards'))) {
+          return;
+        }
+        if (n.classList && n.classList.contains('login-card')) {
+          return;
+        }
+        n = n.parentElement;
+      }
+      e.preventDefault();
+    },
+    { passive: false }
+  );
+})();
+
 async function resolveMemberLevel(nameInput) {
   let memberLevel = '普通';
   var origin = (typeof window.MANGO_API_ORIGIN !== 'undefined' && window.MANGO_API_ORIGIN)

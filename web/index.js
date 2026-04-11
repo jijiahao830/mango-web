@@ -21,22 +21,4 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   observer.observe(hero);
-
-  // 针对用户提到的 1px 框的特殊处理
-  const trigger = document.getElementById('scroll-trigger');
-  const triggerObserver = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        // 当滚动到这个 1px 框（即它进入视口时）
-        video.pause();
-        console.log("已滚动到触发框，视频暂停");
-      }
-    });
-  }, {
-    threshold: 0.1
-  });
-
-  if (trigger) {
-    triggerObserver.observe(trigger);
-  }
 });

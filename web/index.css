@@ -14,12 +14,31 @@
   box-sizing: border-box;
 }
 
+/* 单屏首页：禁止整页被拖动、出现双滚动条（原 hero 下 1px 占位已移除） */
+html {
+  height: 100%;
+  height: 100dvh;
+  overflow: hidden;
+  width: 100%;
+  max-width: 100%;
+  overscroll-behavior: none;
+}
+
 body {
   font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
   background-color: var(--bg);
   color: var(--text);
   line-height: 1.5;
-  /* overflow: hidden; 移除此行以允许滚动 */
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  max-width: 100%;
+  height: 100%;
+  height: 100dvh;
+  overflow: hidden;
+  overscroll-behavior: none;
+  -webkit-overflow-scrolling: auto;
+  touch-action: manipulation;
 }
 
 /* 首页右上角固定 logo */
@@ -75,11 +94,15 @@ body {
 /* Hero */
 .hero {
   position: relative;
-  height: 100vh;
+  height: 100%;
+  min-height: 100dvh;
   display: flex;
   align-items: flex-end;
   justify-content: flex-start;
   overflow: hidden;
+  /* 底部留白，flex-end 对齐点上移，整块文案（三行区域）真正往上走 */
+  padding-bottom: clamp(72px, 13vh, 200px);
+  box-sizing: border-box;
 }
 
 .hero-video-wrapper {
@@ -128,12 +151,13 @@ body {
   text-align: left;
   max-width: 1200px;
   width: 100%;
-  padding: 0 clamp(20px, 8vw, 120px) 12vh;
+  /* 内部仅保留少量底边距；整体上移靠 .hero 的 padding-bottom */
+  padding: 0 clamp(20px, 8vw, 120px) clamp(8px, 1.5vh, 28px);
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 40px;
-  margin-left: 5vw; /* 向右移动整个内容区域 */
+  gap: 24px;
+  margin-left: 5vw; /* 与下方 MANGO SUPERCAR 同一左参考线 */
 }
 
 .hero-header {
@@ -288,8 +312,52 @@ body {
   .index-floating-logo img {
     height: clamp(26px, 9vw, 36px);
   }
-  .hero-content { padding-bottom: 60px; text-align: center; }
-  .hero-eyebrow { justify-content: center; margin-bottom: 16px; }
+  .hero {
+    padding-bottom: clamp(56px, 16vh, 160px);
+  }
+  .hero-content {
+    /* 与桌面一致：与 MANGO SUPERCAR 左对齐 */
+    text-align: left;
+    align-items: flex-start;
+    margin-left: clamp(12px, 4vw, 5vw);
+    padding-left: clamp(16px, 5vw, 32px);
+    padding-right: clamp(16px, 5vw, 32px);
+    padding-bottom: clamp(8px, 2vh, 24px);
+    gap: 22px;
+  }
+  .hero-header {
+    align-items: flex-start;
+    width: 100%;
+  }
+  /* 移动端缩小 RACING COMFORTABLE… 英文行 */
+  .hero-eyebrow {
+    justify-content: flex-start;
+    margin-bottom: 12px;
+    font-size: clamp(10px, 2.9vw, 14px);
+    letter-spacing: 0.35px;
+    flex-wrap: wrap;
+    line-height: 1.35;
+    text-align: left;
+  }
   .hero-eyebrow::before { display: none; }
-  .hero-actions { justify-content: center; }
+  /* 移动端缩小「芒果超跑」 */
+  .hero-eyebrow-highlight {
+    font-size: clamp(16px, 5.2vw, 24px);
+    margin-left: 6px;
+  }
+  .hero-actions {
+    justify-content: flex-start;
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero-eyebrow {
+    font-size: 10px;
+    letter-spacing: 0.25px;
+  }
+  .hero-eyebrow-highlight {
+    font-size: clamp(15px, 5vw, 20px);
+    margin-left: 4px;
+  }
 }
