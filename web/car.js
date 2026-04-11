@@ -835,7 +835,10 @@ document.addEventListener('DOMContentLoaded', function() {
       b.classList.remove('active');
       if (b.dataset.brand === 'all') b.classList.add('active');
     });
-    
+
+    const resetSearchEl = document.getElementById('carSearchInput');
+    if (resetSearchEl) resetSearchEl.value = '';
+
     refreshCars();
     scrollToCarSectionTop();
   });
