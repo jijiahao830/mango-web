@@ -505,7 +505,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
   /** 选车卡片封面：与详情页一致，使用该车型 carpark 目录下素材；有 webp 时浏览器优先用 source，缺失则仅用 jpg */
   function coverUrlsForCar(carName) {
-    var base = './carpark/' + encodeURIComponent(String(carName || '').trim()) + '/';
+    var base = '/media/photos/carpark/' + encodeURIComponent(String(carName || '').trim()) + '/';
     return { webp: base + '封面.webp', jpg: base + '封面.jpg' };
   }
 

@@ -142,8 +142,8 @@ document.addEventListener('DOMContentLoaded', function () {
   function buildCarCardHtmlFromCatalog(car) {
     var folder = encodeURIComponent(car.car_name);
     var href = '../' + folder + '/car.html';
-    var webp = '../' + folder + '/封面.webp';
-    var jpg = '../' + folder + '/封面.jpg';
+    var webp = '/media/photos/carpark/' + folder + '/封面.webp';
+    var jpg = '/media/photos/carpark/' + folder + '/封面.jpg';
     var cat = escHtml(car.category);
     var name = escHtml(car.car_name);
     var badge = categoryBadgeClass(car.category);

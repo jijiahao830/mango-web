@@ -266,7 +266,7 @@
               var u = String(img.src || '');
               if (u.indexOf('详情页-banner.jpg') !== -1) {
                 img.addEventListener('error', onErr, false);
-                img.src = u.split('详情页-banner.jpg').join('详情页-banner.png');
+                img.src = u.split('详情页-banner.jpg').join('/media/photos/carpark/库里南/详情页-banner.png');
                 return;
               }
               finishOtherModelPlaceholder(img);
@@ -299,7 +299,7 @@
               '<div class="car-card">' +
               '<picture>' +
               '<source srcset="' +
-              escHtml(baseU + '详情页-banner.webp') +
+              escHtml(baseU + '/media/photos/carpark/库里南/详情页-banner.webp') +
               '" type="image/webp">' +
               '<img class="car-image car-image-photo" src="' +
               escHtml(baseU + '详情页-banner.jpg') +

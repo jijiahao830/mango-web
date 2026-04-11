@@ -1645,6 +1645,12 @@ def _resolve_carpark_detail_path(filename: str) -> Path | None:
     return None
 
 
+@app.get("/media/<path:filename>")
+def serve_media(filename: str):
+    media_dir = ROOT.parent / "media"
+    return send_from_directory(media_dir, filename)
+
+
 @app.get("/<path:filename>")
 def static_files(filename: str):
     if ".." in filename or filename.startswith("/"):
