@@ -1,6 +1,6 @@
 /**
  * 详情页顶栏「其他车型」：拉取 /api/cars-catalog，筛选与当前车同品牌（brand 规范化 + 车名前缀推断）、排除当前车，
- * 按 rent_price 降序，填入 .dropdown-grid。车型名仅展示接口字段 model；图片优先 详情页-banner.webp / 详情页-banner.jpg，失败用占位图。
+ * 按 rent_price 降序，填入 .dropdown-grid。车型名仅展示接口字段 model；缩略图用各车「详情页-banner.webp」+「详情页-banner.jpg」，失败用占位图。
  * 点击同品牌链接时向 /api/vehicle-click 上报（需已登录 sessionStorage.mango_driver_name）；成功则目标详情页 vehicle-click.js 跳过重复上报。
  */
 (function () {
@@ -257,18 +257,12 @@
           img.alt = '暂无封面';
         }
 
-        /** jpg 缺失时尝试 png，再失败则占位（与各车「详情页-banner」素材一致） */
+        /** jpg 加载失败则占位 */
         function bindImgFallback(img) {
           img.addEventListener(
             'error',
             function onErr() {
               img.removeEventListener('error', onErr);
-              var u = String(img.src || '');
-              if (u.indexOf('详情页-banner.jpg') !== -1) {
-                img.addEventListener('error', onErr, false);
-                img.src = u.split('详情页-banner.jpg').join('/media/photos/carpark/库里南/详情页-banner.png');
-                return;
-              }
               finishOtherModelPlaceholder(img);
             },
             false
@@ -279,7 +273,8 @@
           .map(function (c) {
             var name = String(c.car_name || '').trim();
             var href = siblingBase(name) + 'car.html';
-            var baseU = siblingBase(name);
+            var folderEnc = encodeURIComponent(name);
+            var photoDir = '../../media/photos/carpark/' + folderEnc + '/';
             var modelText = escHtml(modelFromCatalog(c));
             var alt = escHtml(name);
             var vc = apiVehicleClickFields(c);
@@ -299,10 +294,10 @@
               '<div class="car-card">' +
               '<picture>' +
               '<source srcset="' +
-              escHtml(baseU + '/media/photos/carpark/库里南/详情页-banner.webp') +
+              escHtml(photoDir + '详情页-banner.webp') +
               '" type="image/webp">' +
               '<img class="car-image car-image-photo" src="' +
-              escHtml(baseU + '详情页-banner.jpg') +
+              escHtml(photoDir + '详情页-banner.jpg') +
               '" alt="' +
               alt +
               '" loading="lazy">' +

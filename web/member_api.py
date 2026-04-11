@@ -1645,9 +1645,20 @@ def _resolve_carpark_detail_path(filename: str) -> Path | None:
     return None
 
 
+def _media_root() -> Path:
+    """与 `web` 同级的 `media`（约定）；若不存在则尝试 `web/media`（例如指向上一级的符号链接）。"""
+    parent = ROOT.parent / "media"
+    if parent.is_dir():
+        return parent
+    under_web = ROOT / "media"
+    if under_web.is_dir():
+        return under_web
+    return parent
+
+
 @app.get("/media/<path:filename>")
 def serve_media(filename: str):
-    media_dir = ROOT.parent / "media"
+    media_dir = _media_root()
     return send_from_directory(media_dir, filename)
 
 

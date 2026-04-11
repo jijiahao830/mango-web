@@ -12,8 +12,8 @@ function initScenarioShowcase570() {
 
   var scenarios = {
     baizhan: {
-      webp: '/media/photos/carpark/兰博基尼 570-4/场景-摆展.webp',
-      jpg: '/media/photos/carpark/兰博基尼 570-4/场景-摆展.jpg',
+      webp: '../../media/photos/carpark/兰博基尼 570-4/场景-摆展.webp',
+      jpg: '../../media/photos/carpark/兰博基尼 570-4/场景-摆展.jpg',
       alt: '经典使用场景 · 摆展',
       desc: '在高端商场或时尚派对上，这台橙色兰博基尼无疑是瞩目焦点。极具侵略性的赛道外观，能瞬间吸引目光带来流量。',
       features: [
@@ -24,8 +24,8 @@ function initScenarioShowcase570() {
       ]
     },
     chuxing: {
-      webp: '/media/photos/carpark/兰博基尼 570-4/场景-出行.webp',
-      jpg: '/media/photos/carpark/兰博基尼 570-4/场景-出行.jpg',
+      webp: '../../media/photos/carpark/兰博基尼 570-4/场景-出行.webp',
+      jpg: '../../media/photos/carpark/兰博基尼 570-4/场景-出行.jpg',
       alt: '经典使用场景 · 出行',
       desc: '公路巡航、周末短途或山路驾驶——Huracán 570-4 的中置 V10 与四驱抓地让每一段路程都充满驾驶乐趣。开阔视野与超跑坐姿，让「出行」本身充满仪式感。',
       features: [

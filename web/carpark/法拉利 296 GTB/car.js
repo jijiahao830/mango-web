@@ -12,8 +12,8 @@
 
   var scenarios = {
     baizhan: {
-      webp: '/media/photos/carpark/兰博基尼 570-4/场景-摆展.webp',
-      jpg: '/media/photos/carpark/兰博基尼 570-4/场景-摆展.jpg',
+      webp: '../../media/photos/carpark/兰博基尼 570-4/场景-摆展.webp',
+      jpg: '../../media/photos/carpark/兰博基尼 570-4/场景-摆展.jpg',
       alt: '经典使用场景 · 摆展',
       desc: '在高端商场或时尚派对上，这台橙色兰博基尼无疑是瞩目焦点。极具侵略性的赛道外观，能瞬间吸引目光带来流量。',
       features: [

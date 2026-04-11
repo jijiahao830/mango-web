@@ -536,8 +536,8 @@
   z-index: 1;
   overflow: hidden;
   pointer-events: none;
-  -webkit-mask-image: url("/media/photos/index/logo/logo2.png");
-  mask-image: url("/media/photos/index/logo/logo2.png");
+  -webkit-mask-image: url("media/photos/index/logo/logo2.png");
+  mask-image: url("media/photos/index/logo/logo2.png");
   -webkit-mask-size: contain;
   mask-size: contain;
   -webkit-mask-repeat: no-repeat;
