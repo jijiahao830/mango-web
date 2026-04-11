@@ -506,7 +506,7 @@ document.addEventListener('DOMContentLoaded', function() {
   /** 选车卡片封面：与各车 media 下「封面」素材一致 */
   function coverUrlsForCar(carName) {
     var base = '/media/photos/carpark/' + encodeURIComponent(String(carName || '').trim()) + '/';
-    return { webp: base + '封面-thumb.webp', jpg: base + '封面.jpg' };
+    return { webp: base + '封面-thumb.webp', jpg: base + '封面-thumb.webp' };
   }
 
   function categoryBadgeClass(cat) {
