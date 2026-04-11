@@ -1786,6 +1786,11 @@ a.btn-primary {
   .content-wrapper {
     flex-direction: column;
   }
+  /* 收窄选车区与屏幕左右间距（避免与 .main-content、.car-grid 叠加过宽） */
+  #carSection.content-wrapper {
+    padding-left: max(8px, env(safe-area-inset-left));
+    padding-right: max(8px, env(safe-area-inset-right));
+  }
   .sidebar-filter {
     width: 280px;
     height: 100vh;
@@ -1813,7 +1818,7 @@ a.btn-primary {
     z-index: 1000;
   }
   .main-content {
-    padding: 24px 16px;
+    padding: 24px 8px;
   }
 }
 
@@ -2342,12 +2347,20 @@ a.btn-primary {
     align-items: center;
     justify-content: center;
   }
+
+  /* 选车页顶栏（移动端）：左 logo2-1、中不变、右仅筛选按钮 */
+  body:has(#carSection) .header-left .brand-logo {
+    opacity: 1;
+  }
+  body:has(#carSection) .brand-logo-right {
+    display: none !important;
+  }
   
   .category-bar {
     flex-direction: column;
     align-items: stretch;
     gap: 8px;
-    padding: 16px clamp(12px, 5vw, 24px);
+    padding: 16px clamp(8px, 3vw, 16px);
     top: calc(56px + env(safe-area-inset-top));
   }
   
@@ -2361,17 +2374,17 @@ a.btn-primary {
     flex-wrap: nowrap;
     gap: 12px;
     margin-bottom: 0;
-    margin-left: calc(-1 * clamp(12px, 5vw, 24px));
-    margin-right: calc(-1 * clamp(12px, 5vw, 24px));
-    padding-left: clamp(12px, 5vw, 24px);
-    padding-right: clamp(12px, 5vw, 24px);
+    margin-left: calc(-1 * clamp(8px, 3vw, 16px));
+    margin-right: calc(-1 * clamp(8px, 3vw, 16px));
+    padding-left: clamp(8px, 3vw, 16px);
+    padding-right: clamp(8px, 3vw, 16px);
     padding-bottom: 2px;
     overflow-x: auto;
     overflow-y: visible;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-x: contain;
     scroll-snap-type: x proximity;
-    scroll-padding-inline: clamp(12px, 5vw, 24px);
+    scroll-padding-inline: clamp(8px, 3vw, 16px);
     scrollbar-width: none;
     -ms-overflow-style: none;
   }
@@ -2511,7 +2524,7 @@ a.btn-primary {
   
   .car-grid {
     grid-template-columns: repeat(2, 1fr);
-    padding: 24px clamp(12px, 5vw, 24px);
+    padding: 24px 6px;
     gap: 12px;
     margin-top: 10px; /* Adjust margin for mobile */
   }
@@ -2519,15 +2532,15 @@ a.btn-primary {
   .car-image,
   .car-image-photo {
     height: 130px;
-    margin-bottom: -8px;
-    object-position: center calc(50% - 30px);
-    background-position: center calc(50% - 30px);
+    margin-bottom: -6px;
+    object-position: center center;
+    background-position: center center;
   }
   
   .car-info {
-    padding: 10px 12px 10px;
+    padding: 6px 10px 8px;
     column-gap: 8px;
-    row-gap: 6px;
+    row-gap: 4px;
     grid-template-columns: 1fr auto;
   }
 
@@ -2594,14 +2607,20 @@ a.btn-primary {
     flex-direction: column;
     text-align: center;
   }
+
+  .car-pagination.mango-pagination {
+    padding-left: max(8px, env(safe-area-inset-left));
+    padding-right: max(8px, env(safe-area-inset-right));
+  }
 }
 
 @media (max-width: 480px) {
+  /* 小屏手机仍保持一行两车卡（与 ≤768px 一致），避免过窄时变单列 */
   .car-grid {
-    grid-template-columns: 1fr;
-    gap: 20px;
-    padding: 20px 16px;
-    margin-top: 10px; /* Adjust margin for mobile */
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    padding: 16px 4px;
+    margin-top: 10px;
   }
 
   .brand-logo {
@@ -2625,7 +2644,18 @@ a.btn-primary {
   }
   
   .car-price {
-    font-size: 22px;
+    font-size: clamp(13px, 3.4vw, 16px);
+  }
+
+  .car-image,
+  .car-image-photo {
+    height: 112px;
+    margin-bottom: -6px;
+  }
+
+  .car-info {
+    padding-top: 5px;
+    padding-bottom: 6px;
   }
 }
 
@@ -2679,4 +2709,20 @@ a.btn-primary {
 
 .recommend-section-container {
   margin-bottom: 40px;
+}
+
+/* 移动端：分区大标题略右移，与上一组车卡垂直间距收紧 */
+@media (max-width: 768px) {
+  .brand-section {
+    margin-bottom: 26px;
+  }
+
+  .recommend-section-container {
+    margin-bottom: 20px;
+  }
+
+  .brand-title {
+    padding-left: 8px;
+    margin-bottom: 14px;
+  }
 }
