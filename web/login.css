@@ -68,13 +68,12 @@ body {
   touch-action: none;
 }
 
-/* 表单、按钮、欢迎卡内仍可点按；欢迎卡内容过高时仅此区域可滚 */
+/* 表单、按钮、欢迎卡上可点按（欢迎容器本身 touch-action: none 防拖动） */
 .login-card,
 .login-card input,
 .login-card label,
 .login-card button,
 .login-form,
-.welcome-cards,
 .welcome-card,
 .welcome-card button,
 .welcome-card a,
@@ -306,7 +305,7 @@ body {
   }
 }
 
-/* 欢迎卡片容器 - 改为叠层（仅此区域在极窄屏可纵向滚动） */
+/* 欢迎卡片容器 - 叠层；禁止容器内上下拖动滚动 */
 .welcome-cards {
   position: relative;
   z-index: 10;
@@ -315,9 +314,9 @@ body {
   height: min(350px, 85dvh);
   max-height: 85dvh;
   perspective: 1000px;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior: contain;
+  overflow: hidden;
+  overscroll-behavior: none;
+  touch-action: none;
 }
 
 /* 欢迎卡片样式 - 绝对定位重叠 */
@@ -405,12 +404,18 @@ body {
   filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.3));
 }
 
+.welcome-content {
+  overflow: hidden;
+  max-width: 100%;
+}
+
 .welcome-content p {
   font-size: 18px;
   line-height: 1.8;
   color: #fff;
   font-weight: 300;
   letter-spacing: 1px;
+  word-break: break-word;
 }
 
 .empty-placeholder {

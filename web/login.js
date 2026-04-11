@@ -3,16 +3,13 @@
  * 依赖 head：./members.js（可选 membersData）、window.MANGO_API_ORIGIN
  */
 
-/** 移动端：禁止整页跟手滚动（CSS 在 iOS 上仍可能穿透时兜底；欢迎卡区域除外） */
+/** 移动端：禁止整页跟手滚动（含欢迎界面；仅登录卡片内因键盘可能需内部滚动） */
 (function () {
   document.addEventListener(
     'touchmove',
     function (e) {
       var n = e.target;
       while (n && n.nodeType === 1) {
-        if (n.id === 'welcomeCards' || (n.classList && n.classList.contains('welcome-cards'))) {
-          return;
-        }
         if (n.classList && n.classList.contains('login-card')) {
           return;
         }
