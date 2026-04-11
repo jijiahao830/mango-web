@@ -2,7 +2,34 @@
  * 详情页顶栏「其他车型」：拉取 /api/cars-catalog，筛选与当前车同品牌（brand 规范化 + 车名前缀推断）、排除当前车，
  * 按 rent_price 降序，填入 .dropdown-grid。车型名仅展示接口字段 model；缩略图用各车「详情页-banner.webp」+「详情页-banner.jpg」，失败用占位图。
  * 点击同品牌链接时向 /api/vehicle-click 上报（需已登录 sessionStorage.mango_driver_name）；成功则目标详情页 vehicle-click.js 跳过重复上报。
+ *
+ * 站点外观：GET /api/site-ui 返回的 cta-section（与 web/app_config.json 顶层 cta-section 一致，由 member_api 提供）。
  */
+(function () {
+  if (typeof fetch === 'undefined') return;
+  function apiCatalogBase() {
+    var o =
+      typeof window.MANGO_API_ORIGIN !== 'undefined'
+        ? String(window.MANGO_API_ORIGIN || '').replace(/\/$/, '')
+        : '';
+    return o || (typeof location !== 'undefined' ? String(location.origin).replace(/\/$/, '') : '');
+  }
+  var base = apiCatalogBase();
+  if (!base) return;
+  fetch(base + '/api/site-ui', { credentials: 'omit' })
+    .then(function (r) {
+      return r.ok ? r.json() : {};
+    })
+    .then(function (cfg) {
+      if (!cfg || !cfg.ok || cfg['cta-section'] !== false) return;
+      document.querySelectorAll('.cta-section').forEach(function (el) {
+        el.setAttribute('hidden', '');
+        el.style.setProperty('display', 'none', 'important');
+      });
+    })
+    .catch(function () {});
+})();
+
 (function () {
   var PLACEHOLDER_IMG =
     'data:image/svg+xml,' +

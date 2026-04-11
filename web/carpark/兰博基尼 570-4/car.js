@@ -102,7 +102,7 @@ const prevBtn = document.getElementById('prevBtn');
 const nextBtn = document.getElementById('nextBtn');
 let currentIndex = 0;
 
-// data-image: jpg/png path; script sets WebP source + fallback <img>
+// data-image: webp 路径；大图与 <source> 一致
 let imageSources = Array.from(thumbnails).map(thumb => thumb.dataset.image);
 
 // Dynamically update the image sources array in case thumbnails were changed
@@ -114,19 +114,13 @@ updateImageSources();
 
 function updateGallery(index) {
   const path = imageSources[index];
-  let fallback;
-  let webp;
-  if (/\.webp$/i.test(path)) {
-    webp = path;
-    fallback = path.replace(/\.webp$/i, '.jpg');
-  } else {
-    fallback = path;
-    webp = path.replace(/\.(jpe?g|png)$/i, '.webp');
-  }
+  const webp = /\.webp$/i.test(path)
+    ? path
+    : path.replace(/\.(jpe?g|png)$/i, '.webp');
   featuredImage.style.opacity = '0';
   setTimeout(() => {
     if (featuredSource) featuredSource.srcset = webp.replace(/ /g, '%20');
-    featuredImage.src = fallback;
+    featuredImage.src = webp;
     featuredImage.style.opacity = '1';
   }, 200);
 

@@ -990,6 +990,42 @@ def api_cars_catalog():
     return _cors(jsonify(ok=True, cars=rows))
 
 
+def _cta_section_ui_flag_from_disk() -> bool:
+    """
+    app_config.json 顶层 cta-section：是否显示车型详情页「点火」CTA 区块；默认 True。
+    每次请求读盘，修改配置后无需重启进程即可生效。
+    """
+    if not CONFIG_FILE.is_file():
+        return True
+    try:
+        with CONFIG_FILE.open(encoding="utf-8") as f:
+            cfg = json.load(f)
+    except (json.JSONDecodeError, OSError):
+        return True
+    v = cfg.get("cta-section", True)
+    if isinstance(v, bool):
+        return v
+    if isinstance(v, (int, float)):
+        return bool(v)
+    if isinstance(v, str):
+        s = v.strip().lower()
+        if s in ("0", "false", "no", "off"):
+            return False
+        if s in ("1", "true", "yes", "on"):
+            return True
+        return True
+    return True
+
+
+@app.route("/api/site-ui", methods=["GET", "OPTIONS"])
+def api_site_ui():
+    """前端只读：站点 UI 开关（来自 app_config.json，仅返回非敏感字段）。"""
+    if request.method == "OPTIONS":
+        return _cors(make_response("", HTTPStatus.NO_CONTENT))
+    cta = _cta_section_ui_flag_from_disk()
+    return _cors(jsonify({"ok": True, "cta-section": cta}))
+
+
 def _cardata_view_http_response(
     cfg: dict[str, Any] | None,
     err: tuple[Any, int] | None,
