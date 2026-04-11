@@ -384,3 +384,66 @@
       .catch(function () {});
   });
 })();
+
+/** 移动端：顶栏「其他车型」点一次展开，再点一次收回；点击外部关闭 */
+(function () {
+  function initOtherModelsDropdownToggle() {
+    var container = document.querySelector('.header-center-nav .dropdown-container');
+    var trigger = document.querySelector('.header-center-nav .dropdown-trigger');
+    if (!container || !trigger) return;
+
+    var mq = window.matchMedia('(max-width: 768px)');
+
+    function setOpen(open) {
+      container.classList.toggle('is-open', !!open);
+      trigger.setAttribute('aria-expanded', open ? 'true' : 'false');
+    }
+
+    trigger.setAttribute('role', 'button');
+    trigger.setAttribute('tabindex', '0');
+    if (!trigger.hasAttribute('aria-expanded')) {
+      trigger.setAttribute('aria-expanded', 'false');
+    }
+
+    trigger.addEventListener('click', function (e) {
+      if (!mq.matches) return;
+      e.preventDefault();
+      e.stopPropagation();
+      setOpen(!container.classList.contains('is-open'));
+    });
+
+    trigger.addEventListener('keydown', function (e) {
+      if (!mq.matches) return;
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        setOpen(!container.classList.contains('is-open'));
+      }
+    });
+
+    document.addEventListener(
+      'click',
+      function (e) {
+        if (!mq.matches) return;
+        if (!container.classList.contains('is-open')) return;
+        if (container.contains(e.target)) return;
+        setOpen(false);
+      },
+      false
+    );
+
+    function onMqChange() {
+      if (!mq.matches) setOpen(false);
+    }
+    if (typeof mq.addEventListener === 'function') {
+      mq.addEventListener('change', onMqChange);
+    } else if (typeof mq.addListener === 'function') {
+      mq.addListener(onMqChange);
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initOtherModelsDropdownToggle);
+  } else {
+    initOtherModelsDropdownToggle();
+  }
+})();

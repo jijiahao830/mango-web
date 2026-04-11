@@ -46,10 +46,12 @@
   transition: transform 0.3s;
 }
 
-.dropdown-trigger:hover svg,
-.dropdown-menu:hover ~ .dropdown-trigger svg,
-.dropdown-container:hover .dropdown-trigger svg {
-  transform: rotate(180deg);
+@media (min-width: 769px) {
+  .dropdown-trigger:hover svg,
+  .dropdown-menu:hover ~ .dropdown-trigger svg,
+  .dropdown-container:hover .dropdown-trigger svg {
+    transform: rotate(180deg);
+  }
 }
 
 .dropdown-menu {
@@ -114,36 +116,56 @@
   -webkit-mask-image: linear-gradient(90deg, transparent, black 10%, black 90%, transparent);
 }
 
-.dropdown-container:hover .dropdown-menu,
-.dropdown-trigger:hover + .dropdown-menu,
-.dropdown-menu:hover {
-  opacity: 1;
-  visibility: visible;
-  pointer-events: auto;
+@media (min-width: 769px) {
+  .dropdown-container:hover .dropdown-menu,
+  .dropdown-trigger:hover + .dropdown-menu,
+  .dropdown-menu:hover {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+  }
+}
+
+/* 移动端：点击「其他车型」展开，再点收回（由 .is-open + JS）；覆盖各车 car.css 里未限定的 :hover */
+@media (max-width: 768px) {
+  .dropdown-container:hover .dropdown-menu,
+  .dropdown-trigger:hover + .dropdown-menu,
+  .dropdown-menu:hover {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  .dropdown-container:hover .dropdown-trigger svg {
+    transform: none;
+  }
+
+  .dropdown-container.is-open .dropdown-menu {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+  }
+
+  .dropdown-container.is-open .dropdown-trigger svg {
+    transform: rotate(180deg);
+  }
 }
 
 .dropdown-grid {
   display: grid;
-  /* 与兰博基尼 570 顶栏一致：同品牌车型一排 4 个 */
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 24px;
   max-width: 1200px;
   margin: 0 auto;
 }
 
-@media (max-width: 1100px) {
+@media (max-width: 768px) {
   .dropdown-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
   }
 }
 
-@media (max-width: 560px) {
-  .dropdown-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-/* 同品牌其他车型不足 4 个时整行居中，单卡宽度与四列布局下单格一致 */
+/* 同品牌其他车型不足 4 个时整行居中，单卡宽度与两列布局一致 */
 .dropdown-grid.dropdown-grid--few {
   display: flex;
   flex-wrap: wrap;
@@ -152,26 +174,18 @@
   gap: 24px;
 }
 
+@media (max-width: 768px) {
+  .dropdown-grid.dropdown-grid--few {
+    gap: 12px;
+  }
+}
+
 .dropdown-grid.dropdown-grid--few .car-card-link {
   box-sizing: border-box;
   flex: 0 0 auto;
-  width: calc((100% - 72px) / 4);
-  max-width: calc((100% - 72px) / 4);
+  width: calc((100% - 24px) / 2);
+  max-width: calc((100% - 24px) / 2);
   min-width: 0;
-}
-
-@media (max-width: 1100px) {
-  .dropdown-grid.dropdown-grid--few .car-card-link {
-    width: calc((100% - 24px) / 2);
-    max-width: calc((100% - 24px) / 2);
-  }
-}
-
-@media (max-width: 560px) {
-  .dropdown-grid.dropdown-grid--few .car-card-link {
-    width: 100%;
-    max-width: 100%;
-  }
 }
 
 .detail-other-models-empty {
@@ -247,12 +261,16 @@
   display: flex;
   justify-content: flex-end;
   align-items: center;
+  font-size: 18px;
+  line-height: 1.25;
 }
 
+/* 高度随 1em（18px），略大于中间 16px 文案一档 */
 .header-right-logo-img {
-  height: 36px;
+  height: 1em;
   width: auto;
   object-fit: contain;
+  display: block;
 }
 
 /* 与兰博基尼详情页一致：顶栏返回按钮无描边 */
@@ -294,12 +312,31 @@
   font-size: 15px;
 }
 
-@media (max-width: 480px) {
+/* 移动端：仍贴右侧悬浮（非底栏），略低于垂直中线，自右滑入 */
+@media (max-width: 768px) {
   .detail-fab-actions {
+    top: auto;
+    bottom: max(72px, 14vh);
+    left: auto;
+    right: max(12px, env(safe-area-inset-right));
     width: min(138px, calc(100vw - 28px));
+    flex-direction: column;
     gap: 10px;
+    z-index: 95;
+    transform: translateX(calc(100% + 24px));
   }
 
+  .detail-fab-actions.is-visible {
+    transform: translateX(0);
+  }
+
+  .detail-fab-actions .detail-fab-btn {
+    width: 100%;
+    min-width: 0;
+  }
+}
+
+@media (max-width: 480px) {
   .detail-fab-actions .btn-lg {
     padding: 12px 10px;
     font-size: 14px;
@@ -314,5 +351,97 @@
 
   .detail-fab-actions.is-visible {
     transform: translateY(-50%);
+  }
+}
+
+@media (max-width: 768px) and (prefers-reduced-motion: reduce) {
+  .detail-fab-actions {
+    transform: translateX(calc(100% + 24px));
+  }
+
+  .detail-fab-actions.is-visible {
+    transform: translateX(0);
+  }
+}
+
+/* 移动端：实车图赏主图区固定高度比例，切换缩略图后主图铺满该区域 */
+@media (max-width: 768px) {
+  /*
+   * 首屏 Hero：封面图铺满 .hero-detail（与板块同高同宽视觉区域）。
+   * 说明：.hero-bg-overlay 仅为渐变层；实际照片在 .hero-image-main。
+   */
+  .hero-detail .hero-image-main {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    left: 0;
+    top: 0;
+    transform: none;
+    margin: 0;
+    z-index: 0;
+  }
+
+  .hero-detail .hero-image-main picture {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  .hero-detail .hero-image-main img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .hero-detail .hero-image-main img:hover {
+    transform: none;
+  }
+
+  .hero-detail .hero-bg-overlay {
+    z-index: 1;
+  }
+
+  .hero-detail .hero-content-wrapper {
+    position: relative;
+    z-index: 2;
+  }
+
+  .gallery-section .gallery-featured {
+    aspect-ratio: 16 / 10;
+  }
+
+  .gallery-section .gallery-featured > picture {
+    position: absolute;
+    inset: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+  }
+
+  .gallery-section .gallery-featured .featured-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+  }
+
+  .gallery-section .gallery-featured:hover .featured-image {
+    transform: none;
+  }
+
+  .gallery-thumbnails {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: clamp(6px, 2vw, 10px);
+  }
+
+  .gallery-section .thumbnail-item {
+    border-radius: 8px;
+    border-width: 2px;
   }
 }
