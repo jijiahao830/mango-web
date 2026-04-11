@@ -1664,13 +1664,17 @@ document.addEventListener('DOMContentLoaded', function() {
     // --- 联动逻辑结束 ---
 
     
-    // 今日推荐 / 即将上新：场景、分类、品牌均为「全部」，且价格区间为全站最小～最大（未做价格筛选）时显示；搜索仍只过滤下方品牌区卡片
+    // 今日推荐 / 即将上新：无搜索词，且场景/分类/品牌均为「全部」，且价格为全站区间时显示；一旦有搜索内容则整块隐藏（PC/平板/移动一致）
     const recommendSection = document.getElementById('recommendSection');
     const comingSoonSection = document.getElementById('comingSoonSection');
+    const searchInputForSpotlight = document.getElementById('carSearchInput');
+    const searchIsEmpty =
+      !searchInputForSpotlight || String(searchInputForSpotlight.value || '').trim() === '';
     const priceIsFullRange =
       Number(state.priceMin) === Number(globalMinPrice) &&
       Number(state.priceMax) === Number(globalMaxPrice);
     const showSpotlightBlocks =
+      searchIsEmpty &&
       state.scenario === 'all' &&
       state.category === 'all' &&
       state.brand === 'all' &&
