@@ -89,7 +89,8 @@ def fetch_cars_by_name(config: dict) -> dict[str, dict]:
     try:
         with conn.cursor() as cur:
             cur.execute(
-                f"SELECT car_name, brand, model, rent_price, category FROM `{table}`"
+                f"SELECT car_name, brand, model, rent_price, category FROM `{table}` "
+                f"WHERE `status` = 1"
             )
             rows = cur.fetchall()
     finally:

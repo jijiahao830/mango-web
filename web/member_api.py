@@ -916,7 +916,7 @@ def _cors(resp):
 
 
 def _cars_catalog_rows() -> tuple[list[dict[str, Any]], str | None]:
-    """从 MySQL `cars` 表读取选车页所需字段（与 carpark 文件夹名 car_name 一致）。"""
+    """从 MySQL `cars` 表读取选车页所需字段（与 carpark 文件夹名 car_name 一致）；仅 `status` = 1 上架。"""
     cfg = load_config()
     db = cfg.get("database") or {}
     mq = db.get("mysql") or {}
@@ -946,7 +946,7 @@ def _cars_catalog_rows() -> tuple[list[dict[str, Any]], str | None]:
         with conn.cursor() as cur:
             cur.execute(
                 f"SELECT `id`, `car_name`, `brand`, `model`, `rent_price`, `category` "
-                f"FROM `{table_raw}` ORDER BY `brand` ASC, `id` ASC"
+                f"FROM `{table_raw}` WHERE `status` = 1 ORDER BY `brand` ASC, `id` ASC"
             )
             raw_rows = cur.fetchall()
     finally:
@@ -969,7 +969,7 @@ def _cars_catalog_rows() -> tuple[list[dict[str, Any]], str | None]:
 
 @app.route("/api/cars-catalog", methods=["GET", "OPTIONS"])
 def api_cars_catalog():
-    """选车页：从 `cars` 表拉取全部车辆，用于动态生成筛选与卡片（封面由前端统一用五菱宏光）。"""
+    """选车页：从 `cars` 表拉取上架车辆（status=1），用于动态生成筛选与卡片（封面由前端统一用五菱宏光）。"""
     if request.method == "OPTIONS":
         return _cors(make_response("", HTTPStatus.NO_CONTENT))
     rows, err = _cars_catalog_rows()
