@@ -375,7 +375,7 @@
           })
           .join('');
 
-        grid.classList.toggle('dropdown-grid--few', others.length > 0 && others.length < 4);
+        grid.classList.toggle('dropdown-grid--few', others.length > 0 && others.length < 5);
         grid.innerHTML = html || '<p class="detail-other-models-empty">暂无同品牌其他车型</p>';
 
         grid.querySelectorAll('.car-image-photo').forEach(bindImgFallback);

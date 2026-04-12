@@ -815,11 +815,109 @@ body::-webkit-scrollbar {
   flex: 1;
 }
 
+.header-logo-dropdown-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.header-logo-menu-btn {
+  -webkit-appearance: none;
+  appearance: none;
+  border: none;
+  background: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: inherit;
+  line-height: 0;
+  border-radius: 10px;
+}
+
+.header-logo-menu-btn:focus {
+  outline: none;
+}
+
+.header-logo-menu-btn:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 3px;
+}
+
+.header-logo-menu-panel {
+  display: none;
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 50%;
+  transform: translateX(-50%);
+  min-width: 148px;
+  padding: 6px 0;
+  background: rgba(18, 20, 26, 0.98);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.55);
+  z-index: 220;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.header-logo-menu-panel a {
+  display: block;
+  padding: 12px 18px;
+  color: var(--text);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 15px;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.header-logo-menu-panel a:hover,
+.header-logo-menu-panel a:focus-visible {
+  background: rgba(255, 107, 53, 0.12);
+  color: var(--brand);
+}
+
+.header-logo-menu-panel a + a {
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
 .brand-logo-center {
   height: 36px;
   width: auto;
   object-fit: contain;
   display: none;
+  pointer-events: none;
+}
+
+@media (min-width: 1025px) {
+  .header-logo-menu-btn {
+    pointer-events: none;
+    cursor: default;
+  }
+}
+
+@media (max-width: 1024px) {
+  .header-logo-menu-btn {
+    cursor: pointer;
+    pointer-events: auto;
+  }
+
+  .header-logo-menu-panel:not([hidden]) {
+    display: block;
+  }
+}
+
+@media (max-width: 480px) {
+  .header-logo-menu-panel {
+    min-width: 132px;
+  }
+
+  .header-logo-menu-panel a {
+    padding: 10px 14px;
+    font-size: 14px;
+  }
 }
 
 .header-right {
@@ -2724,5 +2822,64 @@ a.btn-primary {
   .brand-title {
     padding-left: 8px;
     margin-bottom: 14px;
+  }
+}
+
+/* 关于页：宽屏与车辆/服务顶栏一致（三链 + 左右字标/圆标）；窄屏隐藏三链、显示中间 logo 下拉 */
+@media (max-width: 1024px) {
+  body.page-about .site-header .header-nav {
+    display: none !important;
+  }
+
+  body.page-about .header-left .brand-logo {
+    opacity: 1;
+  }
+
+  body.page-about .brand-logo-center {
+    display: block !important;
+  }
+
+  body.page-about .header-logo-menu-btn {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+  }
+
+  body.page-about .header-logo-menu-panel:not([hidden]) {
+    display: block !important;
+  }
+
+  body.page-about .brand-logo-right {
+    display: none !important;
+  }
+}
+
+/* 关于页：整页可滚动（car.css 默认 html/body 为 overflow:hidden，仅选车区自滚动） */
+html:has(body.page-about) {
+  overflow-x: hidden;
+  overflow-y: auto;
+  height: auto;
+  min-height: 100%;
+}
+
+body.page-about {
+  overflow-x: hidden;
+  overflow-y: visible;
+  height: auto;
+  min-height: 100%;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* 服务页：顶栏与选车页窄屏一致；无侧栏，隐藏筛选按钮占位 */
+body.page-services .mobile-filter-btn {
+  display: none !important;
+}
+
+@media (max-width: 1024px) {
+  body.page-services .header-left .brand-logo {
+    opacity: 1;
+  }
+
+  body.page-services .brand-logo-right {
+    display: none !important;
   }
 }

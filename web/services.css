@@ -20,6 +20,12 @@ html, body {
   background: #000;
 }
 
+body.page-services .fullscreen-carousel {
+  margin-top: 56px;
+  height: calc(100vh - 56px);
+  min-height: calc(100svh - 56px);
+}
+
 /* 幻灯片 */
 .carousel-slide {
   position: absolute;
@@ -151,53 +157,26 @@ html, body {
   }
 }
 
-/* Logo */
-.carousel-logo {
-  position: fixed;
-  top: 40px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 10;
-}
-
-.carousel-logo img {
-  height: 50px;
-  width: auto;
-  filter: drop-shadow(0 2px 10px rgba(0, 0, 0, 0.5));
-}
-
-/* 返回按钮 */
-.back-btn {
-  position: fixed;
-  top: 40px;
-  right: 40px;
-  z-index: 10;
-  width: 50px;
-  height: 50px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
-  text-decoration: none;
-  transition: all 0.3s ease;
-  cursor: pointer;
-}
-
-.back-btn:hover {
-  background: rgba(255, 107, 53, 0.8);
-  border-color: #ff6b35;
-  transform: scale(1.1);
-}
-
 /* 响应式 */
 @media (max-width: 768px) {
+  body.page-services .fullscreen-carousel {
+    min-height: calc(100svh - 56px);
+    min-height: calc(100vh - 56px);
+  }
+
+  /* 移动端：上半区略压暗，突出顶部文案 */
+  .carousel-slide::after {
+    background: linear-gradient(
+      180deg,
+      rgba(0, 0, 0, 0.68) 0%,
+      rgba(0, 0, 0, 0.38) 42%,
+      rgba(0, 0, 0, 0.18) 100%
+    );
+  }
+
   .carousel-dots {
-    left: 20px;
-    gap: 12px;
+    left: max(16px, env(safe-area-inset-left));
+    gap: 14px;
   }
 
   .dot {
@@ -205,34 +184,63 @@ html, body {
     height: 10px;
   }
 
+  /* 文案置于上半区；padding-top 略大，避免贴顶 */
   .slide-content {
-    left: 5%;
-    right: 5%;
-    max-width: 90%;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: auto;
+    transform: none;
+    max-width: none;
+    width: 100%;
+    padding-top: 48px;
+    padding-right: max(16px, env(safe-area-inset-right));
+    padding-bottom: 20px;
+    padding-left: calc(52px + env(safe-area-inset-left));
+    text-align: left;
+    box-sizing: border-box;
   }
 
   .slide-title {
-    font-size: clamp(32px, 8vw, 48px);
-    margin-bottom: 16px;
+    font-size: clamp(26px, 7.2vw, 36px);
+    font-weight: 800;
+    margin-bottom: 12px;
+    letter-spacing: 0.04em;
+    line-height: 1.2;
+    font-family: system-ui, -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    text-shadow: 0 2px 16px rgba(0, 0, 0, 0.65);
   }
 
   .slide-desc {
-    font-size: clamp(14px, 3vw, 18px);
+    font-size: clamp(14px, 3.6vw, 16px);
+    line-height: 1.65;
+    font-weight: 400;
+    letter-spacing: 0.02em;
+    max-width: 42rem;
+    text-shadow: 0 1px 8px rgba(0, 0, 0, 0.55);
   }
 
-  .carousel-logo {
-    top: 20px;
+}
+
+@media (max-width: 480px) {
+  .slide-content {
+    padding-top: 100px;
+    padding-left: calc(46px + env(safe-area-inset-left));
+    padding-right: max(14px, env(safe-area-inset-right));
   }
 
-  .carousel-logo img {
-    height: 40px;
+  .slide-title {
+    font-size: clamp(22px, 6.8vw, 30px);
+    margin-bottom: 10px;
   }
 
-  .back-btn {
-    top: 20px;
-    right: 20px;
-    width: 44px;
-    height: 44px;
+  .slide-desc {
+    font-size: 14px;
+    line-height: 1.7;
+  }
+
+  .carousel-dots {
+    gap: 12px;
   }
 }
 

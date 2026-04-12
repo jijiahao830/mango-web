@@ -149,8 +149,23 @@
   .dropdown-container.is-open .dropdown-trigger svg {
     transform: rotate(180deg);
   }
+
+  /* 同品牌车型多时在面板内纵向滑动，不占满整屏也无法滑到页面底外 */
+  .dropdown-menu {
+    max-height: calc(
+      100vh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 96px
+    );
+    max-height: calc(
+      100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 96px
+    );
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
 }
 
+/* 其他车型：移动端一排 2 个、PC 一排 5 个（多出的自动换行）；不足 5 辆时用 .dropdown-grid--few 居中 */
 .dropdown-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -159,13 +174,19 @@
   margin: 0 auto;
 }
 
+@media (min-width: 769px) {
+  .dropdown-grid:not(.dropdown-grid--few) {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+}
+
 @media (max-width: 768px) {
   .dropdown-grid {
     gap: 12px;
   }
 }
 
-/* 同品牌其他车型不足 4 个时整行居中，单卡宽度与两列布局一致 */
+/* 同品牌其他车型不足 5 个时整行居中，单卡宽度与两列布局一致 */
 .dropdown-grid.dropdown-grid--few {
   display: flex;
   flex-wrap: wrap;
