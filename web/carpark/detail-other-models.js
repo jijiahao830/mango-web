@@ -385,14 +385,14 @@
   });
 })();
 
-/** 移动端：顶栏「其他车型」点一次展开，再点一次收回；点击外部关闭 */
+/** 手机 / 平板：顶栏「其他车型」点一次展开，再点一次收回；点击外部关闭（宽屏仍用 hover） */
 (function () {
   function initOtherModelsDropdownToggle() {
     var container = document.querySelector('.header-center-nav .dropdown-container');
     var trigger = document.querySelector('.header-center-nav .dropdown-trigger');
     if (!container || !trigger) return;
 
-    var mq = window.matchMedia('(max-width: 768px)');
+    var mq = window.matchMedia('(max-width: 1024px)');
 
     function setOpen(open) {
       container.classList.toggle('is-open', !!open);

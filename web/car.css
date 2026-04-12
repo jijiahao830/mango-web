@@ -1366,7 +1366,8 @@ a.btn-primary {
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
-    justify-content: flex-start;
+    /* 侧栏固定高度内筛选块整体垂直居中；展开品牌长列表时见 .brand-expanded-scroll */
+    justify-content: center;
     align-items: stretch;
     padding: clamp(10px, 2vh, 22px) 12px clamp(12px, 2.5vh, 26px);
     z-index: 2;
@@ -2433,6 +2434,30 @@ a.btn-primary {
   }
 }
 
+/* iPad / 小平板选车页：收窄左右留白与筛选区—车卡区间距，略缩侧栏宽度，车卡两列加宽单卡 */
+@media (min-width: 769px) and (max-width: 1024px) {
+  #carSection.content-wrapper {
+    padding-left: clamp(10px, 2.2vw, 24px);
+    padding-right: clamp(10px, 2.2vw, 24px);
+  }
+
+  /* 筛选区内上下留白一致（与桌面 asymmetric padding 区分） */
+  #carSection .sidebar-filter {
+    width: 220px;
+    padding: clamp(12px, 2.3vh, 24px) 10px;
+    box-sizing: border-box;
+  }
+
+  #carSection .main-content {
+    padding: 28px 16px 36px 16px;
+  }
+
+  #carSection .car-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
+  }
+}
+
 @media (max-width: 768px) {
   :root { 
     --sticky-offset: 360px;
@@ -2869,6 +2894,25 @@ body.page-about {
   -webkit-overflow-scrolling: touch;
 }
 
+/* iPad：关于页 footer 贴视口底（内容短时底部不留空） */
+@media (min-width: 769px) and (max-width: 1024px) {
+  html:has(body.page-about) {
+    height: 100%;
+  }
+
+  body.page-about {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    min-height: 100dvh;
+  }
+
+  body.page-about .site-footer {
+    margin-top: auto;
+    flex-shrink: 0;
+  }
+}
+
 /* 服务页：顶栏与选车页窄屏一致；无侧栏，隐藏筛选按钮占位 */
 body.page-services .mobile-filter-btn {
   display: none !important;
@@ -2881,5 +2925,50 @@ body.page-services .mobile-filter-btn {
 
   body.page-services .brand-logo-right {
     display: none !important;
+  }
+}
+
+/* iPad / 小平板：顶栏与 PC 一致 — 左文字标 logo2-1、中「车辆 / 服务 / 关于我们」、右圆标 logo2（与 car.html 一致） */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .site-header .header-nav {
+    display: flex !important;
+  }
+
+  .site-header .header-left .brand-logo {
+    opacity: 1 !important;
+  }
+
+  .site-header .brand-logo-center {
+    display: none !important;
+  }
+
+  .site-header .header-logo-menu-btn {
+    pointer-events: none;
+    cursor: default;
+  }
+
+  .mobile-filter-btn {
+    display: none !important;
+  }
+
+  body.page-services .brand-logo-right {
+    display: block !important;
+  }
+
+  body.page-about .site-header .header-nav {
+    display: flex !important;
+  }
+
+  body.page-about .brand-logo-center {
+    display: none !important;
+  }
+
+  body.page-about .header-logo-menu-btn {
+    pointer-events: none !important;
+    cursor: default !important;
+  }
+
+  body.page-about .brand-logo-right {
+    display: block !important;
   }
 }

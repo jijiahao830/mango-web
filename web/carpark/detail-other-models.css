@@ -46,7 +46,7 @@
   transition: transform 0.3s;
 }
 
-@media (min-width: 769px) {
+@media (min-width: 1025px) {
   .dropdown-trigger:hover svg,
   .dropdown-menu:hover ~ .dropdown-trigger svg,
   .dropdown-container:hover .dropdown-trigger svg {
@@ -116,7 +116,7 @@
   -webkit-mask-image: linear-gradient(90deg, transparent, black 10%, black 90%, transparent);
 }
 
-@media (min-width: 769px) {
+@media (min-width: 1025px) {
   .dropdown-container:hover .dropdown-menu,
   .dropdown-trigger:hover + .dropdown-menu,
   .dropdown-menu:hover {
@@ -126,8 +126,8 @@
   }
 }
 
-/* 移动端：点击「其他车型」展开，再点收回（由 .is-open + JS）；覆盖各车 car.css 里未限定的 :hover */
-@media (max-width: 768px) {
+/* 手机 / 平板：点击「其他车型」展开，再点收回（由 .is-open + JS）；覆盖 hover */
+@media (max-width: 1024px) {
   .dropdown-container:hover .dropdown-menu,
   .dropdown-trigger:hover + .dropdown-menu,
   .dropdown-menu:hover {
@@ -165,7 +165,7 @@
   }
 }
 
-/* 其他车型：移动端一排 2 个、PC 一排 5 个（多出的自动换行）；不足 5 辆时用 .dropdown-grid--few 居中 */
+/* 其他车型：移动 2 列、平板 3 列、宽屏 5 列（多出的自动换行）；不足 5 辆时用 .dropdown-grid--few 居中 */
 .dropdown-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -174,7 +174,13 @@
   margin: 0 auto;
 }
 
-@media (min-width: 769px) {
+@media (min-width: 769px) and (max-width: 1024px) {
+  .dropdown-grid:not(.dropdown-grid--few) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1025px) {
   .dropdown-grid:not(.dropdown-grid--few) {
     grid-template-columns: repeat(5, minmax(0, 1fr));
   }
@@ -207,6 +213,14 @@
   width: calc((100% - 24px) / 2);
   max-width: calc((100% - 24px) / 2);
   min-width: 0;
+}
+
+/* 必须在上一段「两列宽」之后，否则层叠会把平板三列覆盖回两列 */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .dropdown-grid.dropdown-grid--few .car-card-link {
+    width: calc((100% - 48px) / 3);
+    max-width: calc((100% - 48px) / 3);
+  }
 }
 
 .detail-other-models-empty {
@@ -388,45 +402,95 @@
 /* 移动端：实车图赏主图区固定高度比例，切换缩略图后主图铺满该区域 */
 @media (max-width: 768px) {
   /*
-   * 首屏 Hero：封面图铺满 .hero-detail（与板块同高同宽视觉区域）。
-   * 说明：.hero-bg-overlay 仅为渐变层；实际照片在 .hero-image-main。
+   * car.css 末尾全局 .hero-image-main { left:50%; width:90%; transform } 会铺满失败。
+   * 勿与 inset:0 同时写 width/height: auto，否则会破坏绝对定位拉伸。
+   * 用 > 子选择器 + 逐项 !important 盖死；hero-detail 改 block，避免与 flex 叠出侧向偏移。
    */
-  .hero-detail .hero-image-main {
-    position: absolute;
-    inset: 0;
+  html,
+  body {
     width: 100%;
-    height: 100%;
-    left: 0;
-    top: 0;
-    transform: none;
-    margin: 0;
-    z-index: 0;
+    max-width: 100%;
+    overflow-x: hidden;
   }
 
-  .hero-detail .hero-image-main picture {
-    display: block;
-    width: 100%;
-    height: 100%;
+  body section.hero-detail {
+    display: block !important;
+    position: relative;
+    min-height: 100vh;
+    min-height: 100dvh;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    padding-bottom: 12vh !important;
+    overflow-x: hidden;
+    box-sizing: border-box !important;
   }
 
-  .hero-detail .hero-image-main img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    object-position: center;
-    border-radius: 0;
-    box-shadow: none;
-  }
-
-  .hero-detail .hero-image-main img:hover {
-    transform: none;
-  }
-
-  .hero-detail .hero-bg-overlay {
+  body section.hero-detail > .hero-bg-overlay {
+    position: absolute !important;
+    left: 0 !important;
+    right: 0 !important;
+    top: 0 !important;
+    bottom: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    transform: none !important;
     z-index: 1;
   }
 
-  .hero-detail .hero-content-wrapper {
+  body section.hero-detail > .hero-image-main {
+    position: absolute !important;
+    left: 0 !important;
+    right: 0 !important;
+    top: 0 !important;
+    bottom: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    transform: none !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: flex-end !important;
+    align-items: stretch !important;
+    align-content: stretch !important;
+    z-index: 0 !important;
+    overflow: hidden !important;
+  }
+
+  body section.hero-detail > .hero-image-main > picture {
+    display: block !important;
+    width: 100% !important;
+    min-width: 100% !important;
+    max-width: none !important;
+    flex: 0 0 auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  body section.hero-detail > .hero-image-main > picture img {
+    width: 100% !important;
+    min-width: 100% !important;
+    max-width: none !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    display: block !important;
+  }
+
+  body section.hero-detail > .hero-image-main > picture img:hover {
+    transform: none !important;
+  }
+
+  body section.hero-detail .hero-content-wrapper {
     position: relative;
     z-index: 2;
   }
@@ -464,5 +528,52 @@
   .gallery-section .thumbnail-item {
     border-radius: 8px;
     border-width: 2px;
+  }
+}
+
+/* iPad：首屏封面图铺满 .hero-detail，高度与 .hero-bg-overlay 一致（同一块视觉区域） */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .hero-detail {
+    position: relative;
+    min-height: 100vh;
+    min-height: 100dvh;
+  }
+
+  .hero-detail .hero-image-main {
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    transform: none !important;
+    margin: 0 !important;
+    z-index: 0 !important;
+  }
+
+  .hero-detail .hero-image-main picture {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  .hero-detail .hero-image-main img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .hero-detail .hero-image-main img:hover {
+    transform: none;
+  }
+
+  .hero-detail .hero-bg-overlay {
+    z-index: 1;
+  }
+
+  .hero-detail .hero-content-wrapper {
+    position: relative;
+    z-index: 2;
   }
 }

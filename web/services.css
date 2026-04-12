@@ -244,6 +244,25 @@ body.page-services .fullscreen-carousel {
   }
 }
 
+/* iPad / 小平板竖屏（仍用上半区文案时）：略右移、上移 */
+@media (min-width: 641px) and (max-width: 768px) {
+  body.page-services .slide-content {
+    padding-left: calc(68px + env(safe-area-inset-left));
+    padding-top: 28px;
+    transform: translateY(-100px);
+  }
+}
+
+/* iPad 横屏等 769–1024：桌面版文案区块右移、上移 */
+@media (min-width: 769px) and (max-width: 1024px) {
+  body.page-services .slide-content {
+    left: 14%;
+    top: 42%;
+    transform: translateY(calc(-50% - 300px));
+    max-width: 540px;
+  }
+}
+
 /* 滑动提示（可选） */
 .scroll-hint {
   position: fixed;
