@@ -468,6 +468,38 @@ body {
   box-shadow: 0 0 15px rgba(255, 107, 53, 0.3);
 }
 
+/* 移动端：卡片用实色底，避免半透明 + backdrop-filter 透出背后渐变 / 噪点 */
+@media (max-width: 768px) {
+  .login-card {
+    background: var(--surface);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  .welcome-card {
+    background: var(--surface);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  .welcome-card.level-mango,
+  .welcome-card.level-silver,
+  .welcome-card.level-gold {
+    background: var(--surface);
+  }
+
+  .welcome-card.level-black {
+    background: #121214;
+  }
+
+  .welcome-card.empty-card {
+    background: #15171e;
+    background: color-mix(in srgb, var(--surface) 96%, #0a0b0f);
+    opacity: 1;
+    transform: translateZ(-40px) translateY(16px) scale(0.98);
+  }
+}
+
 @media (max-height: 640px) {
   .login-card {
     max-height: 88dvh;
