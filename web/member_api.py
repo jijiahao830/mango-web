@@ -1682,13 +1682,17 @@ def _resolve_carpark_detail_path(filename: str) -> Path | None:
 
 
 def _media_root() -> Path:
-    """与 `web` 同级的 `media`（约定）；若不存在则尝试 `web/media`（例如指向上一级的符号链接）。"""
+    """与 `web` 同级的 `media`（约定）；若不存在则尝试 `web/media` 或上一级。"""
     parent = ROOT.parent / "media"
     if parent.is_dir():
         return parent
     under_web = ROOT / "media"
     if under_web.is_dir():
         return under_web
+    # 用户把 media 移动到了 mango-web 的上一级（即 芒果/media）
+    grandparent = ROOT.parent.parent / "media"
+    if grandparent.is_dir():
+        return grandparent
     return parent
 
 
