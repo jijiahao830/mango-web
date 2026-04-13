@@ -2,8 +2,8 @@
 """
 批量更新各车型 car.html 的 features-section：三组 feature-title / feature-desc。
 
-文案由 carpark_feature_copy 按「子目录名 + carpark_vehicle_stats.json」逐车生成，
-不再使用粗分类模板 + 字数填充；人工卖点见 carpark_feature_copy.MANUAL_FEATURES。
+先运行同目录下 generate_all_features.py（内部使用 carpark_feature_copy）生成
+generated_features.json；人工卖点见 carpark_feature_copy.MANUAL_FEATURES。
 """
 from __future__ import annotations
 

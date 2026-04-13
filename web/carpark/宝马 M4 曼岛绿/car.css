@@ -459,7 +459,7 @@ body {
   font-size: clamp(48px, 6vw, 64px);
   font-weight: 900;
   color: var(--brand);
-  text-shadow: 0 0 30px color-mix(in srgb, var(--brand) 30%, transparent);
+  text-shadow: 0 0 30px rgba(28, 105, 212, 0.3);
 }
 
 .price-unit {
@@ -492,7 +492,7 @@ body {
 
 .stats-section {
   padding: 80px 0;
-  background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--brand) 5%, transparent), transparent);
+  background: linear-gradient(180deg, transparent, rgba(28, 105, 212, 0.05), transparent);
 }
 
 .stats-grid {
@@ -678,7 +678,7 @@ body {
 
 .gallery-section {
   padding: 80px 0;
-  background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--brand) 3%, transparent), transparent);
+  background: linear-gradient(180deg, transparent, rgba(28, 105, 212, 0.03), transparent);
 }
 
 .gallery-main {
@@ -716,7 +716,7 @@ body {
   top: 50%;
   transform: translateY(-50%);
   background: rgba(0, 0, 0, 0.6);
-  border: 2px solid color-mix(in srgb, var(--brand) 50%, transparent);
+  border: 2px solid rgba(28, 105, 212, 0.5);
   color: white;
   width: 50px;
   height: 50px;
@@ -731,7 +731,7 @@ body {
 }
 
 .gallery-arrow:hover {
-  background: color-mix(in srgb, var(--brand) 90%, transparent);
+  background: rgba(28, 105, 212, 0.9);
   
   transform: translateY(-50%) scale(1.1);
   box-shadow: 0 0 20px color-mix(in srgb, var(--brand) 50%, transparent);

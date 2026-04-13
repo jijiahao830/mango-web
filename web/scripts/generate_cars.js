@@ -19,12 +19,12 @@ const carsData = [
   // 在这里继续添加其他车辆的数据
 ];
 
-// 模板文件路径
+// 模板文件路径（与脚本同目录上一级为 web/）
 const templatePath = path.join(__dirname, '../template.html');
 
 function generateCars() {
   if (!fs.existsSync(templatePath)) {
-    console.error('错误: 找不到模板文件 template.html。请先在项目根目录创建一个 template.html。');
+    console.error('错误: 找不到模板文件 template.html。请在 web 目录下创建 template.html。');
     return;
   }
 

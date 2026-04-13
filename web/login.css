@@ -317,6 +317,21 @@ body {
   overflow: hidden;
   overscroll-behavior: none;
   touch-action: none;
+  /* 与页面底色一致，圆角抗锯齿缝隙不会透出下层渐变/紫灰 */
+  border-radius: 20px;
+  background: var(--bg);
+  isolation: isolate;
+}
+
+/* 固定在圆角区域内的衬色，切换时上层卡片半透明也不会透出页面背景 */
+.welcome-cards__backdrop {
+  position: absolute;
+  inset: 0;
+  border-radius: 20px;
+  background: linear-gradient(165deg, #1e222b 0%, #181b24 42%, #12141a 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  z-index: 0;
+  pointer-events: none;
 }
 
 /* 欢迎卡片样式 - 绝对定位重叠 */
@@ -326,7 +341,9 @@ body {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(23, 26, 33, 0.7);
+  z-index: 1;
+  /* 略提高不透明度，减轻圆角处 backdrop-filter 与底层色差 */
+  background: rgba(23, 26, 33, 0.88);
   backdrop-filter: blur(30px);
   -webkit-backdrop-filter: blur(30px);
   border: 1px solid rgba(255, 107, 53, 0.2);
@@ -339,7 +356,56 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  transition:
+    transform 0.55s cubic-bezier(0.32, 0.72, 0, 1),
+    opacity 0.5s ease,
+    filter 0.5s ease,
+    box-shadow 0.55s ease;
+  overflow: hidden;
+  isolation: isolate;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
+/* 准备切到第二张：叠在上层、先不可见（勿用横移错缝，避免中途露底） */
+.welcome-card.welcome-card--second.active-card {
+  z-index: 3;
+  opacity: 0;
+  transform: scale(0.94) translateY(22px);
+  pointer-events: none;
+}
+
+.welcome-cards--swap #card1.active-card {
+  opacity: 0;
+  transform: scale(0.92) translateY(24px);
+  filter: blur(4px);
+  pointer-events: none;
+}
+
+.welcome-cards--swap .welcome-card.welcome-card--second.active-card {
+  opacity: 1;
+  transform: translate3d(0, 0, 0) scale(1);
+  filter: none;
+  pointer-events: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .welcome-card {
+    transition-duration: 0.2s;
+  }
+
+  .welcome-cards--swap #card1.active-card {
+    filter: none;
+    transform: scale(0.98) translateY(8px);
+  }
+
+  .welcome-card.welcome-card--second.active-card {
+    transform: scale(0.99) translateY(6px);
+  }
+
+  .welcome-cards--swap .welcome-card.welcome-card--second.active-card {
+    transform: none;
+  }
 }
 
 /* 根据不同等级的专属边框/阴影样式 */
@@ -368,16 +434,20 @@ body {
   box-shadow: 0 30px 60px rgba(0, 0, 0, 0.9), inset 0 1px 40px rgba(255, 255, 255, 0.05);
 }
 
-/* 顶层活跃卡片 */
+/* 顶层活跃卡片（第二张准备态由 .welcome-card--second 单独写 transform，避免被这里盖掉） */
 .active-card {
-  transform: translateZ(0) translateY(0);
   opacity: 1;
   z-index: 2;
 }
 
-/* 底层空卡片 */
+.active-card:not(.welcome-card--second) {
+  transform: translateZ(0) translateY(0);
+}
+
+/* 底层空卡片（位移过大时会在上层圆角处露边，略收紧） */
 .empty-card {
-  transform: translateZ(-50px) translateY(20px);
+  transform: translateZ(-40px) translateY(12px) scale(0.99);
+  transform-origin: center center;
   opacity: 0.6;
   z-index: 1;
   background: rgba(23, 26, 33, 0.4);
@@ -496,7 +566,7 @@ body {
     background: #15171e;
     background: color-mix(in srgb, var(--surface) 96%, #0a0b0f);
     opacity: 1;
-    transform: translateZ(-40px) translateY(16px) scale(0.98);
+    transform: translateZ(0) translateY(10px) scale(0.98);
   }
 }
 

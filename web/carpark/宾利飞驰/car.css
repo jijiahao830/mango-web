@@ -4,9 +4,8 @@
   --panel: #171a21;
   --muted: #8b93a7;
   --text: #e8ecf8;
-  /* 与选车页行政级 / 豪华轿车金标、detail-rent-sync 一致；API 仍会覆盖为目录分类色 */
-  --brand: #f7a614;
-  --brand-light: #ffcc6a;
+  --brand: #ff6b35;
+  --brand-light: #ff8c69;
   --accent: #3b82f6;
   --border: #2a2f3a;
 }

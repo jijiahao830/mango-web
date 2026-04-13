@@ -1,3 +1,8 @@
+"""按车型与分类批量更新 car.html 内 scenario-showcase-section（婚庆/商务/摆展/自驾 等）。
+
+依赖 web/no_webp_cars.txt 列出要处理的车文件夹名；可选 web/scripts/cars_scenarios_from_db.json 提供分类。
+用法：在 web 目录执行  python3 scripts/update_scenarios.py
+"""
 import json
 import random
 import re

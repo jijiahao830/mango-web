@@ -40,7 +40,9 @@
     
     <!-- 认证成功后的信息卡片 -->
     <div class="welcome-cards" id="welcomeCards" style="display: none;">
-      
+      <!-- 与卡片同色的固定衬垫，切换动画中途不会透出页面背景 -->
+      <div class="welcome-cards__backdrop" aria-hidden="true"></div>
+
       <!-- 第二个卡片 (叠在下面) -->
       <div class="welcome-card empty-card" id="card2">
         <div class="empty-placeholder"></div>

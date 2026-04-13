@@ -98,15 +98,36 @@ document.getElementById('nextCardBtn').addEventListener('click', function () {
   const card1 = document.getElementById('card1');
   const card2 = document.getElementById('card2');
   const enterBtn = document.getElementById('enterGarageBtn');
+  const deck = document.getElementById('welcomeCards');
+  if (deck.classList.contains('welcome-cards--swap') || deck.classList.contains('welcome-cards--on-second')) {
+    return;
+  }
+  const levelMatch = card1.className.match(/level-[a-z-]+/);
+  const levelClass = levelMatch ? levelMatch[0] : '';
 
-  card1.style.transform = 'translateX(-120%) rotateY(-20deg)';
-  card1.style.opacity = '0';
+  enterBtn.style.display = 'block';
 
-  setTimeout(() => {
-    const currentLevelClass = card1.className.match(/level-[a-z]+/);
-    card2.className = `welcome-card active-card ${currentLevelClass ? currentLevelClass[0] : ''}`;
-    enterBtn.style.display = 'block';
-  }, 300);
+  card2.className = 'welcome-card welcome-card--second active-card ' + levelClass;
+
+  requestAnimationFrame(function () {
+    requestAnimationFrame(function () {
+      deck.classList.add('welcome-cards--swap');
+    });
+  });
+
+  var finished = false;
+  function finish() {
+    if (finished) return;
+    finished = true;
+    card1.setAttribute('hidden', '');
+    card1.classList.remove('active-card');
+    card2.classList.remove('welcome-card--second');
+    deck.classList.remove('welcome-cards--swap');
+    deck.classList.add('welcome-cards--on-second');
+  }
+
+  /* 与 CSS transition 时长一致；避免 transitionend 多属性多次触发导致提前收尾 */
+  window.setTimeout(finish, 580);
 });
 
 document.getElementById('enterGarageBtn').addEventListener('click', function () {
