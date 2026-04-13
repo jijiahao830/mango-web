@@ -14,7 +14,7 @@
   box-sizing: border-box;
 }
 
-/* 单屏首页：禁止整页被拖动、出现双滚动条（原 hero 下 1px 占位已移除） */
+/* 单屏首页：html/body 不滚动；仅 .index-scrollport 内可滚，避免双滚动条 */
 html {
   height: 100%;
   height: 100dvh;
@@ -22,6 +22,35 @@ html {
   width: 100%;
   max-width: 100%;
   overscroll-behavior: none;
+}
+
+/* hero + 底部 1px：滚过首屏时触发 IO，用于暂停背景视频 */
+.index-scrollport {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  height: 100dvh;
+  max-height: 100dvh;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: none;
+  -webkit-overflow-scrolling: touch;
+  /* 隐藏滚动条，仍可滑动 / 滚轮滚动 */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.index-scrollport::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+.index-scroll-trigger {
+  height: 1px;
+  width: 100%;
+  background-color: #000;
+  flex-shrink: 0;
 }
 
 body {

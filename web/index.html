@@ -15,26 +15,30 @@
   <a href="car.html" class="index-floating-logo" aria-label="芒果超跑">
     <img src="media/photos/index/logo/logo2.webp" alt="芒果超跑" />
   </a>
-  <!-- Hero Banner -->
-  <section class="hero">
-    <div class="hero-video-wrapper">
-      <video class="hero-video" src="media/videos/index/carvideo.mp4" autoplay loop playsinline></video>
-      <div class="hero-video-overlay"></div>
-      <div class="hero-noise"></div>
-    </div>
-    <div class="hero-content">
-      <div class="hero-header">
-        <div class="hero-eyebrow animate-in" style="--delay: 0.1s">
-          RACING COMFORTABLE SINCE 2013 FROM<span class="hero-eyebrow-highlight">芒果超跑&nbsp;</span>
+  <div class="index-scrollport">
+    <!-- Hero Banner -->
+    <section class="hero">
+      <div class="hero-video-wrapper">
+        <video class="hero-video" src="media/videos/index/carvideo.mp4" autoplay loop playsinline></video>
+        <div class="hero-video-overlay"></div>
+        <div class="hero-noise"></div>
+      </div>
+      <div class="hero-content">
+        <div class="hero-header">
+          <div class="hero-eyebrow animate-in" style="--delay: 0.1s">
+            RACING COMFORTABLE SINCE 2013 FROM<span class="hero-eyebrow-highlight">芒果超跑&nbsp;</span>
+          </div>
+          <h1 class="hero-title animate-in" style="--delay: 0.3s">MANGO SUPERCAR</h1>
         </div>
-        <h1 class="hero-title animate-in" style="--delay: 0.3s">MANGO SUPERCAR</h1>
+        <div class="hero-actions animate-in" style="--delay: 0.5s">
+          <!-- 按钮修改跳转链接到 login 页面 -->
+          <a href="login.html" class="btn-primary btn-lg hero-choose-btn">立即选车</a>
+        </div>
       </div>
-      <div class="hero-actions animate-in" style="--delay: 0.5s">
-        <!-- 按钮修改跳转链接到 login 页面 -->
-        <a href="login.html" class="btn-primary btn-lg hero-choose-btn">立即选车</a>
-      </div>
-    </div>
-  </section>
+    </section>
+    <!-- 触发视频暂停的 1px（滚入视口时 index.js 暂停背景视频；总高度仅 +1px，避免整页双滚动条） -->
+    <div id="scroll-trigger" class="index-scroll-trigger" aria-hidden="true"></div>
+  </div>
 
   <script src="./index.js"></script>
 </body>
