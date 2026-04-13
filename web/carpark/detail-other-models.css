@@ -56,14 +56,6 @@
   transition: transform 0.3s;
 }
 
-@media (min-width: 1025px) {
-  .dropdown-trigger:hover svg,
-  .dropdown-menu:hover ~ .dropdown-trigger svg,
-  .dropdown-container:hover .dropdown-trigger svg {
-    transform: rotate(180deg);
-  }
-}
-
 .dropdown-menu {
   position: absolute;
   top: 100%;
@@ -79,6 +71,25 @@
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
+}
+
+/* 点击 .is-open 展开；禁止仅靠 hover 打开（覆盖各车 car.css） */
+.detail-header .dropdown-container:not(.is-open):hover .dropdown-menu,
+.detail-header .dropdown-container:not(.is-open) .dropdown-trigger:hover + .dropdown-menu,
+.detail-header .dropdown-container:not(.is-open) .dropdown-menu:hover {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+.detail-header .dropdown-container.is-open .dropdown-menu {
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+}
+
+.detail-header .dropdown-container.is-open .dropdown-trigger svg {
+  transform: rotate(180deg);
 }
 
 .dropdown-menu::before {
@@ -127,52 +138,15 @@
 }
 
 @media (min-width: 1025px) {
-  .dropdown-container:hover .dropdown-menu,
-  .dropdown-trigger:hover + .dropdown-menu,
-  .dropdown-menu:hover {
-    opacity: 1;
-    visibility: visible;
-    pointer-events: auto;
-  }
-}
-
-/* 手机 / 平板：点击「其他车型」展开，再点收回（由 .is-open + JS）；覆盖 hover */
-@media (max-width: 1024px) {
-  .dropdown-container:hover .dropdown-menu,
-  .dropdown-trigger:hover + .dropdown-menu,
-  .dropdown-menu:hover {
-    opacity: 0;
-    visibility: hidden;
-    pointer-events: none;
-  }
-
-  .dropdown-container:hover .dropdown-trigger svg {
-    transform: none;
-  }
-
-  .dropdown-container.is-open .dropdown-menu {
-    opacity: 1;
-    visibility: visible;
-    pointer-events: auto;
-  }
-
-  .dropdown-container.is-open .dropdown-trigger svg {
-    transform: rotate(180deg);
-  }
-
-  /* 同品牌车型多时在面板内纵向滑动，不占满整屏也无法滑到页面底外 */
-  .dropdown-menu {
-    max-height: calc(
-      100vh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 96px
-    );
-    max-height: calc(
-      100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 96px
-    );
+  /* 同品牌车型多时在面板内纵向滚动，一屏装不下可下滑 */
+  .detail-header .dropdown-menu {
+    max-height: min(85vh, 900px);
     overflow-y: auto;
     overflow-x: hidden;
-    -webkit-overflow-scrolling: touch;
     overscroll-behavior: contain;
-    /* 上下装饰线贴在面板内缘（不跟列表走），与桌面 .dropdown-menu-inner 伪元素同视觉 */
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    /* 上下两条线画在「面板」顶边、底边（随滚动口固定），避免用 inner 伪元素在可滚动区里错位到内容中间 */
     background-color: rgba(10, 11, 15, 0.95);
     background-image: linear-gradient(
         to bottom,
@@ -189,14 +163,73 @@
     background-repeat: no-repeat;
   }
 
+  .detail-header .dropdown-menu::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
+  }
+
+  .detail-header .dropdown-menu .dropdown-menu-inner::before,
+  .detail-header .dropdown-menu .dropdown-menu-inner::after {
+    display: none;
+  }
+}
+
+/* 桌面：鼠标在「其他车型」整块区域内时下拉展开，锁住背后页面滚动（不依赖 wheel preventDefault） */
+@media (min-width: 769px) {
+  html.mango-dropdown-scroll-lock,
+  body.mango-dropdown-scroll-lock {
+    overflow: hidden !important;
+    overscroll-behavior: none;
+  }
+}
+
+/* 手机 / 平板：面板高度与触控滚动（展开仍由全局 .is-open + 同上覆盖 car.css） */
+@media (max-width: 1024px) {
+  /* 同品牌车型多时在面板内纵向滑动，不占满整屏也无法滑到页面底外 */
+  .dropdown-menu {
+    max-height: calc(
+      100vh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 96px
+    );
+    max-height: calc(
+      100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 96px
+    );
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    /* 上下装饰线贴在面板顶、底内缘（与桌面同一套背景线） */
+    background-color: rgba(10, 11, 15, 0.95);
+    background-image: linear-gradient(
+        to bottom,
+        color-mix(in srgb, var(--brand) 40%, transparent),
+        transparent
+      ),
+      linear-gradient(
+        to top,
+        color-mix(in srgb, var(--brand) 40%, transparent),
+        transparent
+      );
+    background-size: 100% 6px, 100% 6px;
+    background-position: top, bottom;
+    background-repeat: no-repeat;
+  }
+
+  .dropdown-menu::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
+  }
+
   /* 内层装饰在滚动容器里会错位，移动端改由 .dropdown-menu 背景承担 */
   .dropdown-menu-inner {
     display: none;
   }
 }
 
-/* 其他车型：移动 2 列、平板 3 列、宽屏 5 列（多出的自动换行）；不足 5 辆时用 .dropdown-grid--few 居中 */
-.dropdown-grid {
+.dropdown-menu .dropdown-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 24px;
@@ -205,12 +238,16 @@
 }
 
 @media (min-width: 769px) and (max-width: 1024px) {
-  .dropdown-grid:not(.dropdown-grid--few) {
+  .dropdown-menu .dropdown-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 
 @media (min-width: 1025px) {
+  .dropdown-menu .dropdown-grid {
+    max-width: min(96vw, 1440px);
+  }
+
   .dropdown-grid:not(.dropdown-grid--few) {
     grid-template-columns: repeat(5, minmax(0, 1fr));
   }
@@ -238,7 +275,6 @@
   }
 }
 
-/* 同品牌其他车型不足 5 个时整行居中，单卡宽度与两列布局一致 */
 .dropdown-grid.dropdown-grid--few {
   display: flex;
   flex-wrap: wrap;
@@ -247,30 +283,42 @@
   gap: 24px;
 }
 
+.dropdown-grid.dropdown-grid--few .car-card-link {
+  box-sizing: border-box;
+  flex: 0 0 auto;
+  min-width: 0;
+  width: calc((100% - 96px) / 5);
+  max-width: calc((100% - 96px) / 5);
+}
+
+@media (min-width: 1025px) {
+  .detail-header .dropdown-menu .dropdown-grid.dropdown-grid--few {
+    gap: 40px !important;
+  }
+
+  .dropdown-grid.dropdown-grid--few .car-card-link {
+    width: calc((100% - 160px) / 5);
+    max-width: calc((100% - 160px) / 5);
+  }
+}
+
 @media (max-width: 1024px) {
   .dropdown-grid.dropdown-grid--few {
     gap: 8px;
   }
+}
 
+@media (max-width: 768px) {
   .dropdown-grid.dropdown-grid--few .car-card-link {
     width: calc((100% - 8px) / 2);
     max-width: calc((100% - 8px) / 2);
   }
 }
 
-.dropdown-grid.dropdown-grid--few .car-card-link {
-  box-sizing: border-box;
-  flex: 0 0 auto;
-  width: calc((100% - 24px) / 2);
-  max-width: calc((100% - 24px) / 2);
-  min-width: 0;
-}
-
-/* 必须在上一段「两列宽」之后，否则层叠会把平板三列覆盖回两列 */
 @media (min-width: 769px) and (max-width: 1024px) {
   .dropdown-grid.dropdown-grid--few .car-card-link {
-    width: calc((100% - 48px) / 3);
-    max-width: calc((100% - 48px) / 3);
+    width: calc((100% - 16px) / 3);
+    max-width: calc((100% - 16px) / 3);
   }
 }
 
@@ -315,13 +363,25 @@
 }
 
 @media (min-width: 1025px) {
-  .dropdown-grid .car-image {
-    height: 200px;
+  /* cover + scale 会裁切车身；contain 在格子里完整显示（上下或左右可留白） */
+  .detail-header .dropdown-menu .dropdown-grid .car-image {
+    height: 240px;
+    width: 100%;
+    object-fit: contain;
+    object-position: center bottom;
+    transform: none;
+    background: transparent;
+  }
+
+  .detail-header .dropdown-menu .dropdown-grid .car-card:hover .car-image {
+    transform: scale(1.03);
   }
 }
 
-.dropdown-grid .car-card:hover .car-image {
-  transform: scale(0.945);
+@media (max-width: 1024px) {
+  .dropdown-grid .car-card:hover .car-image {
+    transform: scale(0.945);
+  }
 }
 
 /* 顶栏「其他车型」：车型名叠在图上；top/left = 与图边的留白（仅调大数值，不改叠图布局） */
