@@ -216,16 +216,24 @@
   }
 }
 
-/* 手机 / 小平板：下拉内车卡更紧凑（与 ≤1024 可滚动面板一致） */
 @media (max-width: 1024px) {
   .dropdown-grid {
     gap: 8px;
     row-gap: 8px;
     column-gap: 8px;
   }
+}
 
+@media (max-width: 768px) {
   .dropdown-grid .car-image {
     height: 120px;
+    object-position: center top;
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+  .dropdown-grid .car-image {
+    height: 200px;
     object-position: center top;
   }
 }
