@@ -15,13 +15,18 @@ document.addEventListener('DOMContentLoaded', function() {
         try {
           var root = document.getElementById('carSection');
           var y = 0;
-          if (root) {
+          var useInnerListScroll =
+            root &&
+            window.matchMedia &&
+            window.matchMedia('(min-width: 769px)').matches;
+          if (useInnerListScroll) {
             y = root.scrollTop;
           } else {
             y =
               window.scrollY ||
               window.pageYOffset ||
               (document.documentElement && document.documentElement.scrollTop) ||
+              (document.body && document.body.scrollTop) ||
               0;
           }
           sessionStorage.setItem(CAR_LIST_SCROLL_KEY, String(y));
@@ -68,7 +73,11 @@ document.addEventListener('DOMContentLoaded', function() {
     function applyScroll() {
       try {
         var root = document.getElementById('carSection');
-        if (root) {
+        var useInnerListScroll =
+          root &&
+          window.matchMedia &&
+          window.matchMedia('(min-width: 769px)').matches;
+        if (useInnerListScroll) {
           root.scrollTop = y;
           return;
         }
@@ -231,17 +240,33 @@ document.addEventListener('DOMContentLoaded', function() {
 
   function scrollToCarSectionTop() {
     var root = document.getElementById('carSection');
-    if (root && typeof root.scrollTo === 'function') {
-      try {
-        root.scrollTo({ top: 0, behavior: 'smooth' });
-        return;
-      } catch (e) {
-        root.scrollTop = 0;
-        return;
+    var useInnerListScroll =
+      root &&
+      window.matchMedia &&
+      window.matchMedia('(min-width: 769px)').matches;
+    if (useInnerListScroll) {
+      if (typeof root.scrollTo === 'function') {
+        try {
+          root.scrollTo({ top: 0, behavior: 'smooth' });
+          return;
+        } catch (e) {
+          root.scrollTop = 0;
+          return;
+        }
       }
+      root.scrollTop = 0;
+      return;
     }
     if (carGridEl) {
-      carGridEl.scrollIntoView({ block: 'start', behavior: 'smooth' });
+      try {
+        carGridEl.scrollIntoView({ block: 'start', behavior: 'smooth' });
+        return;
+      } catch (e2) {}
+    }
+    try {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } catch (e3) {
+      window.scrollTo(0, 0);
     }
   }
 

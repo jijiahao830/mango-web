@@ -1890,11 +1890,56 @@ a.btn-primary {
     padding-left: max(8px, env(safe-area-inset-left));
     padding-right: max(8px, env(safe-area-inset-right));
   }
+  /*
+   * 移动端：列表区不要 flex 占满视口高度，否则主栏易被算成一屏高 + 内部滚动，
+   * footer 顶线会出现在第一屏底；改为高度随列表增长，整区 #carSection 单根滚动条，footer 只在全部车辆之后。
+   */
+  #carSection .car-row {
+    flex: 0 0 auto;
+    min-height: 0;
+  }
+  #carSection .main-content {
+    height: auto;
+    max-height: none;
+    min-height: 0;
+    overflow: visible;
+  }
+
+  /*
+   * 选车页移动端：由 html 整页滚动（与 about 页一致），不再用 #carSection 定高做唯一滚动容器。
+   * 否则部分 WebKit 下 flex/定高组合仍会让 footer 顶线出现在视口内，列表却继续向下延伸。
+   */
+  html:has(body.car-section-active) {
+    overflow-x: hidden;
+    overflow-y: auto;
+    height: auto;
+    min-height: 100%;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  body.car-section-active {
+    overflow-x: hidden;
+    overflow-y: visible;
+    height: auto;
+    min-height: 100%;
+  }
+
+  body.car-section-active #carSection.content-wrapper {
+    height: auto;
+    min-height: calc(100vh - 56px);
+    min-height: calc(100dvh - 56px);
+    max-height: none;
+    overflow: visible;
+  }
+
   .sidebar-filter {
     width: 280px;
     height: 100vh;
     max-height: 100vh;
     overflow-y: auto;
+    overflow-x: hidden;
+    overscroll-behavior-x: none;
+    touch-action: pan-y;
     position: fixed;
     top: 0;
     right: -100%;
@@ -1916,6 +1961,14 @@ a.btn-primary {
     max-height: 100vh;
     z-index: 1000;
   }
+
+  /* 拖价格条时勿触发侧栏横向滚动/橡皮筋；由 range 接管横向位移 */
+  .sidebar-filter .price-slider-container {
+    touch-action: none;
+    position: relative;
+    z-index: 2;
+  }
+
   .main-content {
     padding: 24px 8px;
   }

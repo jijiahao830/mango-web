@@ -18,6 +18,16 @@
   min-height: 40px;
 }
 
+@media (max-width: 768px) {
+  .detail-header .header-center-nav {
+    display: flex !important;
+    flex: 1;
+    justify-content: center;
+    align-items: center;
+    min-height: 40px;
+  }
+}
+
 .dropdown-container {
   position: static;
   display: flex;
@@ -162,6 +172,26 @@
     overflow-x: hidden;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior: contain;
+    /* 上下装饰线贴在面板内缘（不跟列表走），与桌面 .dropdown-menu-inner 伪元素同视觉 */
+    background-color: rgba(10, 11, 15, 0.95);
+    background-image: linear-gradient(
+        to bottom,
+        color-mix(in srgb, var(--brand) 40%, transparent),
+        transparent
+      ),
+      linear-gradient(
+        to top,
+        color-mix(in srgb, var(--brand) 40%, transparent),
+        transparent
+      );
+    background-size: 100% 6px, 100% 6px;
+    background-position: top, bottom;
+    background-repeat: no-repeat;
+  }
+
+  /* 内层装饰在滚动容器里会错位，移动端改由 .dropdown-menu 背景承担 */
+  .dropdown-menu-inner {
+    display: none;
   }
 }
 
@@ -186,9 +216,17 @@
   }
 }
 
-@media (max-width: 768px) {
+/* 手机 / 小平板：下拉内车卡更紧凑（与 ≤1024 可滚动面板一致） */
+@media (max-width: 1024px) {
   .dropdown-grid {
-    gap: 12px;
+    gap: 8px;
+    row-gap: 8px;
+    column-gap: 8px;
+  }
+
+  .dropdown-grid .car-image {
+    height: 120px;
+    object-position: center top;
   }
 }
 
@@ -201,9 +239,14 @@
   gap: 24px;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
   .dropdown-grid.dropdown-grid--few {
-    gap: 12px;
+    gap: 8px;
+  }
+
+  .dropdown-grid.dropdown-grid--few .car-card-link {
+    width: calc((100% - 8px) / 2);
+    max-width: calc((100% - 8px) / 2);
   }
 }
 
@@ -257,25 +300,31 @@
 
 .dropdown-grid .car-image {
   width: 100%;
-  height: 200px;
   object-fit: cover;
+  transform: scale(0.9);
+  transform-origin: center top;
   transition: transform 0.5s ease;
 }
 
-.dropdown-grid .car-card:hover .car-image {
-  transform: scale(1.05);
+@media (min-width: 1025px) {
+  .dropdown-grid .car-image {
+    height: 200px;
+  }
 }
 
-/* 顶栏「其他车型」：车型名 = 接口 model，无额外样式，叠在图左上角 */
+.dropdown-grid .car-card:hover .car-image {
+  transform: scale(0.945);
+}
+
+/* 顶栏「其他车型」：车型名叠在图上；top/left = 与图边的留白（仅调大数值，不改叠图布局） */
 .dropdown-grid .other-model-name {
   position: absolute;
-  /* 与 .car-card 圆角（16px）+ overflow:hidden 留出空隙，避免文字贴顶被圆角裁掉 */
-  top: 12px;
-  left: 12px;
+  top: 18px;
+  left: 18px;
   z-index: 2;
   margin: 0;
   padding: 0;
-  max-width: 100%;
+  max-width: calc(100% - 36px);
   font: inherit;
   font-weight: normal;
   font-style: normal;
@@ -289,6 +338,47 @@
   box-shadow: none;
   text-shadow: none;
   pointer-events: none;
+}
+
+/* 静态车卡：badge 叠图，覆盖各车目录 car.css */
+.dropdown-grid .car-card .car-badge.card-badge-overlay,
+.dropdown-grid .car-card .card-badge-overlay.title-badge {
+  position: absolute;
+  top: 18px;
+  left: 18px;
+  z-index: 10;
+  max-width: calc(100% - 36px);
+}
+
+@media (max-width: 1024px) {
+  .dropdown-grid .other-model-name {
+    top: 10px;
+    left: 10px;
+    max-width: calc(100% - 20px);
+    font-size: 12px;
+    line-height: 1.35;
+  }
+
+  .dropdown-grid .car-card .car-badge.card-badge-overlay,
+  .dropdown-grid .car-card .card-badge-overlay.title-badge {
+    top: 10px;
+    left: 10px;
+    max-width: calc(100% - 20px);
+    padding: 4px 8px !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .dropdown-menu .dropdown-grid .other-model-name {
+    top: 6px !important;
+    left: 6px !important;
+    max-width: calc(100% - 12px) !important;
+    padding: 2px 6px !important;
+    margin: 0 !important;
+    line-height: 1.25 !important;
+    font-size: 11px !important;
+    box-sizing: border-box;
+  }
 }
 
 .header-right-logo {
@@ -404,7 +494,8 @@
   /*
    * car.css 末尾全局 .hero-image-main { left:50%; width:90%; transform } 会铺满失败。
    * 勿与 inset:0 同时写 width/height: auto，否则会破坏绝对定位拉伸。
-   * 用 > 子选择器 + 逐项 !important 盖死；hero-detail 改 block，避免与 flex 叠出侧向偏移。
+   * hero-detail 须保持 flex + justify-content:flex-end，否则唯一流内子元素 .hero-content-wrapper 会顶到区块顶部。
+   * 遮罩与图为 absolute，不参与 flex，不影响底对齐标题。
    */
   html,
   body {
@@ -414,7 +505,10 @@
   }
 
   body section.hero-detail {
-    display: block !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: flex-end !important;
+    align-items: flex-end !important;
     position: relative;
     min-height: 100vh;
     min-height: 100dvh;
@@ -455,30 +549,28 @@
     margin: 0 !important;
     padding: 0 !important;
     transform: none !important;
-    display: flex !important;
-    flex-direction: column !important;
-    justify-content: flex-end !important;
-    align-items: stretch !important;
-    align-content: stretch !important;
+    display: block !important;
     z-index: 0 !important;
     overflow: hidden !important;
   }
 
+  /* 与 .hero-bg-overlay 同一块矩形：picture 铺满，img cover 满高 */
   body section.hero-detail > .hero-image-main > picture {
+    position: absolute !important;
+    inset: 0 !important;
     display: block !important;
     width: 100% !important;
-    min-width: 100% !important;
-    max-width: none !important;
-    flex: 0 0 auto !important;
+    height: 100% !important;
     margin: 0 !important;
     padding: 0 !important;
   }
 
   body section.hero-detail > .hero-image-main > picture img {
     width: 100% !important;
-    min-width: 100% !important;
+    height: 100% !important;
     max-width: none !important;
-    height: auto !important;
+    object-fit: cover !important;
+    object-position: center center !important;
     margin: 0 !important;
     padding: 0 !important;
     border-radius: 0 !important;
@@ -493,6 +585,8 @@
   body section.hero-detail .hero-content-wrapper {
     position: relative;
     z-index: 2;
+    flex: 0 0 auto;
+    width: 100%;
   }
 
   .gallery-section .gallery-featured {
