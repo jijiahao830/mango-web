@@ -1,0 +1,25 @@
+{
+  "api_port": 8765,
+  "api_host": "0.0.0.0",
+  "debug": false,
+  "cardata_password": "请改为强口令",
+  "cta-section": true,
+  "database": {
+    "type": "mysql",
+    "default_level_for_new_member": "芒果",
+    "write_register_and_login_on_insert": true,
+    "update_last_login": true,
+    "table": "member",
+    "name_column": "name",
+    "level_column": "level",
+    "register_time_column": "register_time",
+    "last_login_column": "last_login_time",
+    "mysql": {
+      "host": "127.0.0.1",
+      "port": 3306,
+      "user": "root",
+      "password": "",
+      "database": "请填写你的库名"
+    }
+  }
+}

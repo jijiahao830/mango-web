@@ -10,7 +10,10 @@
     function (e) {
       var n = e.target;
       while (n && n.nodeType === 1) {
-        if (n.classList && n.classList.contains('login-card')) {
+        if (
+          n.classList &&
+          (n.classList.contains('login-card') || n.classList.contains('officer-photo-stack'))
+        ) {
           return;
         }
         n = n.parentElement;
@@ -97,7 +100,7 @@ document.getElementById('loginForm').addEventListener('submit', async function (
 document.getElementById('nextCardBtn').addEventListener('click', function () {
   const card1 = document.getElementById('card1');
   const card2 = document.getElementById('card2');
-  const enterBtn = document.getElementById('enterGarageBtn');
+  const openGachaBtn = document.getElementById('openGachaBtn');
   const deck = document.getElementById('welcomeCards');
   if (deck.classList.contains('welcome-cards--swap') || deck.classList.contains('welcome-cards--on-second')) {
     return;
@@ -105,7 +108,7 @@ document.getElementById('nextCardBtn').addEventListener('click', function () {
   const levelMatch = card1.className.match(/level-[a-z-]+/);
   const levelClass = levelMatch ? levelMatch[0] : '';
 
-  enterBtn.style.display = 'block';
+  openGachaBtn.style.display = 'flex';
 
   card2.className = 'welcome-card welcome-card--second active-card ' + levelClass;
 
@@ -130,6 +133,370 @@ document.getElementById('nextCardBtn').addEventListener('click', function () {
   window.setTimeout(finish, 580);
 });
 
-document.getElementById('enterGarageBtn').addEventListener('click', function () {
-  window.location.href = 'car.html#carSection';
+/** 欢迎第二张卡片 → 进入交付官抽卡层 */
+document.getElementById('openGachaBtn').addEventListener('click', function () {
+  const deck = document.getElementById('welcomeCards');
+  const gacha = document.getElementById('deliveryGacha');
+  if (!gacha || deck.classList.contains('welcome-cards--to-gacha')) return;
+  deck.classList.add('welcome-cards--to-gacha');
+  window.setTimeout(function () {
+    deck.style.display = 'none';
+    gacha.style.display = 'flex';
+    gacha.style.flexDirection = 'column';
+    gacha.setAttribute('aria-hidden', 'false');
+    window.requestAnimationFrame(function () {
+      gacha.classList.add('delivery-gacha--visible');
+    });
+  }, 420);
 });
+
+(function initDeliveryGacha() {
+  const gacha = document.getElementById('deliveryGacha');
+  const deck = document.getElementById('gachaDeck');
+  const confirmBtn = document.getElementById('confirmDeliveryBtn');
+  const enterBtn = document.getElementById('enterGarageBtn');
+  const backBtn = document.getElementById('gachaBackBtn');
+  const actionsEl = document.getElementById('deliveryGachaActions');
+  if (!deck || !confirmBtn) return;
+
+  (function bindOfficerPhotoFallbacks() {
+    deck.querySelectorAll('.gacha-card--has-photo .gacha-card__photo-img').forEach(function (img) {
+      var base = (img.getAttribute('data-officer-photo-base') || '').replace(/\/$/, '');
+      if (!base) return;
+      var candidates = [
+        base + '/4-2.webp',
+        base + '/4-1.webp',
+        base + '/2-1.webp',
+        base + '/2-2.webp',
+        base + '/2-3.webp',
+      ];
+      var i = Math.max(
+        0,
+        candidates.findIndex(function (p) {
+          return (img.getAttribute('src') || '') === p;
+        })
+      );
+      img.addEventListener('error', function onErr() {
+        i += 1;
+        if (i < candidates.length) {
+          img.src = candidates[i];
+        } else {
+          img.removeEventListener('error', onErr);
+        }
+      });
+    });
+  })();
+
+  const officerDetailStack = document.getElementById('officerDetailStack');
+  var officerPhotoWallSyncRaf = null;
+  var officerCopyResizeObserver = null;
+
+  /** 宽屏：左栏影像区总高度 = 右侧文案区高度 + 50px（对齐「芒果租车｜体验顾问…」底边以下 50px） */
+  function clearOfficerPhotoWallHeightSync() {
+    ['1', '2', '3'].forEach(function (oid) {
+      var root = document.querySelector('.officer-detail--rich[data-officer-detail="' + oid + '"]');
+      if (!root) return;
+      var wall = root.querySelector('.officer-photo-wall--stack');
+      var stack = root.querySelector('.officer-photo-stack');
+      if (wall) wall.style.removeProperty('min-height');
+      if (stack) stack.style.removeProperty('max-height');
+    });
+  }
+
+  function syncOfficerPhotoWallHeightToCopy() {
+    if (typeof window.matchMedia === 'function' && !window.matchMedia('(min-width: 860px)').matches) {
+      clearOfficerPhotoWallHeightSync();
+      return;
+    }
+    var root = document.querySelector('.officer-detail--rich:not([hidden])');
+    if (!root || root.classList.contains('officer-detail--placeholder')) return;
+    var copy = root.querySelector('.officer-detail__copy');
+    var wall = root.querySelector('.officer-photo-wall--stack');
+    var stack = root.querySelector('.officer-photo-stack');
+    if (!copy || !wall || !stack) return;
+    var h = copy.offsetHeight + 50;
+    wall.style.minHeight = h + 'px';
+    stack.style.maxHeight = h + 'px';
+  }
+
+  function scheduleSyncOfficerPhotoWallHeight() {
+    if (officerPhotoWallSyncRaf !== null) window.cancelAnimationFrame(officerPhotoWallSyncRaf);
+    officerPhotoWallSyncRaf = window.requestAnimationFrame(function () {
+      officerPhotoWallSyncRaf = null;
+      syncOfficerPhotoWallHeightToCopy();
+    });
+  }
+
+  function detachOfficerCopyResizeObserver() {
+    if (officerCopyResizeObserver) {
+      officerCopyResizeObserver.disconnect();
+      officerCopyResizeObserver = null;
+    }
+  }
+
+  function attachOfficerCopyResizeObserver(copyEl) {
+    detachOfficerCopyResizeObserver();
+    if (!copyEl || typeof ResizeObserver === 'undefined') return;
+    officerCopyResizeObserver = new ResizeObserver(function () {
+      scheduleSyncOfficerPhotoWallHeight();
+    });
+    officerCopyResizeObserver.observe(copyEl);
+  }
+
+  const pickerConfirmWrap = document.getElementById('gachaPickerConfirmWrap');
+  const pickerConfirmBtn = document.getElementById('gachaPickerConfirmBtn');
+  const gachaPickerEl = document.getElementById('gachaPicker');
+
+  var pendingCardForDetail = null;
+  var spinSequenceFinished = false;
+  var gachaSpinFallbackTimer = null;
+  /** 为 true：整块「确定」隐藏，直至本次旋转结束 */
+  var gachaConfirmHiddenUntilSpinDone = true;
+  /** 首次旋转结束并显示「确定」后为 true，之后始终保留按钮与条带（换卡、进详情返回也不再隐藏） */
+  var gachaPickerConfirmStayVisible = false;
+
+  function hidePickerConfirm() {
+    if (gachaPickerConfirmStayVisible) return;
+    if (pickerConfirmWrap) pickerConfirmWrap.hidden = true;
+    if (pickerConfirmBtn) pickerConfirmBtn.disabled = true;
+  }
+
+  function showPickerConfirm() {
+    if (pickerConfirmWrap) pickerConfirmWrap.hidden = false;
+    if (pickerConfirmBtn) pickerConfirmBtn.disabled = false;
+  }
+
+  function disablePickerConfirmOnly() {
+    if (pickerConfirmBtn) pickerConfirmBtn.disabled = true;
+  }
+
+  hidePickerConfirm();
+
+  function showGachaPicker() {
+    if (gacha) {
+      gacha.classList.remove('delivery-gacha--showing-detail');
+      gacha.scrollTop = 0;
+    }
+    if (gachaSpinFallbackTimer !== null) {
+      window.clearTimeout(gachaSpinFallbackTimer);
+      gachaSpinFallbackTimer = null;
+    }
+    pendingCardForDetail = null;
+    spinSequenceFinished = false;
+    if (!gachaPickerConfirmStayVisible) {
+      gachaConfirmHiddenUntilSpinDone = true;
+      if (gachaPickerEl) gachaPickerEl.classList.remove('gacha-picker--confirm-strip');
+      hidePickerConfirm();
+    }
+    deck.classList.remove('gacha-deck--busy');
+    detachOfficerCopyResizeObserver();
+    clearOfficerPhotoWallHeightSync();
+    if (officerDetailStack) {
+      officerDetailStack.querySelectorAll('.officer-photo-stack').forEach(function (el) {
+        el.scrollTop = 0;
+      });
+    }
+    if (officerDetailStack) officerDetailStack.hidden = true;
+    if (backBtn) backBtn.hidden = true;
+    if (actionsEl) actionsEl.hidden = true;
+    confirmBtn.disabled = true;
+    confirmBtn.style.display = '';
+    enterBtn.style.display = 'none';
+    /* 从详情返回抽卡区：保留已翻开的卡片状态与当前选中记录 */
+    deck.querySelectorAll('.gacha-card').forEach(function (c) {
+      c.classList.remove('is-spinning');
+      c.style.removeProperty('transition');
+    });
+  }
+
+  function revealOfficerDetailAfterCard(card) {
+    confirmBtn.disabled = false;
+
+    if (gacha) {
+      gacha.classList.add('delivery-gacha--showing-detail');
+      gacha.scrollTop = 0;
+    }
+    if (backBtn) backBtn.hidden = false;
+    if (actionsEl) actionsEl.hidden = false;
+
+    var oid = card.getAttribute('data-officer-id') || '';
+    if (officerDetailStack) {
+      officerDetailStack.hidden = false;
+      officerDetailStack.querySelectorAll('.officer-detail').forEach(function (el) {
+        var match = el.getAttribute('data-officer-detail') === oid;
+        el.hidden = !match;
+      });
+    }
+
+    var detailRoot = document.querySelector('.officer-detail--rich[data-officer-detail="' + oid + '"]');
+    var stackEl = detailRoot ? detailRoot.querySelector('.officer-photo-stack') : null;
+    var copyEl = detailRoot ? detailRoot.querySelector('.officer-detail__copy') : null;
+    if (stackEl && copyEl) {
+      window.requestAnimationFrame(function () {
+        stackEl.scrollTop = 0;
+        window.requestAnimationFrame(function () {
+          syncOfficerPhotoWallHeightToCopy();
+          attachOfficerCopyResizeObserver(copyEl);
+        });
+      });
+    } else {
+      detachOfficerCopyResizeObserver();
+      clearOfficerPhotoWallHeightSync();
+    }
+
+    deck.classList.remove('gacha-deck--busy');
+  }
+
+  function setPicked(card) {
+    if (deck.classList.contains('gacha-deck--busy')) return;
+
+    if (gachaSpinFallbackTimer !== null) {
+      window.clearTimeout(gachaSpinFallbackTimer);
+      gachaSpinFallbackTimer = null;
+    }
+
+    /* 「确定」已出现后，点击已翻开的牌：只切换选中样式，不重新旋转 */
+    if (
+      gachaPickerConfirmStayVisible &&
+      card.classList.contains('is-flipped') &&
+      !card.classList.contains('is-spinning')
+    ) {
+      deck.querySelectorAll('.gacha-card').forEach(function (c) {
+        c.classList.remove('gacha-card--selected', 'is-picked');
+        c.setAttribute('aria-pressed', 'false');
+      });
+      card.classList.add('gacha-card--selected', 'is-picked');
+      card.setAttribute('aria-pressed', 'true');
+      pendingCardForDetail = card;
+      return;
+    }
+
+    spinSequenceFinished = false;
+    pendingCardForDetail = null;
+    if (gachaConfirmHiddenUntilSpinDone) {
+      hidePickerConfirm();
+    } else if (!gachaPickerConfirmStayVisible) {
+      /* 首次翻卡后「确定」常驻：再点其他牌开转时不再禁用按钮，避免样式变灰 */
+      disablePickerConfirmOnly();
+    }
+
+    deck.classList.add('gacha-deck--busy');
+    deck.querySelectorAll('.gacha-card').forEach(function (c) {
+      c.classList.remove('is-picked', 'is-spinning', 'gacha-card--selected');
+      c.style.removeProperty('transition');
+      c.setAttribute('aria-pressed', 'false');
+      /* 仅重置本次点击的牌，其它已翻开的牌保持正面朝上，不再翻回背面 */
+      if (c === card) {
+        c.classList.remove('is-flipped');
+      }
+    });
+
+    var reduced =
+      typeof window.matchMedia === 'function' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    function finishSpinSequence() {
+      if (spinSequenceFinished) return;
+      if (gachaSpinFallbackTimer !== null) {
+        window.clearTimeout(gachaSpinFallbackTimer);
+        gachaSpinFallbackTimer = null;
+      }
+      spinSequenceFinished = true;
+      card.classList.remove('is-spinning');
+      card.style.removeProperty('transition');
+      deck.querySelectorAll('.gacha-card').forEach(function (x) {
+        x.classList.remove('gacha-card--selected');
+      });
+      card.classList.add('gacha-card--selected');
+      pendingCardForDetail = card;
+      if (gachaPickerEl) gachaPickerEl.classList.add('gacha-picker--confirm-strip');
+      gachaConfirmHiddenUntilSpinDone = false;
+      gachaPickerConfirmStayVisible = true;
+      showPickerConfirm();
+      deck.classList.remove('gacha-deck--busy');
+    }
+
+    if (reduced) {
+      card.style.setProperty('transition', 'none');
+      card.classList.add('is-flipped', 'is-picked');
+      card.setAttribute('aria-pressed', 'true');
+      window.requestAnimationFrame(finishSpinSequence);
+      return;
+    }
+
+    var spinStarted = false;
+
+    function startSpin() {
+      if (spinStarted) return;
+      spinStarted = true;
+      card.addEventListener(
+        'animationend',
+        function onSpinEnd(e) {
+          var name = e.animationName || '';
+          if (name.indexOf('gacha-card-spin-reveal') === -1) return;
+          if (gachaSpinFallbackTimer !== null) {
+            window.clearTimeout(gachaSpinFallbackTimer);
+            gachaSpinFallbackTimer = null;
+          }
+          finishSpinSequence();
+        },
+        { once: true }
+      );
+      card.classList.add('is-spinning');
+      gachaSpinFallbackTimer = window.setTimeout(finishSpinSequence, 3200);
+    }
+
+    /* 无翻面过渡：瞬间到正面后立即 Y 轴旋转 */
+    card.style.setProperty('transition', 'none');
+    card.classList.add('is-flipped', 'is-picked');
+    card.setAttribute('aria-pressed', 'true');
+    void card.offsetHeight;
+    window.requestAnimationFrame(function () {
+      window.requestAnimationFrame(startSpin);
+    });
+  }
+
+  if (backBtn) {
+    backBtn.addEventListener('click', function () {
+      showGachaPicker();
+    });
+  }
+
+  if (pickerConfirmBtn) {
+    pickerConfirmBtn.addEventListener('click', function () {
+      if (deck.classList.contains('gacha-deck--busy')) return;
+      var c = deck.querySelector('.gacha-card.gacha-card--selected');
+      if (!c) c = pendingCardForDetail;
+      if (!c) return;
+      pendingCardForDetail = null;
+      spinSequenceFinished = false;
+      hidePickerConfirm();
+      revealOfficerDetailAfterCard(c);
+    });
+  }
+
+  deck.querySelectorAll('.gacha-card').forEach(function (card) {
+    card.addEventListener('click', function () {
+      setPicked(card);
+    });
+  });
+
+  confirmBtn.addEventListener('click', function () {
+    const picked =
+      deck.querySelector('.gacha-card.gacha-card--selected') ||
+      deck.querySelector('.gacha-card.is-picked');
+    if (!picked) return;
+    var name = picked.getAttribute('data-name') || '';
+    var id = picked.getAttribute('data-officer-id') || '';
+    try {
+      sessionStorage.setItem('mango_delivery_officer', name);
+      sessionStorage.setItem('mango_delivery_officer_id', id);
+    } catch (e) {}
+    confirmBtn.style.display = 'none';
+    enterBtn.style.display = 'inline-flex';
+  });
+
+  enterBtn.addEventListener('click', function () {
+    window.location.href = 'car.html#carSection';
+  });
+})();

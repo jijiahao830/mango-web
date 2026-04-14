@@ -14,6 +14,28 @@
   box-sizing: border-box;
 }
 
+/* 隐藏滚动条，保留滚轮/触摸滑动 */
+.login-card,
+.delivery-gacha,
+.officer-detail-stack,
+.officer-detail__copy,
+.gacha-deck,
+.officer-photo-stack {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.login-card::-webkit-scrollbar,
+.delivery-gacha::-webkit-scrollbar,
+.officer-detail-stack::-webkit-scrollbar,
+.officer-detail__copy::-webkit-scrollbar,
+.gacha-deck::-webkit-scrollbar,
+.officer-photo-stack::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
 /* 整页锁死：禁止上下拖动 / 橡皮筋（Safari 需 html 与 body 双固定） */
 html {
   position: fixed;
@@ -77,7 +99,10 @@ body {
 .welcome-card,
 .welcome-card button,
 .welcome-card a,
-.next-card-btn {
+.next-card-btn,
+.delivery-gacha,
+.delivery-gacha button,
+.gacha-card {
   touch-action: manipulation;
 }
 
@@ -489,10 +514,44 @@ body {
 }
 
 .empty-placeholder {
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.03);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 72px;
+  height: 72px;
+  margin: 0 auto 8px;
+}
+
+.delivery-heart {
+  display: block;
+  animation: delivery-heart-bounce 0.95s ease-in-out infinite;
+  filter: drop-shadow(0 6px 14px rgba(255, 59, 0, 0.38));
+  will-change: transform;
+}
+
+@keyframes delivery-heart-bounce {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+  }
+  18% {
+    transform: translateY(-12px) scale(1.08);
+  }
+  36% {
+    transform: translateY(0) scale(1);
+  }
+  52% {
+    transform: translateY(-6px) scale(1.04);
+  }
+  68% {
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .delivery-heart {
+    animation: none;
+  }
 }
 
 /* 右侧箭头按钮 */
@@ -519,6 +578,14 @@ body {
   color: #fff;
   transform: translateY(-50%) translateX(5px);
   box-shadow: 0 0 20px rgba(255, 107, 53, 0.4);
+}
+
+button.next-card-btn {
+  appearance: none;
+  -webkit-appearance: none;
+  font: inherit;
+  padding: 0;
+  margin: 0;
 }
 
 .btn-enter-garage {
@@ -577,5 +644,1378 @@ body {
     -webkit-overflow-scrolling: touch;
     overscroll-behavior: contain;
     padding: 40px 24px;
+  }
+}
+
+/* —— 欢迎第二张：过渡文案 + 进入抽卡 —— */
+.welcome-card2-copy {
+  margin-top: 12px;
+  padding: 0 12px;
+  text-align: center;
+  max-width: 22em;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.welcome-card2-line {
+  color: rgba(255, 255, 255, 0.88);
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 1.65;
+  letter-spacing: 0.03em;
+  margin: 0 0 0.65em;
+}
+
+.welcome-card2-line:last-of-type {
+  margin-bottom: 0;
+}
+
+.welcome-card2-line--emph {
+  margin-top: 0.35em;
+  padding-top: 0.45em;
+  border-top: 1px solid rgba(255, 107, 53, 0.22);
+  color: rgba(255, 224, 210, 0.98);
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+}
+
+.welcome-cards--to-gacha {
+  opacity: 0;
+  transform: scale(0.96);
+  pointer-events: none;
+  transition:
+    opacity 0.4s ease,
+    transform 0.45s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+/* —— 交付官抽卡层 —— */
+.delivery-gacha {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(20px, 5vw, 40px) clamp(16px, 5vw, 32px);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  opacity: 0;
+  transform: translateY(12px) scale(0.98);
+  transition:
+    opacity 0.45s cubic-bezier(0.32, 0.72, 0, 1),
+    transform 0.5s cubic-bezier(0.32, 0.72, 0, 1);
+  pointer-events: none;
+}
+
+.delivery-gacha--showing-detail {
+  align-items: stretch;
+  overflow: hidden;
+  max-height: 100dvh;
+  max-height: 100vh;
+  padding: clamp(8px, 2vw, 14px) clamp(10px, 3vw, 18px) clamp(6px, 1.5vw, 10px);
+  box-sizing: border-box;
+}
+
+.delivery-gacha--visible {
+  display: flex;
+  flex-direction: column;
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
+
+.delivery-gacha__inner {
+  position: relative;
+  width: 100%;
+  max-width: min(98vw, 1200px);
+  text-align: center;
+  margin: 0 auto;
+  padding-bottom: clamp(12px, 3vw, 24px);
+}
+
+/* 仅抽卡：整屏垂直居中 */
+.delivery-gacha:not(.delivery-gacha--showing-detail) .delivery-gacha__inner {
+  display: flex;
+  flex-direction: column;
+  justify-content: safe center;
+  min-height: min(100dvh, 100%);
+  box-sizing: border-box;
+}
+
+.delivery-gacha--showing-detail .delivery-gacha__inner {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  flex: 1 1 0;
+  min-height: 0;
+  max-height: 100%;
+  text-align: left;
+  padding-bottom: 6px;
+}
+
+.gacha-picker {
+  position: relative;
+  width: 100%;
+  --gacha-confirm-btn-block: 56px;
+  --gacha-confirm-float-gap: 100px; /* 卡牌底 → 按钮顶 */
+  --gacha-picker-pad-b: 12px;
+  padding-bottom: var(--gacha-picker-pad-b);
+  box-sizing: border-box;
+}
+
+.delivery-gacha--showing-detail .gacha-picker {
+  display: none;
+}
+
+.gacha-back-btn {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  align-self: flex-end;
+  position: relative;
+  z-index: 12;
+  flex-shrink: 0;
+  margin: 0 0 8px;
+  padding: 8px 12px 10px 14px;
+  border: 1px solid rgba(255, 107, 53, 0.35);
+  border-radius: 999px;
+  background: rgba(18, 21, 28, 0.92);
+  backdrop-filter: blur(10px);
+  color: rgba(255, 255, 255, 0.95);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: border-color 0.2s ease, background 0.2s ease, transform 0.2s ease;
+}
+
+.delivery-gacha--showing-detail .gacha-back-btn:not([hidden]) {
+  display: inline-flex;
+}
+
+.gacha-back-btn:hover {
+  border-color: rgba(255, 107, 53, 0.65);
+  background: rgba(28, 32, 42, 0.96);
+}
+
+.gacha-back-btn:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 3px;
+}
+
+.gacha-back-btn__icon {
+  flex-shrink: 0;
+  opacity: 0.9;
+}
+
+.delivery-gacha__actions {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  margin-top: clamp(12px, 2.5vw, 20px);
+}
+
+.delivery-gacha--showing-detail .delivery-gacha__actions:not([hidden]) {
+  display: flex;
+}
+
+.delivery-gacha__title {
+  font-family: 'Oswald', 'Impact', 'Arial Narrow', sans-serif;
+  font-size: clamp(20px, 5.2vw, 26px);
+  letter-spacing: 0.12em;
+  font-weight: 600;
+  color: #fff;
+  margin-bottom: 10px;
+  line-height: 1.35;
+}
+
+/* 桌面：标题上移与横排三张牌视觉对齐；移动端在下方 max-width:859px 中重置 */
+@media (min-width: 860px) {
+  .gacha-picker > .delivery-gacha__title {
+    transform: translateY(-100px);
+  }
+}
+
+.delivery-gacha__subtitle {
+  font-size: clamp(13px, 3.2vw, 15px);
+  color: var(--text-muted);
+  margin-bottom: clamp(20px, 4vw, 32px);
+}
+
+/* 勿给本元素写无条件的 display:flex，否则会覆盖 [hidden] 的 display:none */
+/* 悬浮在 .gacha-picker 下方 200px（扣掉 picker 底内边距），不占文档流，不撑高、不顶卡牌 */
+.gacha-picker__confirm-wrap {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: auto;
+  min-height: var(--gacha-confirm-btn-block, 56px);
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  z-index: 6;
+  pointer-events: none;
+}
+
+.gacha-picker__confirm-wrap:not([hidden]) {
+  display: flex;
+  top: calc(100% + var(--gacha-confirm-float-gap) - var(--gacha-picker-pad-b));
+  pointer-events: auto;
+}
+
+.gacha-picker__confirm-wrap[hidden] {
+  display: none !important;
+}
+
+.btn-gacha-picker-confirm {
+  appearance: none;
+  min-width: 200px;
+  padding: 12px 36px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 107, 53, 0.55);
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  color: #fff;
+  background: linear-gradient(135deg, rgba(255, 59, 0, 0.85), rgba(255, 107, 53, 0.75));
+  box-shadow: 0 6px 20px rgba(255, 59, 0, 0.28);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.btn-gacha-picker-confirm:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 26px rgba(255, 59, 0, 0.35);
+  border-color: rgba(255, 107, 53, 0.85);
+}
+
+.btn-gacha-picker-confirm:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.btn-gacha-picker-confirm:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 3px;
+}
+
+.gacha-deck {
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: center;
+  align-items: stretch;
+  gap: 50px;
+  margin-bottom: 0;
+  perspective: 1100px;
+  width: 100%;
+}
+
+.gacha-deck.gacha-deck--busy {
+  pointer-events: none;
+}
+
+.gacha-card {
+  position: relative;
+  flex: 1 1 0;
+  min-width: 0;
+  width: 100%;
+  max-width: min(240px, 28vw);
+  aspect-ratio: 3 / 5.1;
+  padding: 0;
+  border: none;
+  cursor: pointer;
+  transform-style: preserve-3d;
+  transition: transform 0.55s cubic-bezier(0.32, 0.72, 0, 1);
+  border-radius: 16px;
+  background: transparent;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.gacha-card:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 4px;
+}
+
+/* 悬停：轻微左右摆；离开悬停或按下鼠标时停止（:active 覆盖动画） */
+@keyframes gacha-card-hover-sway {
+  0%,
+  100% {
+    transform: rotateZ(-2.2deg);
+  }
+  50% {
+    transform: rotateZ(2.2deg);
+  }
+}
+
+.gacha-deck:not(.gacha-deck--busy)
+  .gacha-card:not(.is-spinning):not(.is-flipped):hover:not(:active) {
+  animation: gacha-card-hover-sway 2.35s ease-in-out infinite;
+}
+
+/* 已翻面：悬停不再摆动 */
+.gacha-deck:not(.gacha-deck--busy)
+  .gacha-card.is-flipped:not(.is-spinning):hover:not(:active) {
+  animation: none;
+}
+
+.gacha-deck:not(.gacha-deck--busy) .gacha-card:not(.is-spinning):active {
+  animation: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gacha-deck .gacha-card:hover {
+    animation: none !important;
+  }
+}
+
+.gacha-card__face {
+  position: absolute;
+  inset: 0;
+  border-radius: 16px;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+.gacha-card__back {
+  padding: 14px 12px 16px;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(12px, 3vw, 18px);
+  background: linear-gradient(145deg, #2a2f3a 0%, #1a1e28 50%, #12151c 100%);
+  border: 1px solid rgba(255, 107, 53, 0.25);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 10px 32px rgba(0, 0, 0, 0.45);
+  transform: rotateY(0deg);
+}
+
+.gacha-card__back-logo {
+  display: block;
+  flex-shrink: 0;
+  width: min(52%, 136px);
+  height: auto;
+  max-height: clamp(36px, 12vw, 52px);
+  object-fit: contain;
+  object-position: 50% 50%;
+  opacity: 0.96;
+  filter: drop-shadow(0 2px 10px rgba(0, 0, 0, 0.4));
+  pointer-events: none;
+  user-select: none;
+}
+
+.gacha-card__back::after {
+  content: 'MANGO';
+  font-family: 'Oswald', sans-serif;
+  font-size: clamp(11px, 2.8vw, 13px);
+  letter-spacing: 0.35em;
+  color: rgba(255, 107, 53, 0.45);
+}
+
+.gacha-card__front {
+  padding: 0;
+  overflow: hidden;
+  background: #12151c;
+  border: 1px solid rgba(255, 107, 53, 0.35);
+  transform: rotateY(180deg);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  justify-content: flex-end;
+}
+
+.gacha-card.is-flipped {
+  transform: rotateY(180deg);
+}
+
+/* 翻牌后、旋转结束前不加位移，避免与旋转 keyframes 抢 transform；旋转结束后无放大 */
+.gacha-card.is-flipped.is-picked:not(.is-spinning) {
+  transform: rotateY(180deg);
+}
+
+/* 已翻面且「确定」出现后：点选交付官高亮（仅交互态，与旋转中区分） */
+.gacha-card.is-flipped.gacha-card--selected:not(.is-spinning) {
+  transform: rotateY(180deg);
+  box-shadow:
+    0 0 0 2px rgba(255, 140, 66, 0.95),
+    0 0 24px rgba(255, 59, 0, 0.35);
+  border-radius: 16px;
+  z-index: 2;
+}
+
+/* 翻面完成 → 在原位绕 Y 轴再转 3 圈（1080°），再进入详情 */
+@keyframes gacha-card-spin-reveal {
+  from {
+    transform: rotateY(180deg);
+  }
+  to {
+    transform: rotateY(1260deg);
+  }
+}
+
+.gacha-card.is-flipped.is-picked.is-spinning {
+  transition: none !important;
+  animation: gacha-card-spin-reveal 2.45s cubic-bezier(0.36, 0.9, 0.22, 1) forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gacha-card.is-flipped.is-picked.is-spinning {
+    animation: none;
+    transform: rotateY(180deg);
+  }
+}
+
+.gacha-card__media {
+  position: relative;
+  flex: 1 1 0;
+  min-height: 0;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 卡牌尺寸不变；只调图片在格内的「视觉大小」：改 --gacha-card-photo-scale（1=原图贴格，>1 放大裁切） */
+:root {
+  --gacha-card-photo-scale: 1.12;
+}
+
+.gacha-card__media--photo {
+  background: radial-gradient(ellipse at 50% 35%, #2a3038 0%, #12151c 55%);
+  overflow: hidden;
+}
+
+.gacha-card__media--photo picture {
+  position: absolute;
+  inset: 0;
+  display: block;
+}
+
+.gacha-card__media--photo img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center center;
+  display: block;
+  transform: scale(var(--gacha-card-photo-scale));
+  transform-origin: center center;
+}
+
+.gacha-card__media--letter {
+  background: linear-gradient(165deg, #252a35 0%, #1c2029 100%);
+}
+
+.gacha-card__caption {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 10px 8px 12px;
+  background: linear-gradient(180deg, rgba(18, 21, 28, 0.2) 0%, #141820 38%);
+  border-top: 1px solid rgba(255, 107, 53, 0.2);
+}
+
+.gacha-card__avatar {
+  width: clamp(56px, 14vw, 80px);
+  height: clamp(56px, 14vw, 80px);
+  border-radius: 50%;
+  background: rgba(255, 107, 53, 0.15);
+  border: 1px solid rgba(255, 107, 53, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(22px, 6vw, 32px);
+  font-weight: 600;
+  color: var(--brand-light);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.gacha-card__name {
+  font-size: clamp(15px, 3.8vw, 17px);
+  font-weight: 600;
+  color: #fff;
+  letter-spacing: 0.06em;
+}
+
+.gacha-card__role {
+  font-size: clamp(11px, 2.8vw, 12px);
+  line-height: 1.35;
+  color: var(--text-muted);
+  text-align: center;
+  padding: 0 4px;
+}
+
+.gacha-card--has-photo .gacha-card__role {
+  font-size: clamp(10px, 2.6vw, 11px);
+}
+
+/* —— 移动端：仅抽卡态重排（详情态用 .delivery-gacha--showing-detail，不受影响） —— */
+@media (max-width: 859px) {
+  /* 纵向牌组 + 确定 总高度常超一屏，必须在本层可滚动（勿与桌面共用 overflow:visible） */
+  .delivery-gacha.delivery-gacha--visible:not(.delivery-gacha--showing-detail) {
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
+    overscroll-behavior: contain;
+  }
+
+  .delivery-gacha:not(.delivery-gacha--showing-detail) .delivery-gacha__inner {
+    justify-content: safe center;
+    align-items: center;
+    min-height: min(100dvh, 100%);
+    padding-bottom: max(12px, env(safe-area-inset-bottom, 0px));
+    box-sizing: border-box;
+  }
+
+  .delivery-gacha:not(.delivery-gacha--showing-detail) .gacha-picker {
+    /* 与全局 .gacha-picker__confirm-wrap 的 top: calc(100% + gap - pad) 一致：牌组底 → 按钮顶 50px，不占文档流、不顶牌 */
+    --gacha-confirm-float-gap: 50px;
+    --gacha-picker-pad-b: 0px;
+    /* 底无内边距，100% 即牌组区域底边，避免 50px 再叠一层 padding */
+    padding-bottom: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    max-width: min(92vw, 400px);
+    margin-left: auto;
+    margin-right: auto;
+    box-sizing: border-box;
+  }
+
+  .delivery-gacha:not(.delivery-gacha--showing-detail) .gacha-picker > .delivery-gacha__title {
+    transform: translateY(-70px);
+    align-self: stretch;
+    text-align: center;
+    margin-bottom: clamp(14px, 4vw, 20px);
+    font-size: clamp(18px, 4.8vw, 22px);
+    letter-spacing: 0.1em;
+  }
+
+  .delivery-gacha:not(.delivery-gacha--showing-detail) .gacha-deck {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+    justify-items: stretch;
+    justify-content: center;
+    gap: clamp(10px, 2.8vw, 14px) clamp(10px, 2.8vw, 16px);
+    align-self: stretch;
+    width: 100%;
+    max-width: min(92vw, 360px);
+    margin-left: auto;
+    margin-right: auto;
+    padding: 0 2px;
+    overflow: visible;
+  }
+
+  /* 略扁比例 + 略弱放大，减总高度、三张同屏更易达 */
+  .delivery-gacha:not(.delivery-gacha--showing-detail) .gacha-card {
+    flex: none;
+    width: 100%;
+    max-width: none;
+    aspect-ratio: 3 / 4.25;
+    border-radius: 14px;
+    --gacha-card-photo-scale: 1.06;
+  }
+
+  .delivery-gacha:not(.delivery-gacha--showing-detail) .gacha-card__face {
+    border-radius: 14px;
+  }
+
+  .delivery-gacha:not(.delivery-gacha--showing-detail)
+    .gacha-card.is-flipped.gacha-card--selected:not(.is-spinning) {
+    border-radius: 14px;
+  }
+
+  /* 第三张：单独一行居中，宽度与单列大致对齐 */
+  .delivery-gacha:not(.delivery-gacha--showing-detail) .gacha-card:nth-child(3) {
+    grid-column: 1 / -1;
+    width: min(46vw, 172px);
+    max-width: 172px;
+    justify-self: center;
+  }
+
+  .delivery-gacha:not(.delivery-gacha--showing-detail) .gacha-card__caption {
+    padding: 7px 5px 9px;
+    gap: 2px;
+  }
+
+  .delivery-gacha:not(.delivery-gacha--showing-detail) .gacha-card__avatar {
+    width: clamp(44px, 11vw, 64px);
+    height: clamp(44px, 11vw, 64px);
+    font-size: clamp(18px, 5vw, 26px);
+  }
+
+  .delivery-gacha:not(.delivery-gacha--showing-detail) .gacha-card__name {
+    font-size: clamp(13px, 3.4vw, 15px);
+  }
+
+  .delivery-gacha:not(.delivery-gacha--showing-detail) .gacha-card__role {
+    font-size: clamp(10px, 2.5vw, 11px);
+  }
+
+  /* 「确定」沿用全局 absolute，由 --gacha-confirm-float-gap:50px 悬浮在牌组下；此处仅微调按钮宽度 */
+  .delivery-gacha:not(.delivery-gacha--showing-detail) .btn-gacha-picker-confirm {
+    width: 100%;
+    max-width: min(92vw, 320px);
+    margin-left: auto;
+    margin-right: auto;
+    min-width: 0;
+  }
+}
+
+.officer-detail-stack {
+  width: 100%;
+  max-height: min(36vh, 300px);
+  overflow-y: auto;
+  margin: 0 0 20px;
+  padding: 12px 14px;
+  text-align: left;
+  border-radius: 12px;
+  background: rgba(18, 21, 28, 0.65);
+  border: 1px solid rgba(255, 107, 53, 0.18);
+  box-sizing: border-box;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* 交付官 rich 详情：单屏无滚动条；由外层 .delivery-gacha--showing-detail 裁切 */
+.officer-detail-stack--rich {
+  max-height: none;
+  overflow: hidden;
+  padding: clamp(8px, 1.5vw, 12px) clamp(8px, 1.5vw, 14px);
+}
+
+.delivery-gacha--showing-detail .officer-detail-stack--rich {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 6px;
+}
+
+.delivery-gacha--showing-detail .delivery-gacha__actions {
+  flex-shrink: 0;
+}
+
+.officer-detail--rich {
+  text-align: left;
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* 与上共存：否则 display:flex 会盖掉 [hidden] 的 display:none，三个交付官详情会同时露出 */
+.officer-detail--rich[hidden] {
+  display: none !important;
+}
+
+.officer-detail__head {
+  text-align: center;
+  margin-bottom: clamp(6px, 1.5vw, 10px);
+  flex-shrink: 0;
+}
+
+.officer-detail__head .officer-detail__kicker {
+  margin-bottom: 4px;
+}
+
+.officer-detail__layout {
+  display: grid;
+  gap: clamp(10px, 2vw, 16px);
+  align-items: stretch;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* ≥860px：左滑图右固定文案，均不滚动；align-items 由 JS 配合左栏比右栏 +50px 时用 start */
+@media (min-width: 860px) {
+  .officer-detail--rich .officer-detail__layout {
+    grid-template-columns: minmax(0, 1.12fr) minmax(260px, min(38vw, 400px));
+    gap: clamp(12px, 2vw, 20px);
+    align-items: start;
+  }
+
+  /* start：文案区按内容高度计，便于 JS 用 offsetHeight 对齐左栏 = 文案 + 50px */
+  .officer-detail--rich .officer-detail__copy {
+    position: relative;
+    overflow: hidden;
+    align-self: start;
+    height: auto;
+    padding-right: 4px;
+  }
+
+  /* 桌面：外框不纵向撑满，从下收紧留白，确认按钮上移 */
+  .delivery-gacha--showing-detail .officer-detail-stack--rich {
+    flex: 0 1 auto;
+  }
+
+  .officer-detail--rich {
+    flex: 0 1 auto;
+  }
+
+  .officer-detail__layout {
+    flex: 0 1 auto;
+  }
+}
+
+/* 窄屏：上图下文；基本信息为两列 dl（左姓名—城市，右从业—风格），下方段落不整段分栏 */
+@media (max-width: 859px) {
+  .delivery-gacha--showing-detail .officer-detail--rich .officer-detail__head {
+    margin-bottom: clamp(4px, 1.2vw, 8px);
+  }
+
+  .delivery-gacha--showing-detail .officer-detail--rich .officer-detail__title {
+    margin-bottom: 2px;
+  }
+
+  .officer-detail--rich .officer-detail__layout {
+    grid-template-columns: 1fr;
+    grid-template-rows: minmax(0, 0.48fr) minmax(0, 0.52fr);
+    gap: clamp(8px, 2.2vw, 12px);
+  }
+
+  .officer-detail--rich .officer-photo-wall--stack {
+    min-height: 0;
+    max-height: min(750px, 90vh);
+  }
+
+  .delivery-gacha--showing-detail .officer-detail--rich .officer-detail__copy {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 10px;
+    row-gap: 2px;
+    align-content: start;
+    overflow: visible;
+    min-height: 0;
+    text-align: left;
+  }
+
+  .delivery-gacha--showing-detail .officer-detail--rich .officer-detail__dl-wrap {
+    grid-column: 1 / -1;
+    gap: 4px clamp(8px, 2.5vw, 12px);
+    margin-bottom: 6px;
+  }
+
+  .delivery-gacha--showing-detail .officer-detail--rich .officer-detail__dl-wrap .officer-detail__dl {
+    gap: 1px 6px;
+    font-size: 10px;
+    line-height: 1.28;
+  }
+
+  /* PC：性格/风格各占一行，避免在窄栏里折行 */
+  .delivery-gacha--showing-detail .officer-detail--rich .officer-detail__dl dd:nth-of-type(9),
+  .delivery-gacha--showing-detail .officer-detail--rich .officer-detail__dl dd:nth-of-type(10) {
+    white-space: nowrap;
+  }
+
+  .delivery-gacha--showing-detail .officer-detail--rich .officer-detail__label {
+    margin: 4px 0 1px;
+    font-size: 10px;
+    letter-spacing: 0.06em;
+  }
+
+  .delivery-gacha--showing-detail .officer-detail--rich .officer-detail__label:first-of-type {
+    margin-top: 0;
+  }
+
+  .delivery-gacha--showing-detail .officer-detail--rich .officer-detail__text,
+  .delivery-gacha--showing-detail .officer-detail--rich .officer-detail__list {
+    font-size: 10px;
+    line-height: 1.3;
+    margin: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .delivery-gacha--showing-detail .officer-detail--rich .officer-detail__list {
+    padding-left: 1em;
+    margin: 0;
+  }
+
+  .delivery-gacha--showing-detail .officer-detail--rich .officer-detail__quote {
+    grid-column: 1 / -1;
+    margin: 6px 0 0;
+    padding: 6px 8px;
+    font-size: 10px;
+    line-height: 1.32;
+  }
+
+  .delivery-gacha--showing-detail .officer-detail--rich .officer-detail__footer {
+    grid-column: 1 / -1;
+    margin: 6px 0 0;
+    font-size: 9px;
+    text-align: center;
+  }
+}
+
+.officer-photo-wall {
+  min-width: 0;
+}
+
+.officer-photo-wall--stack {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+}
+
+.officer-photo-stack {
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+  touch-action: pan-y;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 107, 53, 0.18);
+  background: rgba(10, 12, 18, 0.5);
+  padding: 10px 12px 14px;
+  max-height: min(750px, 90vh);
+}
+
+.officer-photo-block {
+  margin-bottom: clamp(14px, 2.5vw, 20px);
+}
+
+.officer-photo-block:last-child {
+  margin-bottom: 0;
+}
+
+.officer-photo-block__title {
+  margin: 0 0 8px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  color: rgba(255, 107, 53, 0.88);
+  text-align: center;
+}
+
+.officer-photo-wall--stack .officer-photo-cell {
+  min-height: 0;
+  max-height: min(34vh, 240px);
+  width: 100%;
+}
+
+.officer-photo-wall__meta {
+  margin: 0 0 12px;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  color: rgba(255, 107, 53, 0.8);
+  text-align: center;
+}
+
+.officer-photo-wall__groups {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(14px, 2.5vw, 22px);
+}
+
+.officer-photo-group__title {
+  margin: 0 0 8px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  color: rgba(255, 255, 255, 0.88);
+  text-align: left;
+  padding-bottom: 4px;
+  border-bottom: 1px solid rgba(255, 107, 53, 0.2);
+}
+
+.officer-photo-group__grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(6px, 1.5vw, 12px);
+}
+
+@media (min-width: 520px) {
+  .officer-photo-group__grid {
+    gap: clamp(8px, 1.8vw, 14px);
+  }
+}
+
+.officer-photo-cell {
+  margin: 0;
+  border-radius: 10px;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 107, 53, 0.15);
+  aspect-ratio: 3 / 4;
+}
+
+/* 交付官资料（rich）：桌面右侧固定文案；dl-wrap 为左姓名—城市 / 右从业—风格 */
+.delivery-gacha--showing-detail .officer-detail--rich .officer-detail__copy {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+
+.officer-detail--rich .officer-detail__kicker {
+  font-size: 12px;
+}
+
+.officer-detail--rich .officer-detail__title {
+  font-size: clamp(16px, 2.2vw, 20px);
+  margin-bottom: 4px;
+}
+
+.officer-detail--rich .officer-detail__dl {
+  font-size: clamp(13px, 1.65vw, 15px);
+  line-height: 1.32;
+  gap: 2px 8px;
+}
+
+.officer-detail--rich .officer-detail__label {
+  font-size: 13px;
+  margin: 5px 0 2px;
+}
+
+.officer-detail--rich .officer-detail__label:first-of-type {
+  margin-top: 4px;
+}
+
+.officer-detail--rich .officer-detail__text,
+.officer-detail--rich .officer-detail__list {
+  font-size: clamp(13px, 1.65vw, 15px);
+  line-height: 1.38;
+}
+
+.officer-detail--rich .officer-detail__quote {
+  font-size: clamp(12px, 1.5vw, 14px);
+  line-height: 1.38;
+  margin: 5px 0 0;
+  padding: 6px 8px;
+}
+
+.officer-detail--rich .officer-detail__footer {
+  font-size: 12px;
+  margin: 5px 0 0;
+}
+
+.officer-photo-cell img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center center;
+  vertical-align: middle;
+}
+
+.officer-detail__kicker {
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  color: rgba(255, 107, 53, 0.75);
+  margin: 0 0 6px;
+  line-height: 1.45;
+}
+
+.officer-detail__title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #fff;
+  margin: 0 0 12px;
+  letter-spacing: 0.04em;
+}
+
+/* 资料区：单列从姓名到风格顺序展示 */
+.officer-detail__dl-wrap {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 6px clamp(10px, 3vw, 18px);
+  align-items: start;
+  margin: 0 0 clamp(8px, 2vw, 12px);
+}
+
+.officer-detail__dl {
+  margin: 0;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 6px 12px;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.officer-detail__dl dt {
+  margin: 0;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.officer-detail__dl dt::after {
+  content: '｜';
+  margin-left: 2px;
+  opacity: 0.5;
+}
+
+.officer-detail__dl dd {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.officer-detail__label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: rgba(255, 107, 53, 0.85);
+  margin: 14px 0 6px;
+}
+
+.officer-detail__label:first-of-type {
+  margin-top: 12px;
+}
+
+.officer-detail__text {
+  font-size: 12px;
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.88);
+  margin: 0;
+}
+
+.officer-detail__list {
+  margin: 0;
+  padding-left: 1.1em;
+  font-size: 12px;
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.officer-detail__quote {
+  margin: 14px 0 0;
+  padding: 10px 12px;
+  border-left: 3px solid rgba(255, 107, 53, 0.45);
+  background: rgba(255, 107, 53, 0.06);
+  font-size: 12px;
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.officer-detail__footer {
+  margin: 12px 0 0;
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+}
+
+.officer-detail--placeholder .officer-detail__placeholder {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.75);
+  text-align: center;
+  padding: 8px 4px;
+}
+
+.btn-confirm-delivery {
+  appearance: none;
+  width: 100%;
+  max-width: 280px;
+  padding: 14px 24px;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  color: #fff;
+  background: linear-gradient(135deg, #ff3b00, #ff6b35);
+  box-shadow: 0 8px 24px rgba(255, 59, 0, 0.35);
+  transition: opacity 0.25s ease, transform 0.2s ease;
+}
+
+.btn-confirm-delivery:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.btn-confirm-delivery:not(:disabled):hover {
+  transform: translateY(-2px);
+}
+
+.btn-enter-garage--after-garage {
+  width: 100%;
+  max-width: 280px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .welcome-cards--to-gacha {
+    transition-duration: 0.15s;
+  }
+
+  .delivery-gacha {
+    transition-duration: 0.15s;
+  }
+
+  .gacha-card {
+    transition-duration: 0.2s;
+  }
+}
+
+/* 移动端：信息页文案改为左右两列（仅在详情态生效） */
+@media (max-width: 859px) {
+  .delivery-gacha--showing-detail .officer-detail--rich .officer-detail__copy {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    column-gap: 10px;
+    row-gap: 2px;
+    align-content: start;
+    overflow: visible;
+    margin-top: 6px;
+    padding-bottom: 12px;
+  }
+
+  /* 第一部分：姓名-城市在左，从业-风格在右 */
+  .delivery-gacha--showing-detail .officer-detail--rich .officer-detail__dl-wrap {
+    grid-column: 1 / -1;
+    display: block;
+    margin-bottom: 6px;
+  }
+
+  .delivery-gacha--showing-detail .officer-detail--rich .officer-detail__dl-wrap .officer-detail__dl {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto minmax(0, 1fr);
+    column-gap: 6px;
+    row-gap: 1px;
+  }
+
+  .delivery-gacha--showing-detail .officer-detail--rich .officer-detail__dl-wrap .officer-detail__dl dt:nth-of-type(-n+5) {
+    grid-column: 1;
+  }
+
+  .delivery-gacha--showing-detail .officer-detail--rich .officer-detail__dl-wrap .officer-detail__dl dd:nth-of-type(-n+5) {
+    grid-column: 2;
+  }
+
+  .delivery-gacha--showing-detail .officer-detail--rich .officer-detail__dl-wrap .officer-detail__dl dt:nth-of-type(n+6) {
+    grid-column: 3;
+  }
+
+  .delivery-gacha--showing-detail .officer-detail--rich .officer-detail__dl-wrap .officer-detail__dl dd:nth-of-type(n+6) {
+    grid-column: 4;
+  }
+
+  /* 右列与左列同起始行，避免整体下沉错开 */
+  .delivery-gacha--showing-detail .officer-detail--rich .officer-detail__dl-wrap .officer-detail__dl dt:nth-of-type(6),
+  .delivery-gacha--showing-detail .officer-detail--rich .officer-detail__dl-wrap .officer-detail__dl dd:nth-of-type(6) { grid-row: 1; }
+  .delivery-gacha--showing-detail .officer-detail--rich .officer-detail__dl-wrap .officer-detail__dl dt:nth-of-type(7),
+  .delivery-gacha--showing-detail .officer-detail--rich .officer-detail__dl-wrap .officer-detail__dl dd:nth-of-type(7) { grid-row: 2; }
+  .delivery-gacha--showing-detail .officer-detail--rich .officer-detail__dl-wrap .officer-detail__dl dt:nth-of-type(8),
+  .delivery-gacha--showing-detail .officer-detail--rich .officer-detail__dl-wrap .officer-detail__dl dd:nth-of-type(8) { grid-row: 3; }
+  .delivery-gacha--showing-detail .officer-detail--rich .officer-detail__dl-wrap .officer-detail__dl dt:nth-of-type(9),
+  .delivery-gacha--showing-detail .officer-detail--rich .officer-detail__dl-wrap .officer-detail__dl dd:nth-of-type(9) { grid-row: 4; }
+  .delivery-gacha--showing-detail .officer-detail--rich .officer-detail__dl-wrap .officer-detail__dl dt:nth-of-type(10),
+  .delivery-gacha--showing-detail .officer-detail--rich .officer-detail__dl-wrap .officer-detail__dl dd:nth-of-type(10) { grid-row: 5; }
+
+  .delivery-gacha--showing-detail .officer-detail--rich .officer-detail__copy > :nth-child(1),
+  .delivery-gacha--showing-detail .officer-detail--rich .officer-detail__copy > :nth-child(3),
+  .delivery-gacha--showing-detail .officer-detail--rich .officer-detail__copy > :nth-child(4),
+  .delivery-gacha--showing-detail .officer-detail--rich .officer-detail__copy > :nth-child(5),
+  .delivery-gacha--showing-detail .officer-detail--rich .officer-detail__copy > :nth-child(6) {
+    grid-column: 1 / -1;
+  }
+
+  /* 第二部分：服务范围+能力标签 左列；服务特点+兴趣爱好 右列 */
+  .delivery-gacha--showing-detail .officer-detail--rich .officer-detail__split-grid {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    column-gap: 10px;
+    row-gap: 4px;
+  }
+
+  .delivery-gacha--showing-detail .officer-detail--rich .officer-detail__split-grid > :nth-child(odd) {
+    grid-column: 1;
+  }
+
+  .delivery-gacha--showing-detail .officer-detail--rich .officer-detail__split-grid > :nth-child(even) {
+    grid-column: 2;
+  }
+
+  .delivery-gacha--showing-detail .officer-detail--rich .officer-detail__split-item {
+    margin: 0;
+  }
+
+  .delivery-gacha--showing-detail .officer-detail--rich .officer-detail__split-item .officer-detail__label:first-child {
+    margin-top: 0;
+  }
+
+  .delivery-gacha--showing-detail .officer-detail--rich .officer-detail__text,
+  .delivery-gacha--showing-detail .officer-detail--rich .officer-detail__list {
+    overflow-wrap: anywhere;
+  }
+
+  /* 移动端信息页文字整体放大 */
+  .delivery-gacha--showing-detail .officer-detail--rich .officer-detail__dl-wrap .officer-detail__dl {
+    font-size: 11px;
+    line-height: 1.36;
+  }
+
+  .delivery-gacha--showing-detail .officer-detail--rich .officer-detail__label {
+    font-size: 11px;
+    line-height: 1.3;
+  }
+
+  .delivery-gacha--showing-detail .officer-detail--rich .officer-detail__text,
+  .delivery-gacha--showing-detail .officer-detail--rich .officer-detail__list {
+    font-size: 11px;
+    line-height: 1.4;
+  }
+
+  .delivery-gacha--showing-detail .officer-detail--rich .officer-detail__quote {
+    font-size: 11px;
+    line-height: 1.4;
+  }
+
+  .delivery-gacha--showing-detail .officer-detail--rich .officer-detail__footer {
+    font-size: 10px;
+    margin-top: 8px;
+  }
+}
+
+/* pad 端：信息页文字加大（覆盖 iPad 竖屏等 768 宽度） */
+@media (min-width: 700px) and (max-width: 1199px) {
+  .delivery-gacha--showing-detail .officer-detail--rich .officer-detail__copy {
+    justify-content: flex-start;
+  }
+
+  .delivery-gacha--showing-detail .officer-detail--rich .officer-detail__dl-wrap {
+    margin-bottom: 8px;
+  }
+
+  .delivery-gacha--showing-detail .officer-detail--rich .officer-detail__dl-wrap .officer-detail__dl {
+    font-size: 18px;
+    line-height: 1.42;
+    gap: 3px 10px;
+  }
+
+  .delivery-gacha--showing-detail .officer-detail--rich .officer-detail__label {
+    font-size: 18px;
+    margin: 6px 0 3px;
+  }
+
+  .delivery-gacha--showing-detail .officer-detail--rich .officer-detail__text,
+  .delivery-gacha--showing-detail .officer-detail--rich .officer-detail__list {
+    font-size: 18px;
+    line-height: 1.42;
+  }
+
+  .delivery-gacha--showing-detail .officer-detail--rich .officer-detail__quote {
+    font-size: 16px;
+    line-height: 1.42;
+    margin-top: 8px;
+  }
+
+  .delivery-gacha--showing-detail .officer-detail--rich .officer-detail__footer {
+    font-size: 15px;
+    margin-top: 8px;
+  }
+}
+
+/* pad 竖屏等窄平板：再压缩图片区高度，确保底部英文行可见 */
+@media (min-width: 700px) and (max-width: 859px) {
+  .delivery-gacha--showing-detail .officer-detail--rich .officer-detail__layout {
+    grid-template-rows: minmax(0, 0.4fr) minmax(0, 0.6fr);
+    gap: clamp(6px, 1.8vw, 10px);
+  }
+
+  .delivery-gacha--showing-detail .officer-detail--rich .officer-photo-wall--stack {
+    max-height: min(500px, 56vh);
+  }
+
+  .delivery-gacha--showing-detail .officer-detail--rich .officer-detail__copy {
+    margin-top: 8px;
+    padding-bottom: 14px;
+  }
+}
+
+/* pad 端抽卡页：三张卡片一行显示，并提升卡片高度 */
+@media (min-width: 700px) and (max-width: 1199px) {
+  .delivery-gacha:not(.delivery-gacha--showing-detail) .gacha-picker {
+    max-width: 100%;
+  }
+
+  .delivery-gacha:not(.delivery-gacha--showing-detail) .gacha-deck {
+    display: flex;
+    flex-wrap: nowrap;
+    justify-content: center;
+    align-items: stretch;
+    gap: clamp(12px, 2.4vw, 20px);
+    width: fit-content;
+    max-width: calc(100vw - 64px);
+    margin-left: auto;
+    margin-right: auto;
+    padding: 0;
+  }
+
+  .delivery-gacha:not(.delivery-gacha--showing-detail) .gacha-card {
+    flex: 0 0 auto;
+    width: clamp(170px, 24vw, 250px);
+    max-width: none;
+    aspect-ratio: 3 / 5.4;
+    border-radius: 16px;
+    --gacha-card-photo-scale: 1.08;
+  }
+
+  .delivery-gacha:not(.delivery-gacha--showing-detail) .gacha-card:nth-child(3) {
+    grid-column: auto;
+    width: clamp(170px, 24vw, 250px);
+    max-width: none;
+    justify-self: auto;
+  }
+}
+
+/* pad 横屏信息页：右侧文案可下滑，避免内容被截断 */
+@media (min-width: 700px) and (max-width: 1199px) and (orientation: landscape) {
+  .delivery-gacha--showing-detail {
+    overflow: hidden;
+  }
+
+  .delivery-gacha--showing-detail .officer-detail-stack--rich,
+  .delivery-gacha--showing-detail .officer-detail--rich {
+    min-height: 0;
+  }
+
+  .delivery-gacha--showing-detail .officer-detail--rich .officer-detail__layout {
+    align-items: stretch;
+    min-height: 0;
+    height: 100%;
+  }
+
+  .delivery-gacha--showing-detail .officer-detail--rich .officer-detail__copy {
+    display: block !important;
+    align-self: stretch;
+    height: min(58vh, calc(100dvh - 220px));
+    min-height: 0;
+    max-height: min(58vh, calc(100dvh - 220px));
+    overflow-x: hidden;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    touch-action: pan-y !important;
+    pointer-events: auto;
+    padding-right: 6px;
   }
 }
