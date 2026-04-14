@@ -528,17 +528,17 @@ document.addEventListener('DOMContentLoaded', function() {
       .replace(/"/g, '&quot;');
   }
 
-  /** 选车卡片封面：优先 thumb；兼容 photos/carpark 与 photos 两种目录层级 */
+  /** 选车卡片封面：优先封面.webp，缺失时再回退到 thumb；兼容两种目录层级 */
   function coverUrlsForCar(carName) {
     var folder = encodeURIComponent(String(carName || '').trim());
     var baseCarpark = 'media-webp/photos/carpark/' + folder + '/';
     var basePhotos = 'media-webp/photos/' + folder + '/';
     return {
-      primary: baseCarpark + '封面-thumb.webp',
+      primary: baseCarpark + '封面.webp',
       fallbacks: [
-        basePhotos + '封面-thumb.webp',
-        baseCarpark + '封面.webp',
         basePhotos + '封面.webp',
+        baseCarpark + '封面-thumb.webp',
+        basePhotos + '封面-thumb.webp',
       ],
     };
   }
