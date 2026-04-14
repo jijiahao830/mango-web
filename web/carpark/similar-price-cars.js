@@ -143,7 +143,7 @@ document.addEventListener('DOMContentLoaded', function () {
     var folder = encodeURIComponent(car.car_name);
     var href = '../' + folder + '/car.html';
     var webp = '../../media-webp/photos/carpark/' + folder + '/封面-thumb.webp';
-    var jpg = '../../media-webp/photos/carpark/' + folder + '/封面-thumb.webp';
+    var jpg = '../../media-webp/photos/carpark/' + folder + '/封面.webp';
     var cat = escHtml(car.category);
     var name = escHtml(car.car_name);
     var badge = categoryBadgeClass(car.category);

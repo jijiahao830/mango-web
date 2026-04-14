@@ -528,10 +528,19 @@ document.addEventListener('DOMContentLoaded', function() {
       .replace(/"/g, '&quot;');
   }
 
-  /** 选车卡片封面：与各车 media 下「封面」素材一致 */
+  /** 选车卡片封面：优先 thumb；兼容 photos/carpark 与 photos 两种目录层级 */
   function coverUrlsForCar(carName) {
-    var base = 'media-webp/photos/carpark/' + encodeURIComponent(String(carName || '').trim()) + '/';
-    return { webp: base + '封面-thumb.webp', jpg: base + '封面-thumb.webp' };
+    var folder = encodeURIComponent(String(carName || '').trim());
+    var baseCarpark = 'media-webp/photos/carpark/' + folder + '/';
+    var basePhotos = 'media-webp/photos/' + folder + '/';
+    return {
+      primary: baseCarpark + '封面-thumb.webp',
+      fallbacks: [
+        basePhotos + '封面-thumb.webp',
+        baseCarpark + '封面.webp',
+        basePhotos + '封面.webp',
+      ],
+    };
   }
 
   function categoryBadgeClass(cat) {
@@ -609,10 +618,12 @@ document.addEventListener('DOMContentLoaded', function() {
       cat +
       '">' +
       '<picture><source srcset="' +
-      escHtml(cov.webp) +
+      escHtml(cov.primary) +
       '" type="image/webp">' +
       '<img class="car-image car-image-photo" loading="lazy" src="' +
-      escHtml(cov.jpg) +
+      escHtml(cov.primary) +
+      '" data-fallbacks="' +
+      escHtml(cov.fallbacks.join('|')) +
       '" alt="' +
       name +
       '">' +
@@ -635,6 +646,29 @@ document.addEventListener('DOMContentLoaded', function() {
       '</div></div></a>'
     );
   }
+
+  /** 车卡封面失败回退：按 data-fallbacks 顺序尝试备用路径 */
+  document.addEventListener(
+    'error',
+    function (e) {
+      var img = e.target;
+      if (!img || !img.classList || !img.classList.contains('car-image-photo')) return;
+      var raw = img.getAttribute('data-fallbacks') || '';
+      if (!raw) return;
+      var list = raw.split('|').filter(Boolean);
+      if (!list.length) return;
+      var idx = parseInt(img.getAttribute('data-fallback-index') || '0', 10);
+      if (isNaN(idx) || idx < 0) idx = 0;
+      if (idx >= list.length) return;
+      var next = list[idx];
+      img.setAttribute('data-fallback-index', String(idx + 1));
+      var pic = img.parentElement;
+      var source = pic ? pic.querySelector('source') : null;
+      if (source) source.setAttribute('srcset', next);
+      img.src = next;
+    },
+    true
+  );
 
   function applyCarsCatalog(cars) {
     if (!Array.isArray(cars) || !cars.length) {
