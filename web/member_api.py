@@ -1696,7 +1696,7 @@ def _media_root() -> Path:
     return parent
 
 
-@app.get("/media/<path:filename>")
+@app.get("/media-webp/<path:filename>")
 def serve_media(filename: str):
     media_dir = _media_root()
     return send_from_directory(media_dir, filename)

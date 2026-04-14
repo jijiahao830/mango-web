@@ -339,7 +339,7 @@
             var name = String(c.car_name || '').trim();
             var href = siblingBase(name) + 'car.html';
             var folderEnc = encodeURIComponent(name);
-            var photoDir = '../../media/photos/carpark/' + folderEnc + '/';
+            var photoDir = '../../media-webp/photos/carpark/' + folderEnc + '/';
             var modelText = escHtml(modelFromCatalog(c));
             var alt = escHtml(name);
             var vc = apiVehicleClickFields(c);

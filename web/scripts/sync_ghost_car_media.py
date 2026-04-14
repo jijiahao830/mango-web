@@ -4,11 +4,11 @@
 古思特一代另更新「经典使用场景」配图。
 
 素材目录按顺序在以下路径查找磁盘文件（任一处存在 `photos/carpark/<车型文件夹>` 即用）：
-  1) web/media/photos/carpark
-  2) <仓库根>/media/photos/carpark
-  3) <仓库上一级>/media/photos/carpark
+  1) web/media-webp/photos/carpark
+  2) <仓库根>/media-webp/photos/carpark
+  3) <仓库上一级>/media-webp/photos/carpark
 
-写回 car.html 时统一使用相对路径：`../../media/photos/carpark/…`（与全站多数详情页一致）。
+写回 car.html 时统一使用相对路径：`../../media-webp/photos/carpark/…`（与全站多数详情页一致）。
 
 仅使用 .webp 素材（忽略同目录下的 jpg/png 等）。
 
@@ -24,8 +24,8 @@ from urllib.parse import quote
 WEB = Path(__file__).resolve().parent.parent
 REPO = WEB.parent
 
-# 与全站多数车型详情页一致（从 web/carpark/<车型>/car.html 指向 web/media/…）
-CARPARK_URL_BASE = "../../media/photos/carpark"
+# 与全站多数车型详情页一致（从 web/carpark/<车型>/car.html 指向 web/media-webp/…）
+CARPARK_URL_BASE = "../../media-webp/photos/carpark"
 
 IMG_EXT = {".webp"}
 
@@ -54,7 +54,7 @@ def rewrite_carpark_folder_paths(html: str, folder_name: str, url_base: str) -> 
         if not seg or seg in seen:
             continue
         seen.add(seg)
-        pat = re.compile(r"(?:\.\./)+(media/photos/carpark/" + re.escape(seg) + r"/)")
+        pat = re.compile(r"(?:\.\./)+(media-webp/photos/carpark/" + re.escape(seg) + r"/)")
         html = pat.sub(f"{base}/{seg}/", html)
     return html
 
