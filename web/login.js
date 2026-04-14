@@ -97,7 +97,7 @@ document.getElementById('loginForm').addEventListener('submit', async function (
   }
 });
 
-document.getElementById('nextCardBtn').addEventListener('click', function () {
+function showSecondWelcomeCard() {
   const card1 = document.getElementById('card1');
   const card2 = document.getElementById('card2');
   const openGachaBtn = document.getElementById('openGachaBtn');
@@ -131,10 +131,23 @@ document.getElementById('nextCardBtn').addEventListener('click', function () {
 
   /* 与 CSS transition 时长一致；避免 transitionend 多属性多次触发导致提前收尾 */
   window.setTimeout(finish, 580);
-});
+}
+
+var nextCardBtnEl = document.getElementById('nextCardBtn');
+if (nextCardBtnEl) {
+  nextCardBtnEl.addEventListener('click', showSecondWelcomeCard);
+  nextCardBtnEl.addEventListener(
+    'touchend',
+    function (e) {
+      e.preventDefault();
+      showSecondWelcomeCard();
+    },
+    { passive: false }
+  );
+}
 
 /** 欢迎第二张卡片 → 进入交付官抽卡层 */
-document.getElementById('openGachaBtn').addEventListener('click', function () {
+function enterDeliveryGachaFromWelcome() {
   const deck = document.getElementById('welcomeCards');
   const gacha = document.getElementById('deliveryGacha');
   if (!gacha || deck.classList.contains('welcome-cards--to-gacha')) return;
@@ -148,7 +161,20 @@ document.getElementById('openGachaBtn').addEventListener('click', function () {
       gacha.classList.add('delivery-gacha--visible');
     });
   }, 420);
-});
+}
+
+var openGachaBtnEl = document.getElementById('openGachaBtn');
+if (openGachaBtnEl) {
+  openGachaBtnEl.addEventListener('click', enterDeliveryGachaFromWelcome);
+  openGachaBtnEl.addEventListener(
+    'touchend',
+    function (e) {
+      e.preventDefault();
+      enterDeliveryGachaFromWelcome();
+    },
+    { passive: false }
+  );
+}
 
 (function initDeliveryGacha() {
   const gacha = document.getElementById('deliveryGacha');
