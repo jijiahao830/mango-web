@@ -2015,3 +2015,62 @@ button.next-card-btn {
     padding-right: 6px;
   }
 }
+
+/* =========================
+   Responsive Hardening Layer
+   目标：三端在极端分辨率下避免溢出/错位
+   ========================= */
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+img,
+svg,
+video,
+canvas {
+  max-width: 100%;
+}
+
+.login-container,
+.delivery-gacha__inner,
+.officer-detail__layout,
+.officer-detail__copy,
+.officer-photo-wall,
+.officer-photo-stack,
+.gacha-picker,
+.gacha-deck {
+  min-width: 0;
+}
+
+body,
+.login-container {
+  overflow-x: clip;
+}
+
+@media (max-width: 380px) {
+  .login-card {
+    padding: 28px 16px;
+  }
+
+  .welcome-cards {
+    max-width: 94vw;
+    height: min(320px, 82dvh);
+  }
+
+  .next-card-btn {
+    width: 42px;
+    height: 42px;
+    right: 10px;
+  }
+
+  .gacha-card__name {
+    font-size: 12px;
+  }
+}
+
+@media (min-width: 1600px) {
+  .delivery-gacha__inner {
+    max-width: min(96vw, 1500px);
+  }
+}

@@ -98,39 +98,8 @@ document.getElementById('loginForm').addEventListener('submit', async function (
 });
 
 function showSecondWelcomeCard() {
-  const card1 = document.getElementById('card1');
-  const card2 = document.getElementById('card2');
-  const openGachaBtn = document.getElementById('openGachaBtn');
-  const deck = document.getElementById('welcomeCards');
-  if (deck.classList.contains('welcome-cards--swap') || deck.classList.contains('welcome-cards--on-second')) {
-    return;
-  }
-  const levelMatch = card1.className.match(/level-[a-z-]+/);
-  const levelClass = levelMatch ? levelMatch[0] : '';
-
-  openGachaBtn.style.display = 'flex';
-
-  card2.className = 'welcome-card welcome-card--second active-card ' + levelClass;
-
-  requestAnimationFrame(function () {
-    requestAnimationFrame(function () {
-      deck.classList.add('welcome-cards--swap');
-    });
-  });
-
-  var finished = false;
-  function finish() {
-    if (finished) return;
-    finished = true;
-    card1.setAttribute('hidden', '');
-    card1.classList.remove('active-card');
-    card2.classList.remove('welcome-card--second');
-    deck.classList.remove('welcome-cards--swap');
-    deck.classList.add('welcome-cards--on-second');
-  }
-
-  /* 与 CSS transition 时长一致；避免 transitionend 多属性多次触发导致提前收尾 */
-  window.setTimeout(finish, 580);
+  /* 屏蔽“请选择一位交付官”页面：第一张欢迎卡后直接走下一步 */
+  enterDeliveryGachaFromWelcome();
 }
 
 var nextCardBtnEl = document.getElementById('nextCardBtn');
@@ -149,17 +118,16 @@ if (nextCardBtnEl) {
 /** 欢迎第二张卡片 → 进入交付官抽卡层 */
 function enterDeliveryGachaFromWelcome() {
   const deck = document.getElementById('welcomeCards');
-  const gacha = document.getElementById('deliveryGacha');
-  if (!gacha || deck.classList.contains('welcome-cards--to-gacha')) return;
+  if (!deck || deck.classList.contains('welcome-cards--to-gacha')) return;
   deck.classList.add('welcome-cards--to-gacha');
   window.setTimeout(function () {
     deck.style.display = 'none';
-    gacha.style.display = 'flex';
-    gacha.style.flexDirection = 'column';
-    gacha.setAttribute('aria-hidden', 'false');
-    window.requestAnimationFrame(function () {
-      gacha.classList.add('delivery-gacha--visible');
-    });
+    /* 屏蔽交付官选择：从欢迎页直接进入车库 */
+    try {
+      sessionStorage.removeItem('mango_delivery_officer');
+      sessionStorage.removeItem('mango_delivery_officer_id');
+    } catch (e) {}
+    window.location.href = 'car.html#carSection';
   }, 420);
 }
 

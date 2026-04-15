@@ -3025,3 +3025,66 @@ body.page-services .mobile-filter-btn {
     display: block !important;
   }
 }
+
+/* =========================
+   Responsive Hardening Layer
+   目标：PC / Pad / Mobile 降低布局破版概率
+   ========================= */
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+img,
+svg,
+video,
+canvas {
+  max-width: 100%;
+  height: auto;
+}
+
+body,
+.content-wrapper,
+.car-row,
+.main-content,
+.car-grid,
+#carparkBrandSectionsRoot {
+  min-width: 0;
+}
+
+body,
+.content-wrapper {
+  overflow-x: clip;
+}
+
+.car-card,
+.car-image,
+.car-info,
+.brand-title {
+  min-width: 0;
+}
+
+@media (max-width: 380px) {
+  .site-header {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+
+  .content-wrapper {
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+
+  .car-card .car-name {
+    font-size: 13px;
+    line-height: 1.3;
+  }
+}
+
+@media (min-width: 1600px) {
+  .content-wrapper {
+    max-width: min(96vw, 1680px);
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
