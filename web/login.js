@@ -50,12 +50,39 @@ async function resolveMemberLevel(nameInput) {
   return memberLevel;
 }
 
+function normalizeTierFromLevel(level) {
+  var s = String(level || '');
+  if (s.indexOf('黑') !== -1) return 'black';
+  if (s.indexOf('金') !== -1) return 'gold';
+  if (s.indexOf('银') !== -1 || s.indexOf('青') !== -1) return 'silver';
+  return 'mango';
+}
+
+function highlightMemberBenefitsByLevel(level) {
+  var tier = normalizeTierFromLevel(level);
+  var roots = document.querySelectorAll('.member-benefits');
+  if (!roots.length) return;
+  roots.forEach(function (root) {
+    root
+      .querySelectorAll('.member-benefits__table .is-active-tier')
+      .forEach(function (el) {
+        el.classList.remove('is-active-tier');
+      });
+    root
+      .querySelectorAll('.member-benefits__table [data-tier="' + tier + '"]')
+      .forEach(function (el) {
+        el.classList.add('is-active-tier');
+      });
+  });
+}
+
 document.getElementById('loginForm').addEventListener('submit', async function (e) {
   e.preventDefault();
   const nameInput = document.getElementById('driverName').value.trim();
 
   if (nameInput) {
     const memberLevel = await resolveMemberLevel(nameInput);
+    highlightMemberBenefitsByLevel(memberLevel);
     let levelClass = '';
 
     if (memberLevel.includes('黑')) {
@@ -85,7 +112,7 @@ document.getElementById('loginForm').addEventListener('submit', async function (
     btn.classList.add('igniting');
     btn.querySelector('.btn-text').textContent = 'IGNITING...';
 
-    const welcomeMessage = `尊贵的${memberLevel}会员，${nameInput}<br>感谢您选择芒果超跑<br>即将为您开启您的专属车库`;
+    const welcomeMessage = `尊贵的${memberLevel}会员，${nameInput}，感谢您选择芒果超跑`;
     document.getElementById('welcomeMessage').innerHTML = `<p>${welcomeMessage}</p>`;
 
     setTimeout(() => {
@@ -96,6 +123,11 @@ document.getElementById('loginForm').addEventListener('submit', async function (
     }, 800);
   }
 });
+
+try {
+  var savedLevel = sessionStorage.getItem('mango_driver_level');
+  if (savedLevel) highlightMemberBenefitsByLevel(savedLevel);
+} catch (e) {}
 
 function showSecondWelcomeCard() {
   /* 屏蔽“请选择一位交付官”页面：第一张欢迎卡后直接走下一步 */

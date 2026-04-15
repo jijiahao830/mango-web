@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="icon" type="image/png" href="media-webp/photos/index/logo/logo2.webp">
+  <link rel="icon" type="image/webp" href="media-webp/photos/index/logo/logo2.webp">
 
   <title>芒果超跑 · 专属认证</title>
   <link rel="stylesheet" href="./login.css">
@@ -36,6 +36,7 @@
           <span class="btn-fx"></span>
         </button>
       </form>
+
     </div>
     
     <!-- 认证成功后的信息卡片 -->
@@ -80,12 +81,67 @@
         <div class="welcome-content" id="welcomeMessage">
           <!-- 内容将通过 JS 动态生成 -->
         </div>
-        <!-- 点击进入下一张卡片的箭头 -->
-        <div class="next-card-btn" id="nextCardBtn">
-          <svg viewBox="0 0 24 24" width="32" height="32" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="9 18 15 12 9 6"></polyline>
-          </svg>
-        </div>
+        <section class="member-benefits member-benefits--welcome" id="memberBenefitsWelcome" aria-label="会员权益">
+          <h3 class="member-benefits__title">会员权益</h3>
+          <div class="member-benefits__table-wrap">
+            <table class="member-benefits__table">
+              <thead>
+                <tr>
+                  <th>权益项</th>
+                  <th data-tier="mango">芒果派</th>
+                  <th data-tier="silver">青芒果</th>
+                  <th data-tier="gold">金芒果</th>
+                  <th data-tier="black">黑金芒果</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <th>手搓旅游攻略</th>
+                  <td data-tier="mango">√</td>
+                  <td data-tier="silver">√</td>
+                  <td data-tier="gold">√</td>
+                  <td data-tier="black">√</td>
+                </tr>
+                <tr>
+                  <th>酒店预定</th>
+                  <td data-tier="mango">√</td>
+                  <td data-tier="silver">√</td>
+                  <td data-tier="gold">√</td>
+                  <td data-tier="black">√</td>
+                </tr>
+                <tr>
+                  <th>首单8.8折</th>
+                  <td data-tier="mango">√</td>
+                  <td data-tier="silver">√</td>
+                  <td data-tier="gold">√</td>
+                  <td data-tier="black">√</td>
+                </tr>
+                <tr>
+                  <th>全场优惠</th>
+                  <td data-tier="mango">x</td>
+                  <td data-tier="silver">√</td>
+                  <td data-tier="gold">√</td>
+                  <td data-tier="black">√</td>
+                </tr>
+                <tr>
+                  <th>接送机</th>
+                  <td data-tier="mango">x</td>
+                  <td data-tier="silver">半价</td>
+                  <td data-tier="gold">免费</td>
+                  <td data-tier="black">免费</td>
+                </tr>
+                <tr>
+                  <th>专属秘书</th>
+                  <td data-tier="mango">x</td>
+                  <td data-tier="silver">x</td>
+                  <td data-tier="gold">x</td>
+                  <td data-tier="black">√</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+        <button type="button" class="welcome-next-btn" id="nextCardBtn">开始专属车库</button>
       </div>
       
     </div>

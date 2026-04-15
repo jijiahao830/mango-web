@@ -13,7 +13,7 @@
   --accent: #3b82f6;
   --accent-light: #60a5fa;
   --card: #1d2129;
-  --border: #2a2f3a;
+  --border: #252a33;
   --gold-start: #f7a614;
   --gold-end: #ffcc6a;
   --purple: #1c2140;
@@ -2477,6 +2477,12 @@ a.btn-primary {
 
 @media (max-width: 1200px) {
   .car-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@media (max-width: 1080px) {
+  .car-grid {
     grid-template-columns: repeat(3, 1fr);
   }
 }
@@ -3027,41 +3033,43 @@ body.page-services .mobile-filter-btn {
 }
 
 /* =========================
-   Responsive Hardening Layer
-   目标：PC / Pad / Mobile 降低布局破版概率
+   Responsive Hardening Layer（仅 Pad / Mobile）
+   PC 端不启用兜底规则
    ========================= */
-html {
-  -webkit-text-size-adjust: 100%;
-  text-size-adjust: 100%;
-}
+@media (max-width: 1199px) {
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
 
-img,
-svg,
-video,
-canvas {
-  max-width: 100%;
-  height: auto;
-}
+  img,
+  svg,
+  video,
+  canvas {
+    max-width: 100%;
+    height: auto;
+  }
 
-body,
-.content-wrapper,
-.car-row,
-.main-content,
-.car-grid,
-#carparkBrandSectionsRoot {
-  min-width: 0;
-}
+  body,
+  .content-wrapper,
+  .car-row,
+  .main-content,
+  .car-grid,
+  #carparkBrandSectionsRoot {
+    min-width: 0;
+  }
 
-body,
-.content-wrapper {
-  overflow-x: clip;
-}
+  body,
+  .content-wrapper {
+    overflow-x: clip;
+  }
 
-.car-card,
-.car-image,
-.car-info,
-.brand-title {
-  min-width: 0;
+  .car-card,
+  .car-image,
+  .car-info,
+  .brand-title {
+    min-width: 0;
+  }
 }
 
 @media (max-width: 380px) {
@@ -3081,10 +3089,3 @@ body,
   }
 }
 
-@media (min-width: 1600px) {
-  .content-wrapper {
-    max-width: min(96vw, 1680px);
-    margin-left: auto;
-    margin-right: auto;
-  }
-}
