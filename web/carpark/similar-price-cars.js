@@ -138,11 +138,22 @@ document.addEventListener('DOMContentLoaded', function () {
     return (String(car.brand || '') + ' ' + String(car.model || '')).trim() || String(car.car_name || '');
   }
 
+  function normalizeCarFolderNameForAssets(carName) {
+    var raw = String(carName || '').trim();
+    if (!raw) return raw;
+    var compact = raw.replace(/[\s\u00a0\u3000]+/g, ' ').trim();
+    var aliasMap = {
+      '兰博基尼 V12 大牛 LP750-4 SV': '兰博基尼 LP750-4 SV',
+      '兰博基尼V12 大牛 LP750-4 SV': '兰博基尼 LP750-4 SV',
+    };
+    return aliasMap[compact] || compact;
+  }
+
   /** 与选车页 car.js 卡片结构一致；链接与封面相对当前详情页（carpark/当前车/car.html） */
   function buildCarCardHtmlFromCatalog(car) {
-    var folder = encodeURIComponent(car.car_name);
+    var folder = encodeURIComponent(normalizeCarFolderNameForAssets(car.car_name));
     var href = '../' + folder + '/car.html';
-    var webp = '../../media-webp/photos/carpark/' + folder + '/封面-thumb.webp';
+    var webp = '../../media-webp/photos/carpark/' + folder + '/封面.webp';
     var jpg = '../../media-webp/photos/carpark/' + folder + '/封面.webp';
     var cat = escHtml(car.category);
     var name = escHtml(car.car_name);

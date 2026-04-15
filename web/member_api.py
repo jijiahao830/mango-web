@@ -1682,18 +1682,22 @@ def _resolve_carpark_detail_path(filename: str) -> Path | None:
 
 
 def _media_root() -> Path:
-    """与 `web` 同级的 `media`（约定）；若不存在则尝试 `web/media` 或上一级。"""
-    parent = ROOT.parent / "media"
-    if parent.is_dir():
-        return parent
-    under_web = ROOT / "media"
-    if under_web.is_dir():
-        return under_web
-    # 用户把 media 移动到了 mango-web 的上一级（即 芒果/media）
-    grandparent = ROOT.parent.parent / "media"
-    if grandparent.is_dir():
-        return grandparent
-    return parent
+    """
+    `/media-webp/<path:filename>` 静态资源根目录解析：
+    优先 `media-webp`，兼容历史 `media` 目录。
+    """
+    candidates = [
+        ROOT.parent / "media-webp",
+        ROOT / "media-webp",
+        ROOT.parent.parent / "media-webp",
+        ROOT.parent / "media",          # 兼容旧目录
+        ROOT / "media",                 # 兼容旧目录
+        ROOT.parent.parent / "media",   # 兼容旧目录
+    ]
+    for p in candidates:
+        if p.is_dir():
+            return p
+    return ROOT.parent / "media-webp"
 
 
 @app.get("/media-webp/<path:filename>")

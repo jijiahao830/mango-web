@@ -117,7 +117,7 @@ def main():
         print("FAILED:", failed)
 
     for name in [
-        "兰博基尼 V12 大牛 LP750-4 SV",
+        "兰博基尼 LP750-4 SV",
         "兰博基尼 570-4",
         "兰博基尼 Huracán LP580-2",
         "兰博基尼 Huracán LP610-4",

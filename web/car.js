@@ -528,9 +528,35 @@ document.addEventListener('DOMContentLoaded', function() {
       .replace(/"/g, '&quot;');
   }
 
+  function modelOnlyNameFromCar(car) {
+    var brand = String((car && car.brand) || '').trim();
+    var model = String((car && car.model) || '').trim();
+    var fallback = String((car && car.car_name) || '').trim();
+    var text = model || fallback;
+    if (!text) return '';
+    if (brand && text.indexOf(brand) === 0) {
+      var rest = text.slice(brand.length).replace(/^[\s\u3000\-_/·]+/, '').trim();
+      return rest || text;
+    }
+    return text;
+  }
+
+  /** 车型目录名归一化：数据库/历史文案变更时，静态资源目录仍可命中 */
+  function normalizeCarFolderNameForAssets(carName) {
+    var raw = String(carName || '').trim();
+    if (!raw) return raw;
+    var compact = raw.replace(/[\s\u00a0\u3000]+/g, ' ').trim();
+    var aliasMap = {
+      '兰博基尼 V12 大牛 LP750-4 SV': '兰博基尼 LP750-4 SV',
+      '兰博基尼V12 大牛 LP750-4 SV': '兰博基尼 LP750-4 SV',
+    };
+    return aliasMap[compact] || compact;
+  }
+
   /** 选车卡片封面：优先封面.webp，缺失时再回退到 thumb；兼容两种目录层级 */
   function coverUrlsForCar(carName) {
-    var folder = encodeURIComponent(String(carName || '').trim());
+    var normalizedName = normalizeCarFolderNameForAssets(carName);
+    var folder = encodeURIComponent(normalizedName);
     var baseCarpark = 'media-webp/photos/carpark/' + folder + '/';
     var basePhotos = 'media-webp/photos/' + folder + '/';
     return {
@@ -604,7 +630,7 @@ document.addEventListener('DOMContentLoaded', function() {
     var href = './carpark/' + encodeURIComponent(car.car_name) + '/car.html';
     var cov = coverUrlsForCar(car.car_name);
     var cat = escHtml(car.category);
-    var name = escHtml(car.car_name);
+    var name = escHtml(modelOnlyNameFromCar(car));
     var badge = categoryBadgeClass(car.category);
     var priceHtml = opts.comingSoon
       ? '¥???<span class="car-price-unit">/天</span>'
