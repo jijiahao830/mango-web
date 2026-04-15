@@ -1,6 +1,7 @@
 document.addEventListener('DOMContentLoaded', function() {
   const CAR_FILTER_STORAGE_KEY = 'mangoCarFilterState';
   const CAR_FILTER_OWNER_KEY = 'mango_filter_saved_for_driver';
+  const CAR_CHECKLIST_STORAGE_KEY = 'mangoCarChecklist';
   /** 从详情返回选车页时恢复列表滚动位置（与 sessionStorage 配合） */
   const CAR_LIST_SCROLL_KEY = 'mango_car_list_scroll_y';
 
@@ -541,6 +542,86 @@ document.addEventListener('DOMContentLoaded', function() {
     return text;
   }
 
+  function readChecklistMap() {
+    try {
+      var raw = localStorage.getItem(CAR_CHECKLIST_STORAGE_KEY) || '{}';
+      var obj = JSON.parse(raw);
+      return obj && typeof obj === 'object' ? obj : {};
+    } catch (e) {
+      return {};
+    }
+  }
+
+  function writeChecklistMap(map) {
+    try {
+      localStorage.setItem(CAR_CHECKLIST_STORAGE_KEY, JSON.stringify(map || {}));
+    } catch (e) {}
+  }
+
+  function getChecklistCount(map) {
+    return Object.keys(map || {}).length;
+  }
+
+  function syncChecklistButtonCount(map) {
+    var countEl = document.getElementById('carChecklistCount');
+    var btnEl = document.getElementById('carChecklistBtn');
+    var count = getChecklistCount(map);
+    if (!countEl) return;
+    countEl.textContent = String(count);
+    if (btnEl) {
+      btnEl.classList.toggle('has-items', count > 0);
+    }
+  }
+
+  function syncCardChecklistToggleStates(map) {
+    var picked = map || readChecklistMap();
+    document.querySelectorAll('.car-checklist-toggle').forEach(function (el) {
+      var id = String(el.getAttribute('data-car-id') || '').trim();
+      var isPicked = !!(id && picked[id]);
+      el.classList.toggle('is-picked', isPicked);
+      el.textContent = isPicked ? '已加入' : '加入清单';
+      el.setAttribute('aria-pressed', isPicked ? 'true' : 'false');
+    });
+  }
+
+  function renderChecklistPanel(map) {
+    var picked = map || readChecklistMap();
+    var listEl = document.getElementById('carChecklistList');
+    var emptyEl = document.getElementById('carChecklistEmpty');
+    if (!listEl || !emptyEl) return;
+    var ids = Object.keys(picked);
+    listEl.innerHTML = ids
+      .map(function (id) {
+        var item = picked[id] || {};
+        var name = escHtml(String(item.model_name || item.car_name || id));
+        return (
+          '<li class="car-checklist-item" data-car-id="' +
+          escHtml(id) +
+          '">' +
+          '<div class="car-checklist-item__name">' +
+          name +
+          '</div>' +
+          '<button type="button" class="car-checklist-item__remove" data-remove-car-id="' +
+          escHtml(id) +
+          '">移除</button>' +
+          '</li>'
+        );
+      })
+      .join('');
+    emptyEl.style.display = ids.length ? 'none' : '';
+  }
+
+  function toggleChecklistCar(item) {
+    if (!item || !item.car_id) return;
+    var map = readChecklistMap();
+    if (map[item.car_id]) delete map[item.car_id];
+    else map[item.car_id] = item;
+    writeChecklistMap(map);
+    syncChecklistButtonCount(map);
+    syncCardChecklistToggleStates(map);
+    renderChecklistPanel(map);
+  }
+
   /** 车型目录名归一化：数据库/历史文案变更时，静态资源目录仍可命中 */
   function normalizeCarFolderNameForAssets(carName) {
     var raw = String(carName || '').trim();
@@ -630,6 +711,8 @@ document.addEventListener('DOMContentLoaded', function() {
     var href = './carpark/' + encodeURIComponent(car.car_name) + '/car.html';
     var cov = coverUrlsForCar(car.car_name);
     var cat = escHtml(car.category);
+    var rawCarId = String(car.car_name || '').trim();
+    var carId = escHtml(rawCarId);
     var name = escHtml(modelOnlyNameFromCar(car));
     var badge = categoryBadgeClass(car.category);
     var priceHtml = opts.comingSoon
@@ -642,7 +725,16 @@ document.addEventListener('DOMContentLoaded', function() {
       '">' +
       '<div class="car-card" data-category="' +
       cat +
+      '" data-car-id="' +
+      carId +
       '">' +
+      '<span class="car-checklist-toggle" role="button" tabindex="0" data-car-id="' +
+      carId +
+      '" data-car-name="' +
+      carId +
+      '" data-model-name="' +
+      name +
+      '" aria-pressed="false">加入清单</span>' +
       '<picture><source srcset="' +
       escHtml(cov.primary) +
       '" type="image/webp">' +
@@ -827,6 +919,7 @@ document.addEventListener('DOMContentLoaded', function() {
         '</div>';
       root.appendChild(sec);
     });
+    syncCardChecklistToggleStates(readChecklistMap());
   }
 
   function loadCatalogThenInit() {
@@ -1333,6 +1426,7 @@ document.addEventListener('DOMContentLoaded', function() {
     chosen.forEach(function (c) {
       gridEl.appendChild(c.link.cloneNode(true));
     });
+    syncCardChecklistToggleStates(readChecklistMap());
   }
 
   function refreshTodayRecommend() {
@@ -1815,6 +1909,65 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   loadCatalogThenInit();
+
+  var checklistBtn = document.getElementById('carChecklistBtn');
+  var checklistPanel = document.getElementById('carChecklistPanel');
+  var checklistCloseBtn = document.getElementById('carChecklistCloseBtn');
+  syncChecklistButtonCount(readChecklistMap());
+  renderChecklistPanel(readChecklistMap());
+  syncCardChecklistToggleStates(readChecklistMap());
+
+  if (checklistBtn && checklistPanel) {
+    checklistBtn.addEventListener('click', function () {
+      var hidden = checklistPanel.hasAttribute('hidden');
+      if (hidden) checklistPanel.removeAttribute('hidden');
+      else checklistPanel.setAttribute('hidden', '');
+    });
+  }
+  if (checklistCloseBtn && checklistPanel) {
+    checklistCloseBtn.addEventListener('click', function () {
+      checklistPanel.setAttribute('hidden', '');
+    });
+  }
+
+  document.addEventListener('click', function (e) {
+    var toggle = e.target.closest && e.target.closest('.car-checklist-toggle');
+    if (toggle) {
+      e.preventDefault();
+      e.stopPropagation();
+      var carId = String(toggle.getAttribute('data-car-id') || '').trim();
+      var carName = String(toggle.getAttribute('data-car-name') || '').trim();
+      var modelName = String(toggle.getAttribute('data-model-name') || '').trim();
+      toggleChecklistCar({
+        car_id: carId || carName,
+        car_name: carName,
+        model_name: modelName || carName,
+      });
+      return;
+    }
+    var removeBtn = e.target.closest && e.target.closest('[data-remove-car-id]');
+    if (removeBtn) {
+      e.preventDefault();
+      var id = String(removeBtn.getAttribute('data-remove-car-id') || '').trim();
+      if (!id) return;
+      var map = readChecklistMap();
+      if (map[id]) {
+        delete map[id];
+        writeChecklistMap(map);
+        syncChecklistButtonCount(map);
+        syncCardChecklistToggleStates(map);
+        renderChecklistPanel(map);
+      }
+    }
+  });
+
+  document.addEventListener('keydown', function (e) {
+    var toggle = e.target.closest && e.target.closest('.car-checklist-toggle');
+    if (!toggle) return;
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    e.preventDefault();
+    toggle.click();
+  });
 
   const backToCarsBtn = document.getElementById('backToCarsBtn');
   const heroEl = document.querySelector('.hero');

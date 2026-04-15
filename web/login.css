@@ -209,7 +209,7 @@ body {
 .member-benefits__table td {
   padding: 8px 10px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-  font-size: 16px;
+  font-size: 14px;
   color: rgba(255, 255, 255, 0.88);
   text-align: center;
   white-space: nowrap;
@@ -257,7 +257,7 @@ body {
 
 .member-benefits--welcome .member-benefits__table th,
 .member-benefits--welcome .member-benefits__table td {
-  font-size: 16px;
+  font-size: 14px;
   padding: 7px 9px;
 }
 
@@ -418,9 +418,9 @@ body {
   position: relative;
   z-index: 10;
   width: 100%;
-  max-width: min(96vw, 980px);
-  height: min(760px, 94dvh);
-  max-height: 94dvh;
+  max-width: min(98vw, 1120px);
+  height: min(940px, 98dvh);
+  max-height: 98dvh;
   perspective: 1000px;
   overflow: hidden;
   overscroll-behavior: none;
@@ -637,22 +637,66 @@ body {
 }
 
 .welcome-icon {
-  font-size: 48px;
+  width: 64px;
+  height: 64px;
   margin-bottom: 20px;
-  filter: drop-shadow(0 0 10px rgba(255, 107, 53, 0.5));
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+}
+
+.welcome-icon__img {
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+  display: block;
+  background: transparent !important;
+  mix-blend-mode: screen;
+  filter: none;
+}
+
+.welcome-card.level-mango .welcome-icon__img {
+  /* 芒果橙 */
+  filter: sepia(1) saturate(5.6) hue-rotate(-12deg) brightness(1.08);
+}
+
+.welcome-card.level-silver .welcome-icon__img {
+  /* 青芒果：往绿色偏移 */
+  filter: sepia(1) saturate(5.2) hue-rotate(110deg) brightness(1.1);
+}
+
+.welcome-card.level-gold .welcome-icon__img {
+  /* 金芒果金色 */
+  filter: sepia(1) saturate(5.2) hue-rotate(10deg) brightness(1.16);
+}
+
+.welcome-card.level-black .welcome-icon__img {
+  /* 黑芒果黑金 */
+  mix-blend-mode: normal;
+  filter: sepia(1) saturate(5.8) hue-rotate(4deg) brightness(0.88) contrast(1.24)
+    drop-shadow(0 0 8px rgba(191, 142, 56, 0.42));
 }
 
 /* 根据不同等级的 Icon 发光样式 */
 .welcome-card.level-silver .welcome-icon {
-  filter: drop-shadow(0 0 10px rgba(192, 192, 192, 0.6));
+  border: none;
+  background: transparent;
+  box-shadow: none;
 }
 
 .welcome-card.level-gold .welcome-icon {
-  filter: drop-shadow(0 0 15px rgba(255, 215, 0, 0.8));
+  border: none;
+  background: transparent;
+  box-shadow: none;
 }
 
 .welcome-card.level-black .welcome-icon {
-  filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.3));
+  border: none;
+  background: transparent;
+  box-shadow: none;
 }
 
 .welcome-content {
@@ -672,7 +716,7 @@ body {
 #card1.welcome-card {
   justify-content: flex-start;
   padding-top: 28px;
-  padding-bottom: 24px;
+  padding-bottom: 34px;
   overflow-y: hidden;
 }
 
@@ -690,7 +734,7 @@ body {
 }
 
 .welcome-next-btn {
-  margin-top: 14px;
+  margin-top: 44px;
   width: min(100%, 320px);
   border: 1px solid rgba(255, 107, 53, 0.55);
   border-radius: 12px;

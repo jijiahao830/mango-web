@@ -35,6 +35,7 @@ async function resolveMemberLevel(nameInput) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name: nameInput }),
+      cache: 'no-store',
     });
     const data = await res.json().catch(function () { return {}; });
     if (res.ok && data.ok && Object.prototype.hasOwnProperty.call(data, 'level')) {
@@ -47,7 +48,7 @@ async function resolveMemberLevel(nameInput) {
       memberLevel = membersData[nameInput];
     }
   }
-  return memberLevel;
+  return String(memberLevel || '').trim() || '普通';
 }
 
 function normalizeTierFromLevel(level) {
@@ -89,7 +90,7 @@ document.getElementById('loginForm').addEventListener('submit', async function (
       levelClass = 'level-black';
     } else if (memberLevel.includes('金')) {
       levelClass = 'level-gold';
-    } else if (memberLevel.includes('银')) {
+    } else if (memberLevel.includes('银') || memberLevel.includes('青')) {
       levelClass = 'level-silver';
     } else if (memberLevel.includes('芒果')) {
       levelClass = 'level-mango';
@@ -112,7 +113,7 @@ document.getElementById('loginForm').addEventListener('submit', async function (
     btn.classList.add('igniting');
     btn.querySelector('.btn-text').textContent = 'IGNITING...';
 
-    const welcomeMessage = `尊贵的${memberLevel}会员，${nameInput}，感谢您选择芒果超跑`;
+    const welcomeMessage = `尊贵的${memberLevel}会员：${nameInput}，感谢您选择芒果超跑`;
     document.getElementById('welcomeMessage').innerHTML = `<p>${welcomeMessage}</p>`;
 
     setTimeout(() => {
@@ -124,10 +125,36 @@ document.getElementById('loginForm').addEventListener('submit', async function (
   }
 });
 
-try {
-  var savedLevel = sessionStorage.getItem('mango_driver_level');
-  if (savedLevel) highlightMemberBenefitsByLevel(savedLevel);
-} catch (e) {}
+// 每次进入 login 页都尝试同步一次数据库中的会员等级（若已有登录态姓名）
+(function syncMemberLevelOnLoginEnter() {
+  var savedName = '';
+  try {
+    savedName = (sessionStorage.getItem('mango_driver_name') || '').trim();
+  } catch (e) {
+    savedName = '';
+  }
+  if (!savedName) {
+    try {
+      var savedLevel = sessionStorage.getItem('mango_driver_level');
+      if (savedLevel) highlightMemberBenefitsByLevel(savedLevel);
+    } catch (e2) {}
+    return;
+  }
+  resolveMemberLevel(savedName)
+    .then(function (latestLevel) {
+      if (!latestLevel) return;
+      try {
+        sessionStorage.setItem('mango_driver_level', latestLevel);
+      } catch (e3) {}
+      highlightMemberBenefitsByLevel(latestLevel);
+    })
+    .catch(function () {
+      try {
+        var fallbackLevel = sessionStorage.getItem('mango_driver_level');
+        if (fallbackLevel) highlightMemberBenefitsByLevel(fallbackLevel);
+      } catch (e4) {}
+    });
+})();
 
 function showSecondWelcomeCard() {
   /* 屏蔽“请选择一位交付官”页面：第一张欢迎卡后直接走下一步 */

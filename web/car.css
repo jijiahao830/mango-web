@@ -13,7 +13,7 @@
   --accent: #3b82f6;
   --accent-light: #60a5fa;
   --card: #1d2129;
-  --border: #252a33;
+  --border: #2b2b2b;
   --gold-start: #f7a614;
   --gold-end: #ffcc6a;
   --purple: #1c2140;
@@ -1733,7 +1733,7 @@ a.btn-primary {
   position: fixed;
   z-index: 500;
   right: clamp(16px, 4vw, 32px);
-  bottom: calc(24px + env(safe-area-inset-bottom));
+  bottom: calc(114px + env(safe-area-inset-bottom));
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -1789,6 +1789,148 @@ a.btn-primary {
 
 .back-to-cars-label {
   color: var(--gold-end);
+}
+
+.car-checklist-btn {
+  position: fixed;
+  z-index: 500;
+  right: clamp(16px, 4vw, 32px);
+  bottom: calc(188px + env(safe-area-inset-bottom));
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 18px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: rgba(23, 26, 33, 0.96);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  box-shadow:
+    0 4px 24px rgba(0, 0, 0, 0.45),
+    0 0 0 1px rgba(255, 255, 255, 0.06) inset;
+  transition:
+    opacity 0.3s ease,
+    transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.25s ease,
+    border-color 0.25s ease,
+    visibility 0.3s ease;
+}
+
+.car-checklist-btn__icon {
+  color: #ffffff;
+}
+
+.car-checklist-btn.has-items .car-checklist-btn__icon {
+  color: var(--brand-light);
+}
+
+.car-checklist-btn__count {
+  min-width: 20px;
+  height: 20px;
+  line-height: 20px;
+  border-radius: 999px;
+  text-align: center;
+  font-size: 12px;
+  background: var(--brand);
+  color: #fff;
+}
+
+.car-checklist-btn:hover {
+  border-color: rgba(255, 107, 53, 0.55);
+  box-shadow:
+    0 6px 28px rgba(255, 107, 53, 0.2),
+    0 0 0 1px rgba(255, 107, 53, 0.15) inset;
+}
+
+.car-checklist-btn:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 3px;
+}
+
+.car-checklist-panel {
+  position: fixed;
+  z-index: 700;
+  right: clamp(16px, 4vw, 32px);
+  bottom: calc(238px + env(safe-area-inset-bottom));
+  width: min(360px, calc(100vw - 24px));
+  max-height: min(62vh, 560px);
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  background: rgba(18, 20, 28, 0.98);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45);
+  overflow: hidden;
+}
+
+.car-checklist-panel__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.car-checklist-panel__header h3 {
+  margin: 0;
+  font-size: 15px;
+}
+
+.car-checklist-panel__close {
+  border: none;
+  background: transparent;
+  color: var(--text);
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.car-checklist-panel__body {
+  padding: 10px 12px 12px;
+  overflow: auto;
+  max-height: calc(min(62vh, 560px) - 56px);
+}
+
+.car-checklist-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.car-checklist-item {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+  align-items: center;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.car-checklist-item__name {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.car-checklist-item__remove {
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 999px;
+  padding: 4px 8px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.88);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.car-checklist-empty {
+  margin: 10px 2px 0;
+  color: rgba(255, 255, 255, 0.68);
+  font-size: 13px;
 }
 
 .brand-section {
@@ -2177,6 +2319,27 @@ a.btn-primary {
   display: block;
   width: 100%;
   flex-shrink: 0;
+}
+
+.car-checklist-toggle {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 4;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  padding: 5px 10px;
+  font-size: 12px;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.45);
+  cursor: pointer;
+  user-select: none;
+}
+
+.car-checklist-toggle.is-picked {
+  border-color: rgba(255, 107, 53, 0.85);
+  background: rgba(255, 107, 53, 0.2);
+  color: #ffd7c6;
 }
 
 .car-image {

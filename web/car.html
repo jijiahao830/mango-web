@@ -198,6 +198,23 @@
     <span class="back-to-cars-label">返回顶部</span>
   </button>
 
+  <button type="button" class="car-checklist-btn" id="carChecklistBtn" aria-label="查看用车清单">
+    <span class="car-checklist-btn__icon" aria-hidden="true">★</span>
+    <span class="car-checklist-btn__text">用车清单</span>
+    <span class="car-checklist-btn__count" id="carChecklistCount">0</span>
+  </button>
+
+  <section class="car-checklist-panel" id="carChecklistPanel" hidden aria-label="已选用车清单">
+    <div class="car-checklist-panel__header">
+      <h3>已选车辆</h3>
+      <button type="button" class="car-checklist-panel__close" id="carChecklistCloseBtn" aria-label="关闭清单">×</button>
+    </div>
+    <div class="car-checklist-panel__body">
+      <ul class="car-checklist-list" id="carChecklistList"></ul>
+      <p class="car-checklist-empty" id="carChecklistEmpty">还没有加入车辆，点击车卡上的“加入清单”即可收藏。</p>
+    </div>
+  </section>
+
   <!-- 与 login.html 一致：填写 member_api 根地址后「今日推荐」才能拉取个人点击汇总（留空则仅用价差兜底） -->
   <script>window.MANGO_API_ORIGIN = "";</script>
   <script src="./car.js"></script>

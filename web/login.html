@@ -77,7 +77,9 @@
 
       <!-- 第一个卡片 (叠在上面) -->
       <div class="welcome-card active-card" id="card1">
-        <div class="welcome-icon">👑</div>
+        <div class="welcome-icon" aria-hidden="true">
+          <img src="media-webp/photos/index/logo/logo2.webp" alt="" class="welcome-icon__img" loading="lazy" decoding="async">
+        </div>
         <div class="welcome-content" id="welcomeMessage">
           <!-- 内容将通过 JS 动态生成 -->
         </div>
@@ -87,61 +89,138 @@
             <table class="member-benefits__table">
               <thead>
                 <tr>
-                  <th>权益项</th>
-                  <th data-tier="mango">芒果派</th>
+                  <th>权益项目</th>
+                  <th data-tier="mango">芒果 π</th>
                   <th data-tier="silver">青芒果</th>
                   <th data-tier="gold">金芒果</th>
-                  <th data-tier="black">黑金芒果</th>
+                  <th data-tier="black">黑芒果</th>
                 </tr>
               </thead>
               <tbody>
                 <tr>
-                  <th>手搓旅游攻略</th>
+                  <th>专属会员标签</th>
                   <td data-tier="mango">√</td>
                   <td data-tier="silver">√</td>
                   <td data-tier="gold">√</td>
                   <td data-tier="black">√</td>
                 </tr>
                 <tr>
-                  <th>酒店预定</th>
+                  <th>会员价展示</th>
                   <td data-tier="mango">√</td>
                   <td data-tier="silver">√</td>
                   <td data-tier="gold">√</td>
                   <td data-tier="black">√</td>
                 </tr>
                 <tr>
-                  <th>首单8.8折</th>
+                  <th>基础积分累积</th>
                   <td data-tier="mango">√</td>
                   <td data-tier="silver">√</td>
                   <td data-tier="gold">√</td>
                   <td data-tier="black">√</td>
                 </tr>
                 <tr>
-                  <th>全场优惠</th>
-                  <td data-tier="mango">x</td>
+                  <th>积分商城基础区</th>
+                  <td data-tier="mango">√</td>
                   <td data-tier="silver">√</td>
                   <td data-tier="gold">√</td>
                   <td data-tier="black">√</td>
                 </tr>
                 <tr>
-                  <th>接送机</th>
-                  <td data-tier="mango">x</td>
-                  <td data-tier="silver">半价</td>
-                  <td data-tier="gold">免费</td>
+                  <th>专属客服通道</th>
+                  <td data-tier="mango">—</td>
+                  <td data-tier="silver">√</td>
+                  <td data-tier="gold">√</td>
+                  <td data-tier="black">√</td>
+                </tr>
+                <tr>
+                  <th>生日礼券</th>
+                  <td data-tier="mango">—</td>
+                  <td data-tier="silver">√</td>
+                  <td data-tier="gold">√</td>
+                  <td data-tier="black">√</td>
+                </tr>
+                <tr>
+                  <th>积分商城进阶区</th>
+                  <td data-tier="mango">—</td>
+                  <td data-tier="silver">√</td>
+                  <td data-tier="gold">√</td>
+                  <td data-tier="black">√</td>
+                </tr>
+                <tr>
+                  <th>免费接送机(次/年)</th>
+                  <td data-tier="mango">—</td>
+                  <td data-tier="silver">1</td>
+                  <td data-tier="gold">2</td>
+                  <td data-tier="black">4</td>
+                </tr>
+                <tr>
+                  <th>租车折扣</th>
+                  <td data-tier="mango">95折</td>
+                  <td data-tier="silver">92折</td>
+                  <td data-tier="gold">88折</td>
+                  <td data-tier="black">85折</td>
+                </tr>
+                <tr>
+                  <th>优先预订权</th>
+                  <td data-tier="mango">—</td>
+                  <td data-tier="silver">—</td>
+                  <td data-tier="gold">√</td>
+                  <td data-tier="black">√</td>
+                </tr>
+                <tr>
+                  <th>升舱体验券</th>
+                  <td data-tier="mango">—</td>
+                  <td data-tier="silver">—</td>
+                  <td data-tier="gold">√</td>
+                  <td data-tier="black">√</td>
+                </tr>
+                <tr>
+                  <th>异地还车手续费减免</th>
+                  <td data-tier="mango">—</td>
+                  <td data-tier="silver">8.8 折</td>
+                  <td data-tier="gold">8.5 折</td>
+                  <td data-tier="black">8 折</td>
+                </tr>
+                <tr>
+                  <th>免费取送车</th>
+                  <td data-tier="mango">—</td>
+                  <td data-tier="silver">7 天以上订单</td>
+                  <td data-tier="gold">3 天以上订单</td>
+                  <td data-tier="black">所有订单</td>
+                </tr>
+                <tr>
+                  <th>违章代办服务费</th>
+                  <td data-tier="mango">标准收费</td>
+                  <td data-tier="silver">5 折</td>
+                  <td data-tier="gold">3 折</td>
                   <td data-tier="black">免费</td>
                 </tr>
                 <tr>
-                  <th>专属秘书</th>
-                  <td data-tier="mango">x</td>
-                  <td data-tier="silver">x</td>
-                  <td data-tier="gold">x</td>
-                  <td data-tier="black">√</td>
+                  <th>事故停运费减免</th>
+                  <td data-tier="mango">—</td>
+                  <td data-tier="silver">减免 10%</td>
+                  <td data-tier="gold">减免 20%</td>
+                  <td data-tier="black">减免 30%</td>
+                </tr>
+                <tr>
+                  <th>免押金额度</th>
+                  <td data-tier="mango">—</td>
+                  <td data-tier="silver">5千</td>
+                  <td data-tier="gold">1万</td>
+                  <td data-tier="black">2万</td>
+                </tr>
+                <tr>
+                  <th>专属活动邀约</th>
+                  <td data-tier="mango">—</td>
+                  <td data-tier="silver">—</td>
+                  <td data-tier="gold">试驾/品鉴</td>
+                  <td data-tier="black">晚宴/赛道日</td>
                 </tr>
               </tbody>
             </table>
           </div>
         </section>
-        <button type="button" class="welcome-next-btn" id="nextCardBtn">开始专属车库</button>
+        <button type="button" class="welcome-next-btn" id="nextCardBtn">开启专属车库</button>
       </div>
       
     </div>
