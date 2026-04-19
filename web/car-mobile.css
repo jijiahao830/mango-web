@@ -106,10 +106,12 @@ body.m-car-page {
 .m-vip-strip {
   flex-shrink: 0;
   margin: 10px 12px 10px;
-  padding: 10px 12px;
+  height: 60px;
+  padding: 8px 12px;
+  box-sizing: border-box;
   display: grid;
-  grid-template-columns: 62px 1fr auto;
-  gap: 10px;
+  grid-template-columns: 52px 1fr auto;
+  gap: 8px;
   align-items: center;
   border-radius: 12px;
   background: linear-gradient(135deg, rgba(255, 107, 53, 0.12) 0%, rgba(20, 23, 31, 0.96) 42%, rgba(15, 17, 21, 0.96) 100%);
@@ -118,8 +120,8 @@ body.m-car-page {
 }
 
 .m-vip-strip__cover {
-  width: 62px;
-  height: 62px;
+  width: 40px;
+  height: 40px;
   border-radius: 10px;
   overflow: hidden;
 }
@@ -137,16 +139,16 @@ body.m-car-page {
 .m-vip-strip__title {
   margin: 0;
   color: #fff;
-  font-size: 24px;
+  font-size: 18px;
   font-weight: 800;
   line-height: 1.15;
   letter-spacing: -0.02em;
 }
 
 .m-vip-strip__desc {
-  margin: 8px 0 0;
+  margin: 4px 0 0;
   color: rgba(255, 255, 255, 0.76);
-  font-size: 15px;
+  font-size: 12px;
   line-height: 1.25;
 }
 
