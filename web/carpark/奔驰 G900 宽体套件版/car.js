@@ -197,7 +197,7 @@ document.querySelectorAll('.stat-card, .feature-card, .spec-group, .thumbnail-it
 });
 
 // Reserve button actions（含右侧悬浮按钮）
-document.querySelectorAll('.btn-reserve, .btn-primary, #detailFabActions .btn-ghost').forEach(btn => {
+document.querySelectorAll('#detailFabActions .btn-ghost').forEach(btn => {
   btn.addEventListener('click', function() {
     alert('预约功能开发中，请联系客服：400-888-8888');
   });

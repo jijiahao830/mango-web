@@ -527,6 +527,25 @@
     width: 100%;
     min-width: 0;
   }
+
+  /* 用车清单挂在 FAB 内、位于「咨询客服」下方（由 detail-fab.js 在窄屏插入） */
+  #detailFabActions .detail-checklist-btn {
+    position: static !important;
+    right: auto !important;
+    bottom: auto !important;
+    width: 100% !important;
+    max-width: 100%;
+    box-sizing: border-box;
+    justify-content: center;
+    z-index: 1;
+    flex-shrink: 0;
+  }
+
+  /* 三枚竖向按钮时，面板上移避免遮挡 */
+  .detail-checklist-panel {
+    bottom: calc(max(72px, 14vh) + 200px + env(safe-area-inset-bottom, 0px)) !important;
+    right: max(12px, env(safe-area-inset-right)) !important;
+  }
 }
 
 @media (max-width: 480px) {
@@ -557,13 +576,17 @@
   }
 }
 
+/* 详情页租金表头：由 detail-rent-sync.js 注入，仅移动端显示为表头行 */
+.stats-section .stats-rent-table-head {
+  display: none;
+}
+
 /* 移动端：实车图赏主图区固定高度比例，切换缩略图后主图铺满该区域 */
 @media (max-width: 768px) {
   /*
-   * car.css 末尾全局 .hero-image-main { left:50%; width:90%; transform } 会铺满失败。
-   * 勿与 inset:0 同时写 width/height: auto，否则会破坏绝对定位拉伸。
-   * hero-detail 须保持 flex + justify-content:flex-end，否则唯一流内子元素 .hero-content-wrapper 会顶到区块顶部。
-   * 遮罩与图为 absolute，不参与 flex，不影响底对齐标题。
+   * car.css 末尾全局 .hero-image-main { left:50%; width:90%; transform } 须覆盖。
+   * 首屏仅保留封面条：Grid 单行；无 min-height 撑屏；顶栏 fixed，padding-top 仅留出顶栏占位；
+   * 隐藏 .hero-content-wrapper；无 padding-bottom，stats-section 紧贴其下。
    */
   html,
   body {
@@ -573,71 +596,199 @@
   }
 
   body section.hero-detail {
-    display: flex !important;
-    flex-direction: column !important;
-    justify-content: flex-end !important;
-    align-items: flex-end !important;
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    grid-template-rows: auto !important;
+    justify-content: stretch !important;
+    align-items: start !important;
     position: relative;
-    min-height: 100vh;
-    min-height: 100dvh;
+    min-height: 0 !important;
+    height: auto !important;
     width: 100% !important;
     max-width: 100% !important;
     margin-left: 0 !important;
     margin-right: 0 !important;
+    margin-top: 0 !important;
     padding-left: 0 !important;
     padding-right: 0 !important;
-    padding-bottom: 12vh !important;
+    /* 与固定顶栏底边对齐（顶栏约 60px + 安全区），覆盖 car.css 的 100px */
+    padding-top: calc(60px + env(safe-area-inset-top, 0px)) !important;
+    padding-bottom: 0 !important;
+    gap: 0 !important;
     overflow-x: hidden;
     box-sizing: border-box !important;
   }
 
-  body section.hero-detail > .hero-bg-overlay {
-    position: absolute !important;
-    left: 0 !important;
-    right: 0 !important;
-    top: 0 !important;
-    bottom: 0 !important;
-    width: 100% !important;
-    height: 100% !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    transform: none !important;
-    z-index: 1;
+  /* 统计区上下留白（覆盖 car.css 的 80px 等） */
+  body .stats-section {
+    padding-top: 80px !important;
+    padding-bottom: 0px !important;
   }
 
-  body section.hero-detail > .hero-image-main {
+  /* 租金档位：移动端两列表格（左租用天数 / 右价格），覆盖 car.css 横向卡片滚动 */
+  body .stats-section .stats-grid.stats-grid--rent {
+    display: flex !important;
+    flex-direction: column !important;
+    flex-wrap: nowrap !important;
+    overflow-x: visible !important;
+    overflow-y: visible !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding: 0 !important;
+    gap: 0 !important;
+    border: 1px solid var(--border, #2a2f3a);
+    border-radius: 12px;
+    overflow: hidden;
+    background: var(--panel, #171a21);
+  }
+
+  body .stats-section .stats-grid.stats-grid--rent > .stats-rent-table-head {
+    display: grid !important;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    background: rgba(255, 255, 255, 0.04);
+    border-bottom: 1px solid var(--border, #2a2f3a);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--muted, #8b93a7);
+  }
+
+  body .stats-section .stats-grid.stats-grid--rent > .stats-rent-table-head .stats-rent-table-head__price {
+    text-align: right;
+    white-space: nowrap;
+  }
+
+  body .stats-section .stats-grid.stats-grid--rent > .stat-card {
+    display: grid !important;
+    grid-template-columns: 1fr auto;
+    grid-template-rows: auto;
+    align-items: center;
+    gap: 12px;
+    flex: none !important;
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 12px 14px !important;
+    text-align: left !important;
+    border-radius: 0 !important;
+    border: none !important;
+    border-bottom: 1px solid var(--border, #2a2f3a) !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    transform: none !important;
+  }
+
+  body .stats-section .stats-grid.stats-grid--rent > .stat-card:last-child {
+    border-bottom: none !important;
+  }
+
+  body .stats-section .stats-grid.stats-grid--rent > .stat-card::before {
+    display: none !important;
+  }
+
+  body .stats-section .stats-grid.stats-grid--rent > .stat-card:hover {
+    transform: none !important;
+    box-shadow: none !important;
+  }
+
+  body .stats-section .stats-grid.stats-grid--rent > .stat-card .stat-icon {
+    margin: 0 !important;
+    font-size: 15px !important;
+    font-weight: 600 !important;
+    line-height: 1.35 !important;
+    color: var(--text, #e8ecf8) !important;
+  }
+
+  body .stats-section .stats-grid.stats-grid--rent > .stat-card .stat-value {
+    margin: 0 !important;
+    font-size: 15px !important;
+    font-weight: 800 !important;
+    color: var(--brand, #ff6b35) !important;
+    white-space: nowrap;
+    text-align: right;
+  }
+
+  body .stats-section .stats-grid.stats-grid--rent > .stat-card .stat-label {
+    display: none !important;
+  }
+
+  body section.hero-detail > .hero-bg-overlay {
+    grid-row: 1;
+    grid-column: 1;
     position: absolute !important;
-    left: 0 !important;
-    right: 0 !important;
-    top: 0 !important;
-    bottom: 0 !important;
+    inset: 0 !important;
     width: 100% !important;
     height: 100% !important;
     max-width: none !important;
     margin: 0 !important;
     padding: 0 !important;
     transform: none !important;
-    display: block !important;
-    z-index: 0 !important;
-    overflow: hidden !important;
+    z-index: 1;
+    pointer-events: none;
   }
 
-  /* 与 .hero-bg-overlay 同一块矩形：picture 铺满，img cover 满高 */
+  body section.hero-detail > .hero-image-main {
+    grid-row: 1;
+    grid-column: 1;
+    position: relative !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    left: auto !important;
+    right: auto !important;
+    top: auto !important;
+    bottom: auto !important;
+    transform: none !important;
+    display: block !important;
+    z-index: 0 !important;
+    overflow: visible;
+    align-self: start;
+    justify-self: stretch;
+  }
+
+  body section.hero-detail > video {
+    grid-row: 1;
+    grid-column: 1;
+    position: relative !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    left: auto !important;
+    right: auto !important;
+    top: auto !important;
+    bottom: auto !important;
+    transform: none !important;
+    display: block !important;
+    z-index: 0 !important;
+    object-fit: contain !important;
+    object-position: center center !important;
+    pointer-events: none;
+    align-self: start;
+    justify-self: stretch;
+  }
+
   body section.hero-detail > .hero-image-main > picture {
-    position: absolute !important;
-    inset: 0 !important;
+    position: static !important;
     display: block !important;
     width: 100% !important;
-    height: 100% !important;
+    height: auto !important;
     margin: 0 !important;
     padding: 0 !important;
   }
 
   body section.hero-detail > .hero-image-main > picture img {
     width: 100% !important;
-    height: 100% !important;
-    max-width: none !important;
-    object-fit: cover !important;
+    height: auto !important;
+    max-width: 100% !important;
+    object-fit: unset !important;
     object-position: center center !important;
     margin: 0 !important;
     padding: 0 !important;
@@ -651,10 +802,7 @@
   }
 
   body section.hero-detail .hero-content-wrapper {
-    position: relative;
-    z-index: 2;
-    flex: 0 0 auto;
-    width: 100%;
+    display: none !important;
   }
 
   .gallery-section .gallery-featured {

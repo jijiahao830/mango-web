@@ -6,6 +6,8 @@
   <link rel="icon" type="image/webp" href="media-webp/photos/index/logo/logo2.webp">
 
   <title>芒果超跑 · 极速出行</title>
+  <script src="./device-redirect.js"></script>
+  <script>MangoDeviceRedirect.redirectFromPcCarPage();</script>
   <link rel="stylesheet" href="./car.css">
 </head>
 <body>
@@ -212,8 +214,59 @@
     <div class="car-checklist-panel__body">
       <ul class="car-checklist-list" id="carChecklistList"></ul>
       <p class="car-checklist-empty" id="carChecklistEmpty">还没有加入车辆，点击车卡上的“加入清单”即可收藏。</p>
+      <p class="car-checklist-original" id="carChecklistOriginal">原价：¥0</p>
+      <p class="car-checklist-total" id="carChecklistTotal">总价：¥0</p>
+      <div class="car-checklist-actions">
+        <button type="button" class="car-checklist-clear-btn" id="carChecklistClearBtn">清空清单</button>
+        <button type="button" class="car-checklist-send-btn" id="carChecklistSendBtn">选择完成</button>
+      </div>
     </div>
   </section>
+
+  <section class="phone-modal" id="wecomPhoneModal" hidden>
+    <div class="phone-modal__backdrop" data-phone-cancel="1"></div>
+    <div class="phone-modal__card" role="dialog" aria-modal="true" aria-labelledby="wecomPhoneTitle">
+      <h3 class="phone-modal__title" id="wecomPhoneTitle">请输入您的手机号，稍后客服会联系您</h3>
+      <input type="tel" inputmode="numeric" maxlength="11" class="phone-modal__input" id="wecomPhoneInput" placeholder="请输入手机号" />
+      <p class="phone-modal__error" id="wecomPhoneError" hidden>请输入正确的11位手机号</p>
+      <div class="phone-modal__actions">
+        <button type="button" class="phone-modal__btn phone-modal__btn--ghost" id="wecomPhoneCancelBtn">取消</button>
+        <button type="button" class="phone-modal__btn phone-modal__btn--primary" id="wecomPhoneSubmitBtn">发送</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="phone-modal" id="wecomSuccessModal" hidden>
+    <div class="phone-modal__backdrop"></div>
+    <div class="phone-modal__card phone-modal__card--success" role="dialog" aria-modal="true" aria-labelledby="wecomSuccessTitle">
+      <h3 class="phone-modal__title" id="wecomSuccessTitle">客服已收到您的信息，请稍等</h3>
+      <div class="phone-modal__actions phone-modal__actions--center">
+        <button type="button" class="phone-modal__btn phone-modal__btn--primary" id="wecomSuccessOkBtn">确定</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="phone-modal" id="wecomFailModal" hidden>
+    <div class="phone-modal__backdrop"></div>
+    <div class="phone-modal__card phone-modal__card--success" role="dialog" aria-modal="true" aria-labelledby="wecomFailTitle">
+      <h3 class="phone-modal__title" id="wecomFailTitle">发送失败，请稍后重试</h3>
+      <div class="phone-modal__actions phone-modal__actions--center">
+        <button type="button" class="phone-modal__btn phone-modal__btn--primary" id="wecomFailOkBtn">确定</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 选车天数弹窗 -->
+  <div id="daysSelectModal" class="days-select-modal" hidden>
+    <div class="days-select-content">
+      <div class="days-select-header">请选择用车天数</div>
+      <div class="days-select-options" id="daysSelectOptions">
+        <!-- 动态渲染选项 -->
+      </div>
+      <div class="days-select-footer">右下角的选车清单中可以查看总价</div>
+      <button class="days-select-close" id="daysSelectCloseBtn">×</button>
+    </div>
+  </div>
 
   <!-- 与 login.html 一致：填写 member_api 根地址后「今日推荐」才能拉取个人点击汇总（留空则仅用价差兜底） -->
   <script>window.MANGO_API_ORIGIN = "";</script>

@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" type="image/webp" href="media-webp/photos/index/logo/logo2.webp">
+  <title>芒果超跑 · 选车（移动 / 平板）</title>
+  <script src="./device-redirect.js"></script>
+  <script>MangoDeviceRedirect.redirectFromMobileCarPage();</script>
+  <link rel="stylesheet" href="./car.css">
+  <link rel="stylesheet" href="./car-mobile.css">
+</head>
+<body class="m-car-page">
+  <header class="m-topbar">
+    <a href="index.html" class="m-topbar__logo-left" aria-label="返回首页">
+      <img src="media-webp/photos/index/logo/logo2-1.webp" alt="芒果超跑">
+    </a>
+    <a href="index.html" class="m-topbar__logo" aria-label="返回首页">
+      <img src="media-webp/photos/index/logo/logo2.webp" alt="芒果超跑">
+    </a>
+  </header>
+
+  <div class="m-toolbar">
+    <button type="button" class="m-filter-trigger m-sort-trigger" id="mobileSortTrigger">
+      <span class="m-filter-trigger__text">推荐排序</span>
+      <span class="m-filter-trigger__caret" aria-hidden="true">▾</span>
+    </button>
+    <button type="button" class="m-filter-trigger m-price-trigger" id="mobilePriceTrigger">
+      <span class="m-filter-trigger__text">价格筛选</span>
+      <span class="m-filter-trigger__caret" aria-hidden="true">▾</span>
+    </button>
+    <div class="m-search">
+      <input type="text" id="carSearchInput" placeholder="搜索品牌/车型">
+    </div>
+  </div>
+
+  <section class="m-vip-strip" aria-label="月租优惠">
+    <div class="m-vip-strip__cover">
+      <img src="media-webp/photos/index/logo/vip.webp" alt="VIP">
+    </div>
+    <div class="m-vip-strip__content">
+      <h2 class="m-vip-strip__title">月租低至77折</h2>
+      <p class="m-vip-strip__desc">打开开关查看超低月租价格</p>
+    </div>
+    <button type="button" class="m-vip-strip__switch" id="mobileVipSwitch" role="switch" aria-checked="false" aria-label="切换月租优惠展示">
+      <span class="m-vip-strip__thumb"></span>
+    </button>
+  </section>
+
+  <section class="m-layout" id="carSection">
+    <aside class="m-category-column" id="mobileCategoryColumn">
+      <button type="button" class="m-category-btn is-active" data-category="all">全部</button>
+    </aside>
+    <main class="m-list-column" id="mobileListRoot"></main>
+  </section>
+
+  <p id="carparkCatalogError" class="m-catalog-error" hidden></p>
+
+  <footer class="m-page-footer" role="contentinfo">
+    <a
+      class="m-page-footer__icp"
+      href="https://beian.miit.gov.cn/"
+      target="_blank"
+      rel="noopener noreferrer"
+    >滇ICP备2025055273号-3</a>
+  </footer>
+
+  <section class="m-sort-pop" id="mobileSortPop" hidden>
+    <button type="button" class="m-sort-pop__item is-active" data-sort="recommend">推荐排序</button>
+    <button type="button" class="m-sort-pop__item" data-sort="price-asc">价格从低到高</button>
+    <button type="button" class="m-sort-pop__item" data-sort="price-desc">价格从高到低</button>
+  </section>
+  <section class="m-price-pop" id="mobilePricePop" hidden>
+    <div class="m-price-pop__title">价格筛选</div>
+    <div class="m-price-pop__form">
+      <label class="m-price-pop__field">
+        <span>最小金额</span>
+        <input type="number" inputmode="numeric" min="0" step="1" id="mobilePriceMinInput" placeholder="例如 500">
+      </label>
+      <label class="m-price-pop__field">
+        <span>最大金额</span>
+        <input type="number" inputmode="numeric" min="0" step="1" id="mobilePriceMaxInput" placeholder="例如 3000">
+      </label>
+      <div class="m-price-pop__actions">
+        <button type="button" class="m-price-pop__btn m-price-pop__btn--ghost" id="mobilePriceResetBtn">重置</button>
+        <button type="button" class="m-price-pop__btn m-price-pop__btn--primary" id="mobilePriceApplyBtn">确定</button>
+      </div>
+    </div>
+  </section>
+
+  <div class="m-mask" id="mobileSortMask" hidden></div>
+
+  <button type="button" class="car-checklist-btn" id="carChecklistBtn" aria-label="查看用车清单">
+    <span class="car-checklist-btn__icon" aria-hidden="true">★</span>
+    <span class="car-checklist-btn__text">用车清单</span>
+    <span class="car-checklist-btn__count" id="carChecklistCount">0</span>
+  </button>
+
+  <section class="car-checklist-panel" id="carChecklistPanel" hidden aria-label="已选用车清单">
+    <div class="car-checklist-panel__header">
+      <h3>已选车辆</h3>
+      <button type="button" class="car-checklist-panel__close" id="carChecklistCloseBtn" aria-label="关闭清单">×</button>
+    </div>
+    <div class="car-checklist-panel__body">
+      <ul class="car-checklist-list" id="carChecklistList"></ul>
+      <p class="car-checklist-empty" id="carChecklistEmpty">还没有加入车辆，点击车卡上的“加入清单”即可收藏。</p>
+      <p class="car-checklist-original" id="carChecklistOriginal">原价：¥0</p>
+      <p class="car-checklist-total" id="carChecklistTotal">总价：¥0</p>
+      <div class="car-checklist-actions">
+        <button type="button" class="car-checklist-clear-btn" id="carChecklistClearBtn">清空清单</button>
+        <button type="button" class="car-checklist-send-btn" id="carChecklistSendBtn">选择完成</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="phone-modal" id="wecomPhoneModal" hidden>
+    <div class="phone-modal__backdrop" data-phone-cancel="1"></div>
+    <div class="phone-modal__card" role="dialog" aria-modal="true" aria-labelledby="wecomPhoneTitle">
+      <h3 class="phone-modal__title" id="wecomPhoneTitle">请输入您的手机号，稍后客服会联系您</h3>
+      <input type="tel" inputmode="numeric" maxlength="11" class="phone-modal__input" id="wecomPhoneInput" placeholder="请输入手机号" />
+      <p class="phone-modal__error" id="wecomPhoneError" hidden>请输入正确的11位手机号</p>
+      <div class="phone-modal__actions">
+        <button type="button" class="phone-modal__btn phone-modal__btn--ghost" id="wecomPhoneCancelBtn">取消</button>
+        <button type="button" class="phone-modal__btn phone-modal__btn--primary" id="wecomPhoneSubmitBtn">发送</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="phone-modal" id="wecomSuccessModal" hidden>
+    <div class="phone-modal__backdrop"></div>
+    <div class="phone-modal__card phone-modal__card--success" role="dialog" aria-modal="true" aria-labelledby="wecomSuccessTitle">
+      <h3 class="phone-modal__title" id="wecomSuccessTitle">客服已收到您的信息，请稍等</h3>
+      <div class="phone-modal__actions phone-modal__actions--center">
+        <button type="button" class="phone-modal__btn phone-modal__btn--primary" id="wecomSuccessOkBtn">确定</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="phone-modal" id="wecomFailModal" hidden>
+    <div class="phone-modal__backdrop"></div>
+    <div class="phone-modal__card phone-modal__card--success" role="dialog" aria-modal="true" aria-labelledby="wecomFailTitle">
+      <h3 class="phone-modal__title" id="wecomFailTitle">发送失败，请稍后重试</h3>
+      <div class="phone-modal__actions phone-modal__actions--center">
+        <button type="button" class="phone-modal__btn phone-modal__btn--primary" id="wecomFailOkBtn">确定</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 选车天数弹窗 -->
+  <div id="daysSelectModal" class="days-select-modal" hidden>
+    <div class="days-select-content">
+      <div class="days-select-header">请选择用车天数</div>
+      <div class="days-select-options" id="daysSelectOptions">
+        <!-- 动态渲染选项 -->
+      </div>
+      <div class="days-select-footer">右下角的选车清单中可以查看总价</div>
+      <button class="days-select-close" id="daysSelectCloseBtn">×</button>
+    </div>
+  </div>
+
+  <script>window.MANGO_API_ORIGIN = "";</script>
+  <script src="./car-mobile.js"></script>
+</body>
+</html>

@@ -4,630 +4,68 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" type="image/webp" href="media-webp/photos/index/logo/logo2.webp">
-
   <title>芒果超跑 · 专属认证</title>
   <link rel="stylesheet" href="./login.css">
   <script src="./members.js"></script>
-  <!-- 若用 Live Server、其它端口或 file:// 打开本页，请填写会员 API 根地址（与 python member_api.py 一致），例如 http://127.0.0.1:8765 -->
   <script>window.MANGO_API_ORIGIN = "";</script>
 </head>
 <body>
   <div class="login-container">
-    <!-- 背景光效与颗粒感 -->
     <div class="bg-fx"></div>
     <div class="bg-noise"></div>
-    
+
     <div class="login-card animate-in">
       <div class="brand-header">
         <img src="media-webp/photos/index/logo/logo2-1.webp" alt="芒果超跑" class="login-logo">
         <h2 class="login-title">DRIVER IDENTIFICATION</h2>
         <p class="login-subtitle">请输入您的尊贵姓名，启动超跑之旅</p>
       </div>
-      
+
       <form class="login-form" id="loginForm">
         <div class="input-group">
           <input type="text" id="driverName" name="name" required autocomplete="off" placeholder=" ">
           <label for="driverName">会员姓名</label>
           <div class="input-glow"></div>
         </div>
-        
+
         <button type="submit" class="btn-engine-start">
           <span class="btn-text">ENGINE START</span>
           <span class="btn-fx"></span>
         </button>
       </form>
-
     </div>
-    
-    <!-- 认证成功后的信息卡片 -->
+
     <div class="welcome-cards" id="welcomeCards" style="display: none;">
-      <!-- 与卡片同色的固定衬垫，切换动画中途不会透出页面背景 -->
       <div class="welcome-cards__backdrop" aria-hidden="true"></div>
-
-      <!-- 第二个卡片 (叠在下面)：欢迎结束 → 进入交付官抽卡 -->
-      <div class="welcome-card empty-card" id="card2">
-        <div class="empty-placeholder" aria-hidden="true">
-          <svg class="delivery-heart" viewBox="0 0 24 24" width="56" height="56" focusable="false">
-            <defs>
-              <linearGradient id="deliveryHeartGrad" x1="4" y1="4" x2="22" y2="20" gradientUnits="userSpaceOnUse">
-                <stop offset="0" stop-color="#ff3b00"/>
-                <stop offset="1" stop-color="#ff6b35"/>
-              </linearGradient>
-            </defs>
-            <path fill="url(#deliveryHeartGrad)" d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-          </svg>
-        </div>
-        <div class="welcome-card2-copy">
-          <p class="welcome-card2-line">在开启您的专属车库之前，</p>
-          <p class="welcome-card2-line">为了给您带来更优质的用车服务，</p>
-          <p class="welcome-card2-line welcome-card2-line--emph">请选择一位交付官。</p>
-        </div>
-        <button
-          type="button"
-          class="next-card-btn"
-          id="openGachaBtn"
-          aria-label="进入交付官选择"
-          style="display: none;"
-        >
-          <svg viewBox="0 0 24 24" width="32" height="32" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
-            <polyline points="9 18 15 12 9 6"></polyline>
-          </svg>
-        </button>
-      </div>
-
-      <!-- 第一个卡片 (叠在上面) -->
       <div class="welcome-card active-card" id="card1">
-        <div class="welcome-icon" aria-hidden="true">
-          <img src="media-webp/photos/index/logo/logo2.webp" alt="" class="welcome-icon__img" loading="lazy" decoding="async">
-        </div>
-        <div class="welcome-content" id="welcomeMessage">
-          <!-- 内容将通过 JS 动态生成 -->
-        </div>
-        <section class="member-benefits member-benefits--welcome" id="memberBenefitsWelcome" aria-label="会员权益">
-          <h3 class="member-benefits__title">会员权益</h3>
-          <div class="member-benefits__table-wrap">
-            <table class="member-benefits__table">
-              <thead>
-                <tr>
-                  <th>权益项目</th>
-                  <th data-tier="mango">芒果 π</th>
-                  <th data-tier="silver">青芒果</th>
-                  <th data-tier="gold">金芒果</th>
-                  <th data-tier="black">黑芒果</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <th>专属会员标签</th>
-                  <td data-tier="mango">√</td>
-                  <td data-tier="silver">√</td>
-                  <td data-tier="gold">√</td>
-                  <td data-tier="black">√</td>
-                </tr>
-                <tr>
-                  <th>会员价展示</th>
-                  <td data-tier="mango">√</td>
-                  <td data-tier="silver">√</td>
-                  <td data-tier="gold">√</td>
-                  <td data-tier="black">√</td>
-                </tr>
-                <tr>
-                  <th>基础积分累积</th>
-                  <td data-tier="mango">√</td>
-                  <td data-tier="silver">√</td>
-                  <td data-tier="gold">√</td>
-                  <td data-tier="black">√</td>
-                </tr>
-                <tr>
-                  <th>积分商城基础区</th>
-                  <td data-tier="mango">√</td>
-                  <td data-tier="silver">√</td>
-                  <td data-tier="gold">√</td>
-                  <td data-tier="black">√</td>
-                </tr>
-                <tr>
-                  <th>专属客服通道</th>
-                  <td data-tier="mango">—</td>
-                  <td data-tier="silver">√</td>
-                  <td data-tier="gold">√</td>
-                  <td data-tier="black">√</td>
-                </tr>
-                <tr>
-                  <th>生日礼券</th>
-                  <td data-tier="mango">—</td>
-                  <td data-tier="silver">√</td>
-                  <td data-tier="gold">√</td>
-                  <td data-tier="black">√</td>
-                </tr>
-                <tr>
-                  <th>积分商城进阶区</th>
-                  <td data-tier="mango">—</td>
-                  <td data-tier="silver">√</td>
-                  <td data-tier="gold">√</td>
-                  <td data-tier="black">√</td>
-                </tr>
-                <tr>
-                  <th>免费接送机(次/年)</th>
-                  <td data-tier="mango">—</td>
-                  <td data-tier="silver">1</td>
-                  <td data-tier="gold">2</td>
-                  <td data-tier="black">4</td>
-                </tr>
-                <tr>
-                  <th>租车折扣</th>
-                  <td data-tier="mango">95折</td>
-                  <td data-tier="silver">92折</td>
-                  <td data-tier="gold">88折</td>
-                  <td data-tier="black">85折</td>
-                </tr>
-                <tr>
-                  <th>优先预订权</th>
-                  <td data-tier="mango">—</td>
-                  <td data-tier="silver">—</td>
-                  <td data-tier="gold">√</td>
-                  <td data-tier="black">√</td>
-                </tr>
-                <tr>
-                  <th>升舱体验券</th>
-                  <td data-tier="mango">—</td>
-                  <td data-tier="silver">—</td>
-                  <td data-tier="gold">√</td>
-                  <td data-tier="black">√</td>
-                </tr>
-                <tr>
-                  <th>异地还车手续费减免</th>
-                  <td data-tier="mango">—</td>
-                  <td data-tier="silver">8.8 折</td>
-                  <td data-tier="gold">8.5 折</td>
-                  <td data-tier="black">8 折</td>
-                </tr>
-                <tr>
-                  <th>免费取送车</th>
-                  <td data-tier="mango">—</td>
-                  <td data-tier="silver">7 天以上订单</td>
-                  <td data-tier="gold">3 天以上订单</td>
-                  <td data-tier="black">所有订单</td>
-                </tr>
-                <tr>
-                  <th>违章代办服务费</th>
-                  <td data-tier="mango">标准收费</td>
-                  <td data-tier="silver">5 折</td>
-                  <td data-tier="gold">3 折</td>
-                  <td data-tier="black">免费</td>
-                </tr>
-                <tr>
-                  <th>事故停运费减免</th>
-                  <td data-tier="mango">—</td>
-                  <td data-tier="silver">减免 10%</td>
-                  <td data-tier="gold">减免 20%</td>
-                  <td data-tier="black">减免 30%</td>
-                </tr>
-                <tr>
-                  <th>免押金额度</th>
-                  <td data-tier="mango">—</td>
-                  <td data-tier="silver">5千</td>
-                  <td data-tier="gold">1万</td>
-                  <td data-tier="black">2万</td>
-                </tr>
-                <tr>
-                  <th>专属活动邀约</th>
-                  <td data-tier="mango">—</td>
-                  <td data-tier="silver">—</td>
-                  <td data-tier="gold">试驾/品鉴</td>
-                  <td data-tier="black">晚宴/赛道日</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </section>
-        <button type="button" class="welcome-next-btn" id="nextCardBtn">开启专属车库</button>
-      </div>
-      
-    </div>
-
-    <!-- 交付官抽卡（欢迎流程结束后进入） -->
-    <div class="delivery-gacha" id="deliveryGacha" style="display: none;" aria-hidden="true">
-      <div class="delivery-gacha__inner">
-        <button type="button" class="gacha-back-btn" id="gachaBackBtn" hidden aria-label="返回抽卡">
-          <svg class="gacha-back-btn__icon" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M19 12H5M12 19l-7-7 7-7"/>
-          </svg>
-          <span class="gacha-back-btn__text">返回</span>
-        </button>
-        <div class="gacha-picker" id="gachaPicker">
-          <h2 class="delivery-gacha__title">请选择您的交付官</h2>
-          <div class="gacha-deck" id="gachaDeck" role="list">
-          <button type="button" class="gacha-card gacha-card--has-photo" data-officer-id="1" data-name="葡萄" aria-label="抽取交付官 葡萄">
-            <span class="gacha-card__face gacha-card__back" aria-hidden="true">
-              <img class="gacha-card__back-logo gacha-card__back-logo--top" src="media-webp/photos/index/logo/logo2.webp" alt="" width="140" height="48" decoding="async">
-              <img class="gacha-card__back-logo gacha-card__back-logo--bottom" src="media-webp/photos/index/logo/logo2-1.webp" alt="" width="140" height="48" decoding="async">
-            </span>
-            <span class="gacha-card__face gacha-card__front">
-              <span class="gacha-card__media gacha-card__media--photo" aria-hidden="true">
-                <img
-                  class="gacha-card__photo-img"
-                  data-officer-photo-base="media-webp/photos/people/葡萄"
-                  src="media-webp/photos/people/葡萄/4-2.webp"
-                  alt="葡萄"
-                  loading="lazy"
-                  decoding="async"
-                >
-              </span>
-              <span class="gacha-card__caption">
-                <span class="gacha-card__name">葡萄</span>
-                <span class="gacha-card__role">芒果专属体验顾问</span>
-              </span>
-            </span>
-          </button>
-          <button type="button" class="gacha-card gacha-card--has-photo" data-officer-id="2" data-name="草莓" aria-label="抽取交付官 草莓">
-            <span class="gacha-card__face gacha-card__back" aria-hidden="true">
-              <img class="gacha-card__back-logo gacha-card__back-logo--top" src="media-webp/photos/index/logo/logo2.webp" alt="" width="140" height="48" decoding="async">
-              <img class="gacha-card__back-logo gacha-card__back-logo--bottom" src="media-webp/photos/index/logo/logo2-1.webp" alt="" width="140" height="48" decoding="async">
-            </span>
-            <span class="gacha-card__face gacha-card__front">
-              <span class="gacha-card__media gacha-card__media--photo" aria-hidden="true">
-                <img
-                  class="gacha-card__photo-img"
-                  data-officer-photo-base="media-webp/photos/people/草莓"
-                  src="media-webp/photos/people/草莓/4-2.webp"
-                  alt="草莓"
-                  loading="lazy"
-                  decoding="async"
-                >
-              </span>
-              <span class="gacha-card__caption">
-                <span class="gacha-card__name">草莓</span>
-                <span class="gacha-card__role">芒果专属体验顾问</span>
-              </span>
-            </span>
-          </button>
-          <button type="button" class="gacha-card gacha-card--has-photo" data-officer-id="3" data-name="蓝莓" aria-label="抽取交付官 蓝莓">
-            <span class="gacha-card__face gacha-card__back" aria-hidden="true">
-              <img class="gacha-card__back-logo gacha-card__back-logo--top" src="media-webp/photos/index/logo/logo2.webp" alt="" width="140" height="48" decoding="async">
-              <img class="gacha-card__back-logo gacha-card__back-logo--bottom" src="media-webp/photos/index/logo/logo2-1.webp" alt="" width="140" height="48" decoding="async">
-            </span>
-            <span class="gacha-card__face gacha-card__front">
-              <span class="gacha-card__media gacha-card__media--photo" aria-hidden="true">
-                <img
-                  class="gacha-card__photo-img"
-                  data-officer-photo-base="media-webp/photos/people/蓝莓"
-                  src="media-webp/photos/people/蓝莓/4-2.webp"
-                  alt="蓝莓"
-                  loading="lazy"
-                  decoding="async"
-                >
-              </span>
-              <span class="gacha-card__caption">
-                <span class="gacha-card__name">蓝莓</span>
-                <span class="gacha-card__role">芒果专属体验顾问</span>
-              </span>
-            </span>
-          </button>
-          </div>
-          <div class="gacha-picker__confirm-wrap" id="gachaPickerConfirmWrap" hidden>
-            <button type="button" class="btn-gacha-picker-confirm" id="gachaPickerConfirmBtn" disabled>确定</button>
-          </div>
-        </div>
-        <div class="officer-detail-stack officer-detail-stack--rich" id="officerDetailStack" hidden>
-          <article class="officer-detail officer-detail--rich" data-officer-detail="1">
-            <header class="officer-detail__head">
-              <p class="officer-detail__kicker">MANGO｜葡萄 · MANGO RECEPTION PROFILE</p>
-              <h3 class="officer-detail__title">芒果专属体验顾问</h3>
-            </header>
-            <div class="officer-detail__layout">
-              <section class="officer-photo-wall officer-photo-wall--stack" aria-label="葡萄影像档案">
-                <div class="officer-photo-stack" tabindex="0">
-                  <div class="officer-photo-block">
-                    <p class="officer-photo-block__title">姓名展示</p>
-                    <div class="officer-photo-group__grid">
-                      <figure class="officer-photo-cell"><img src="media-webp/photos/people/葡萄/logo.webp" alt="葡萄 姓名展示 1" loading="lazy" decoding="async"></figure>
-                      <figure class="officer-photo-cell"><img src="media-webp/photos/people/葡萄/葡.webp" alt="葡萄 姓名展示 2" loading="lazy" decoding="async"></figure>
-                      <figure class="officer-photo-cell"><img src="media-webp/photos/people/葡萄/萄.webp" alt="葡萄 姓名展示 3" loading="lazy" decoding="async"></figure>
-                    </div>
-                  </div>
-                  <div class="officer-photo-block">
-                    <p class="officer-photo-block__title">个人形象</p>
-                    <div class="officer-photo-group__grid">
-                      <figure class="officer-photo-cell"><img src="media-webp/photos/people/葡萄/2-1.webp" alt="葡萄 个人形象 1" loading="lazy" decoding="async"></figure>
-                      <figure class="officer-photo-cell"><img src="media-webp/photos/people/葡萄/2-2.webp" alt="葡萄 个人形象 2" loading="lazy" decoding="async"></figure>
-                      <figure class="officer-photo-cell"><img src="media-webp/photos/people/葡萄/2-3.webp" alt="葡萄 个人形象 3" loading="lazy" decoding="async"></figure>
-                    </div>
-                  </div>
-                  <div class="officer-photo-block">
-                    <p class="officer-photo-block__title">服务范围</p>
-                    <div class="officer-photo-group__grid">
-                      <figure class="officer-photo-cell"><img src="media-webp/photos/people/葡萄/3-1.webp" alt="葡萄 服务范围 1" loading="lazy" decoding="async"></figure>
-                      <figure class="officer-photo-cell"><img src="media-webp/photos/people/葡萄/3-2.webp" alt="葡萄 服务范围 2" loading="lazy" decoding="async"></figure>
-                      <figure class="officer-photo-cell"><img src="media-webp/photos/people/葡萄/3-3.webp" alt="葡萄 服务范围 3" loading="lazy" decoding="async"></figure>
-                    </div>
-                  </div>
-                  <div class="officer-photo-block">
-                    <p class="officer-photo-block__title">服务特点</p>
-                    <div class="officer-photo-group__grid">
-                      <figure class="officer-photo-cell"><img src="media-webp/photos/people/葡萄/4-1.webp" alt="葡萄 服务特点 1" loading="lazy" decoding="async"></figure>
-                      <figure class="officer-photo-cell"><img src="media-webp/photos/people/葡萄/4-2.webp" alt="葡萄 服务特点 2" loading="lazy" decoding="async"></figure>
-                      <figure class="officer-photo-cell"><img src="media-webp/photos/people/葡萄/4-3.webp" alt="葡萄 服务特点 3" loading="lazy" decoding="async"></figure>
-                    </div>
-                  </div>
-                  <div class="officer-photo-block">
-                    <p class="officer-photo-block__title">能力标签</p>
-                    <div class="officer-photo-group__grid">
-                      <figure class="officer-photo-cell"><img src="media-webp/photos/people/葡萄/5-1.webp" alt="葡萄 能力标签 1" loading="lazy" decoding="async"></figure>
-                      <figure class="officer-photo-cell"><img src="media-webp/photos/people/葡萄/5-2.webp" alt="葡萄 能力标签 2" loading="lazy" decoding="async"></figure>
-                      <figure class="officer-photo-cell"><img src="media-webp/photos/people/葡萄/5-3.webp" alt="葡萄 能力标签 3" loading="lazy" decoding="async"></figure>
-                    </div>
-                  </div>
-                  <div class="officer-photo-block">
-                    <p class="officer-photo-block__title">兴趣爱好</p>
-                    <div class="officer-photo-group__grid">
-                      <figure class="officer-photo-cell"><img src="media-webp/photos/people/葡萄/6-1.webp" alt="葡萄 兴趣爱好 1" loading="lazy" decoding="async"></figure>
-                      <figure class="officer-photo-cell"><img src="media-webp/photos/people/葡萄/6-2.webp" alt="葡萄 兴趣爱好 2" loading="lazy" decoding="async"></figure>
-                      <figure class="officer-photo-cell"><img src="media-webp/photos/people/葡萄/6-3.webp" alt="葡萄 兴趣爱好 3" loading="lazy" decoding="async"></figure>
-                    </div>
-                  </div>
-                </div>
-              </section>
-              <div class="officer-detail__copy">
-                <div class="officer-detail__dl-wrap">
-                  <dl class="officer-detail__dl" aria-label="基本信息">
-                    <dt>姓名</dt><dd>葡萄</dd>
-                    <dt>岗位</dt><dd>体验顾问</dd>
-                    <dt>身高</dt><dd>165cm</dd>
-                    <dt>年龄</dt><dd>21</dd>
-                    <dt>城市</dt><dd>红河</dd>
-                    <dt>从业</dt><dd>2年</dd>
-                    <dt>星座</dt><dd>金牛座</dd>
-                    <dt>MBTI</dt><dd>ESTP</dd>
-                    <dt>性格</dt><dd>亲和自然｜活泼开朗</dd>
-                    <dt>风格</dt><dd>甜美可爱｜互动自然</dd>
-                  </dl>
-                </div>
-                <div class="officer-detail__split-grid">
-                  <div class="officer-detail__split-item">
-                    <p class="officer-detail__label">兴趣爱好</p>
-                    <p class="officer-detail__text">旅行｜机车｜羽毛球｜露营</p>
-                  </div>
-                  <div class="officer-detail__split-item">
-                    <p class="officer-detail__label">服务范围</p>
-                    <p class="officer-detail__text">商务接待｜机场交付｜酒店交付<br>活动陪同｜婚庆用车｜客户接待</p>
-                  </div>
-                  <div class="officer-detail__split-item">
-                    <p class="officer-detail__label">服务特点</p>
-                    <ul class="officer-detail__list">
-                      <li>全程陪同服务</li>
-                      <li>专属体验接待</li>
-                      <li>高端客户沟通</li>
-                      <li>用车流程协助</li>
-                    </ul>
-                  </div>
-                  <div class="officer-detail__split-item">
-                    <p class="officer-detail__label">能力标签</p>
-                    <p class="officer-detail__text">拍照协助｜路线熟悉<br>行程陪同｜互动自然<br>服务意识强｜形象气质佳</p>
-                  </div>
-                </div>
-                <p class="officer-detail__label">服务说明</p>
-                <p class="officer-detail__text">提供专属用车体验服务；负责客户接待与交付陪同；提升整体出行体验感。</p>
-                <blockquote class="officer-detail__quote">
-                  芒果体验顾问，负责客户全流程用车体验：从接待 · 交付 · 陪同，到完整出行服务体验，让每一次出行更加轻松与舒适。
-                </blockquote>
-                <p class="officer-detail__footer">芒果租车｜体验顾问 · MANGO CAR RENTAL</p>
-              </div>
+        <div class="welcome-board">
+          <div class="welcome-header">
+            <div class="welcome-topline">
+              <img src="media-webp/photos/index/logo/logo2.webp" alt="" class="welcome-heading__logo" loading="lazy" decoding="async">
+              <div id="welcomeMessage"></div>
             </div>
-          </article>
-          <article class="officer-detail officer-detail--rich" data-officer-detail="2" hidden>
-            <header class="officer-detail__head">
-              <p class="officer-detail__kicker">MANGO｜草莓 · MANGO RECEPTION PROFILE</p>
-              <h3 class="officer-detail__title">芒果专属体验顾问</h3>
-            </header>
-            <div class="officer-detail__layout">
-              <section class="officer-photo-wall officer-photo-wall--stack" aria-label="草莓影像档案">
-                <div class="officer-photo-stack" tabindex="0">
-                  <div class="officer-photo-block">
-                    <p class="officer-photo-block__title">姓名展示</p>
-                    <div class="officer-photo-group__grid">
-                      <figure class="officer-photo-cell"><img src="media-webp/photos/people/草莓/logo.webp" alt="草莓 姓名展示 1" loading="lazy" decoding="async"></figure>
-                      <figure class="officer-photo-cell"><img src="media-webp/photos/people/草莓/草.webp" alt="草莓 姓名展示 2" loading="lazy" decoding="async"></figure>
-                      <figure class="officer-photo-cell"><img src="media-webp/photos/people/草莓/莓.webp" alt="草莓 姓名展示 3" loading="lazy" decoding="async"></figure>
-                    </div>
-                  </div>
-                  <div class="officer-photo-block">
-                    <p class="officer-photo-block__title">个人形象</p>
-                    <div class="officer-photo-group__grid">
-                      <figure class="officer-photo-cell"><img src="media-webp/photos/people/草莓/2-1.webp" alt="草莓 个人形象 1" loading="lazy" decoding="async"></figure>
-                      <figure class="officer-photo-cell"><img src="media-webp/photos/people/草莓/2-2.webp" alt="草莓 个人形象 2" loading="lazy" decoding="async"></figure>
-                      <figure class="officer-photo-cell"><img src="media-webp/photos/people/草莓/2-3.webp" alt="草莓 个人形象 3" loading="lazy" decoding="async"></figure>
-                    </div>
-                  </div>
-                  <div class="officer-photo-block">
-                    <p class="officer-photo-block__title">服务范围</p>
-                    <div class="officer-photo-group__grid">
-                      <figure class="officer-photo-cell"><img src="media-webp/photos/people/草莓/3-1.webp" alt="草莓 服务范围 1" loading="lazy" decoding="async"></figure>
-                      <figure class="officer-photo-cell"><img src="media-webp/photos/people/草莓/3-2.webp" alt="草莓 服务范围 2" loading="lazy" decoding="async"></figure>
-                      <figure class="officer-photo-cell"><img src="media-webp/photos/people/草莓/3-3.webp" alt="草莓 服务范围 3" loading="lazy" decoding="async"></figure>
-                    </div>
-                  </div>
-                  <div class="officer-photo-block">
-                    <p class="officer-photo-block__title">服务特点</p>
-                    <div class="officer-photo-group__grid">
-                      <figure class="officer-photo-cell"><img src="media-webp/photos/people/草莓/4-1.webp" alt="草莓 服务特点 1" loading="lazy" decoding="async"></figure>
-                      <figure class="officer-photo-cell"><img src="media-webp/photos/people/草莓/4-2.webp" alt="草莓 服务特点 2" loading="lazy" decoding="async"></figure>
-                      <figure class="officer-photo-cell"><img src="media-webp/photos/people/草莓/4-3.webp" alt="草莓 服务特点 3" loading="lazy" decoding="async"></figure>
-                    </div>
-                  </div>
-                  <div class="officer-photo-block">
-                    <p class="officer-photo-block__title">能力标签</p>
-                    <div class="officer-photo-group__grid">
-                      <figure class="officer-photo-cell"><img src="media-webp/photos/people/草莓/5-1.webp" alt="草莓 能力标签 1" loading="lazy" decoding="async"></figure>
-                      <figure class="officer-photo-cell"><img src="media-webp/photos/people/草莓/5-2.webp" alt="草莓 能力标签 2" loading="lazy" decoding="async"></figure>
-                      <figure class="officer-photo-cell"><img src="media-webp/photos/people/草莓/5-3.webp" alt="草莓 能力标签 3" loading="lazy" decoding="async"></figure>
-                    </div>
-                  </div>
-                  <div class="officer-photo-block">
-                    <p class="officer-photo-block__title">兴趣爱好</p>
-                    <div class="officer-photo-group__grid">
-                      <figure class="officer-photo-cell"><img src="media-webp/photos/people/草莓/6-1.webp" alt="草莓 兴趣爱好 1" loading="lazy" decoding="async"></figure>
-                      <figure class="officer-photo-cell"><img src="media-webp/photos/people/草莓/6-2.webp" alt="草莓 兴趣爱好 2" loading="lazy" decoding="async"></figure>
-                      <figure class="officer-photo-cell"><img src="media-webp/photos/people/草莓/6-3.webp" alt="草莓 兴趣爱好 3" loading="lazy" decoding="async"></figure>
-                    </div>
-                  </div>
-                </div>
-              </section>
-              <div class="officer-detail__copy">
-                <div class="officer-detail__dl-wrap">
-                  <dl class="officer-detail__dl" aria-label="基本信息">
-                    <dt>姓名</dt><dd>草莓</dd>
-                    <dt>岗位</dt><dd>体验顾问</dd>
-                    <dt>身高</dt><dd>175cm</dd>
-                    <dt>年龄</dt><dd>24</dd>
-                    <dt>城市</dt><dd>昆明</dd>
-                    <dt>从业</dt><dd>2年</dd>
-                    <dt>星座</dt><dd>射手座</dd>
-                    <dt>MBTI</dt><dd>ENFJ</dd>
-                    <dt>性格</dt><dd>外向活泼｜沟通舒适</dd>
-                    <dt>风格</dt><dd>御姐｜辣妹</dd>
-                  </dl>
-                </div>
-                <div class="officer-detail__split-grid">
-                  <div class="officer-detail__split-item">
-                    <p class="officer-detail__label">兴趣爱好</p>
-                    <p class="officer-detail__text">旅行｜羽毛球｜台球｜探店打卡</p>
-                  </div>
-                  <div class="officer-detail__split-item">
-                    <p class="officer-detail__label">服务范围</p>
-                    <p class="officer-detail__text">商务接待｜机场交付｜酒店交付<br>活动陪同｜婚庆用车｜客户接待</p>
-                  </div>
-                  <div class="officer-detail__split-item">
-                    <p class="officer-detail__label">服务特点</p>
-                    <ul class="officer-detail__list">
-                      <li>全程陪同服务</li>
-                      <li>专属体验接待</li>
-                      <li>高端客户沟通</li>
-                      <li>用车流程协助</li>
-                    </ul>
-                  </div>
-                  <div class="officer-detail__split-item">
-                    <p class="officer-detail__label">能力标签</p>
-                    <p class="officer-detail__text">拍照协助｜路线熟悉<br>行程陪同｜互动自然<br>服务意识强｜形象气质佳</p>
-                  </div>
-                </div>
-                <p class="officer-detail__label">服务说明</p>
-                <p class="officer-detail__text">提供专属用车体验服务；负责客户接待与交付陪同；提升整体出行体验感。</p>
-                <blockquote class="officer-detail__quote">
-                  芒果体验顾问，负责客户全流程用车体验：从接待 · 交付 · 陪同，到完整出行服务体验，让每一次出行更加轻松与舒适。
-                </blockquote>
-                <p class="officer-detail__footer">芒果租车｜体验顾问 · MANGO CAR RENTAL</p>
-              </div>
+          </div>
+          <div class="welcome-list-container">
+            <div class="welcome-list-row welcome-row-tl" id="row-mango-pai">
+              <div class="welcome-list-title">芒果π</div>
+              <div class="welcome-list-content" id="grid-mango-pai"></div>
             </div>
-          </article>
-          <article class="officer-detail officer-detail--rich" data-officer-detail="3" hidden>
-            <header class="officer-detail__head">
-              <p class="officer-detail__kicker">MANGO｜蓝莓 · MANGO RECEPTION PROFILE</p>
-              <h3 class="officer-detail__title">芒果专属体验顾问</h3>
-            </header>
-            <div class="officer-detail__layout">
-              <section class="officer-photo-wall officer-photo-wall--stack" aria-label="蓝莓影像档案">
-                <div class="officer-photo-stack" tabindex="0">
-                  <div class="officer-photo-block">
-                    <p class="officer-photo-block__title">姓名展示</p>
-                    <div class="officer-photo-group__grid">
-                      <figure class="officer-photo-cell"><img src="media-webp/photos/people/蓝莓/logo.webp" alt="蓝莓 姓名展示 1" loading="lazy" decoding="async"></figure>
-                      <figure class="officer-photo-cell"><img src="media-webp/photos/people/蓝莓/蓝.webp" alt="蓝莓 姓名展示 2" loading="lazy" decoding="async"></figure>
-                      <figure class="officer-photo-cell"><img src="media-webp/photos/people/蓝莓/莓.webp" alt="蓝莓 姓名展示 3" loading="lazy" decoding="async"></figure>
-                    </div>
-                  </div>
-                  <div class="officer-photo-block">
-                    <p class="officer-photo-block__title">个人形象</p>
-                    <div class="officer-photo-group__grid">
-                      <figure class="officer-photo-cell"><img src="media-webp/photos/people/蓝莓/2-1.webp" alt="蓝莓 个人形象 1" loading="lazy" decoding="async"></figure>
-                      <figure class="officer-photo-cell"><img src="media-webp/photos/people/蓝莓/2-2.webp" alt="蓝莓 个人形象 2" loading="lazy" decoding="async"></figure>
-                      <figure class="officer-photo-cell"><img src="media-webp/photos/people/蓝莓/2-3.webp" alt="蓝莓 个人形象 3" loading="lazy" decoding="async"></figure>
-                    </div>
-                  </div>
-                  <div class="officer-photo-block">
-                    <p class="officer-photo-block__title">服务范围</p>
-                    <div class="officer-photo-group__grid">
-                      <figure class="officer-photo-cell"><img src="media-webp/photos/people/蓝莓/3-1.webp" alt="蓝莓 服务范围 1" loading="lazy" decoding="async"></figure>
-                      <figure class="officer-photo-cell"><img src="media-webp/photos/people/蓝莓/3-2.webp" alt="蓝莓 服务范围 2" loading="lazy" decoding="async"></figure>
-                      <figure class="officer-photo-cell"><img src="media-webp/photos/people/蓝莓/3-3.webp" alt="蓝莓 服务范围 3" loading="lazy" decoding="async"></figure>
-                    </div>
-                  </div>
-                  <div class="officer-photo-block">
-                    <p class="officer-photo-block__title">服务特点</p>
-                    <div class="officer-photo-group__grid">
-                      <figure class="officer-photo-cell"><img src="media-webp/photos/people/蓝莓/4-1.webp" alt="蓝莓 服务特点 1" loading="lazy" decoding="async"></figure>
-                      <figure class="officer-photo-cell"><img src="media-webp/photos/people/蓝莓/4-2.webp" alt="蓝莓 服务特点 2" loading="lazy" decoding="async"></figure>
-                      <figure class="officer-photo-cell"><img src="media-webp/photos/people/蓝莓/4-3.webp" alt="蓝莓 服务特点 3" loading="lazy" decoding="async"></figure>
-                    </div>
-                  </div>
-                  <div class="officer-photo-block">
-                    <p class="officer-photo-block__title">能力标签</p>
-                    <div class="officer-photo-group__grid">
-                      <figure class="officer-photo-cell"><img src="media-webp/photos/people/蓝莓/5-1.webp" alt="蓝莓 能力标签 1" loading="lazy" decoding="async"></figure>
-                      <figure class="officer-photo-cell"><img src="media-webp/photos/people/蓝莓/5-2.webp" alt="蓝莓 能力标签 2" loading="lazy" decoding="async"></figure>
-                      <figure class="officer-photo-cell"><img src="media-webp/photos/people/蓝莓/5-3.webp" alt="蓝莓 能力标签 3" loading="lazy" decoding="async"></figure>
-                    </div>
-                  </div>
-                  <div class="officer-photo-block">
-                    <p class="officer-photo-block__title">兴趣爱好</p>
-                    <div class="officer-photo-group__grid">
-                      <figure class="officer-photo-cell"><img src="media-webp/photos/people/蓝莓/6-1.webp" alt="蓝莓 兴趣爱好 1" loading="lazy" decoding="async"></figure>
-                      <figure class="officer-photo-cell"><img src="media-webp/photos/people/蓝莓/6-2.webp" alt="蓝莓 兴趣爱好 2" loading="lazy" decoding="async"></figure>
-                      <figure class="officer-photo-cell"><img src="media-webp/photos/people/蓝莓/6-3.webp" alt="蓝莓 兴趣爱好 3" loading="lazy" decoding="async"></figure>
-                    </div>
-                  </div>
-                </div>
-              </section>
-              <div class="officer-detail__copy">
-                <div class="officer-detail__dl-wrap">
-                  <dl class="officer-detail__dl" aria-label="基本信息">
-                    <dt>姓名</dt><dd>蓝莓</dd>
-                    <dt>岗位</dt><dd>体验顾问</dd>
-                    <dt>身高</dt><dd>174cm</dd>
-                    <dt>年龄</dt><dd>24</dd>
-                    <dt>城市</dt><dd>昆明</dd>
-                    <dt>从业</dt><dd>2年</dd>
-                    <dt>星座</dt><dd>天秤座</dd>
-                    <dt>MBTI</dt><dd>ESFP</dd>
-                    <dt>性格</dt><dd>亲和自然｜外向开朗</dd>
-                    <dt>风格</dt><dd>可盐｜可甜</dd>
-                  </dl>
-                </div>
-                <div class="officer-detail__split-grid">
-                  <div class="officer-detail__split-item">
-                    <p class="officer-detail__label">兴趣爱好</p>
-                    <p class="officer-detail__text">旅行｜音乐｜运动</p>
-                  </div>
-                  <div class="officer-detail__split-item">
-                    <p class="officer-detail__label">服务范围</p>
-                    <p class="officer-detail__text">商务接待｜机场交付｜酒店交付<br>活动陪同｜婚庆用车｜客户接待</p>
-                  </div>
-                  <div class="officer-detail__split-item">
-                    <p class="officer-detail__label">服务特点</p>
-                    <ul class="officer-detail__list">
-                      <li>全程陪同服务</li>
-                      <li>专属体验接待</li>
-                      <li>高端客户沟通</li>
-                      <li>用车流程协助</li>
-                    </ul>
-                  </div>
-                  <div class="officer-detail__split-item">
-                    <p class="officer-detail__label">能力标签</p>
-                    <p class="officer-detail__text">拍照协助｜路线熟悉<br>行程陪同｜互动自然<br>服务意识强｜适应力强</p>
-                  </div>
-                </div>
-                <p class="officer-detail__label">服务说明</p>
-                <p class="officer-detail__text">提供专属用车体验服务；负责客户接待与交付陪同；提升整体出行体验感。</p>
-                <blockquote class="officer-detail__quote">
-                  芒果体验顾问，负责客户全流程用车体验：从接待 · 交付 · 陪同，到完整出行服务体验，让每一次出行更加轻松与舒适。
-                </blockquote>
-                <p class="officer-detail__footer">芒果租车｜体验顾问 · MANGO CAR RENTAL</p>
-              </div>
+            <div class="welcome-list-row welcome-row-tr" id="row-mango-qing">
+              <div class="welcome-list-title">青芒π</div>
+              <div class="welcome-list-content" id="grid-mango-qing"></div>
             </div>
-          </article>
-        </div>
-        <div class="delivery-gacha__actions" id="deliveryGachaActions" hidden>
-          <button type="button" class="btn-confirm-delivery" id="confirmDeliveryBtn" disabled>确认选择</button>
-          <button type="button" class="btn-enter-garage btn-enter-garage--after-gacha" id="enterGarageBtn" style="display: none;">进入专属车库</button>
+            <div class="welcome-list-row welcome-row-bl" id="row-mango-jin">
+              <div class="welcome-list-title">金芒π</div>
+              <div class="welcome-list-content" id="grid-mango-jin"></div>
+            </div>
+            <div class="welcome-list-row welcome-row-br" id="row-mango-hei">
+              <div class="welcome-list-title">黑芒π</div>
+              <div class="welcome-list-content" id="grid-mango-hei"></div>
+            </div>
+          </div>
+          <div class="welcome-footer">
+            <button type="button" class="welcome-next-btn" id="nextCardBtn">开启专属车库</button>
+          </div>
         </div>
       </div>
     </div>

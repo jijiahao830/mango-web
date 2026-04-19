@@ -1,0 +1,580 @@
+/* 移动 / 平板选车：深色主题与 PC 选车页一致（依赖 car.css 中的 :root 变量） */
+
+body.m-car-page {
+  margin: 0;
+  background: var(--bg, #0a0b0f);
+  color: var(--text, #e8ecf8);
+  /* 底部由页脚 + 列表区内边距承担；避免与固定「用车清单」叠层重复留白 */
+  padding-bottom: 0;
+  /* 顶栏 + 工具栏占固定高度，列表在下方独立滚动，避免 sticky 工具栏盖住首张车卡 */
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  min-height: 100vh;
+}
+
+.m-topbar {
+  flex-shrink: 0;
+  z-index: 40;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: calc(30px + env(safe-area-inset-top, 0px)) 12px 10px;
+  background: var(--bg-secondary, #0f1115);
+  border-bottom: 1px solid var(--border, #2b2b2b);
+}
+
+.m-topbar__logo-left img {
+  height: 24px;
+  width: auto;
+}
+
+.m-topbar__logo img {
+  height: 24px;
+  width: auto;
+}
+
+.m-toolbar {
+  flex-shrink: 0;
+  z-index: 35;
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  padding: 10px 12px;
+  background: var(--bg-secondary, #0f1115);
+  border-bottom: 1px solid var(--border, #2b2b2b);
+}
+
+.m-filter-trigger {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: 0;
+  background: transparent;
+  color: var(--text, #e8ecf8);
+  height: 28px;
+  padding: 0;
+  font-size: 16px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.m-filter-trigger__text {
+  display: inline-block;
+  line-height: 1;
+}
+
+.m-filter-trigger__caret {
+  font-size: 12px;
+  opacity: 0.92;
+}
+
+.m-sort-trigger {
+  color: var(--text, #e8ecf8);
+}
+
+.m-price-trigger {
+  color: var(--text, #e8ecf8);
+}
+
+.m-filter-trigger.is-active {
+  color: var(--brand, #ff6b35);
+}
+
+.m-search {
+  flex: 1;
+}
+
+.m-search input {
+  width: 100%;
+  height: 36px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  padding: 0 12px;
+  font-size: 14px;
+  outline: none;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text, #e8ecf8);
+}
+
+.m-search input::placeholder {
+  color: var(--muted, #8b93a7);
+}
+
+/* 排序栏与分类/列表之间的月租优惠条 */
+.m-vip-strip {
+  flex-shrink: 0;
+  margin: 10px 12px 10px;
+  padding: 10px 12px;
+  display: grid;
+  grid-template-columns: 62px 1fr auto;
+  gap: 10px;
+  align-items: center;
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(255, 107, 53, 0.12) 0%, rgba(20, 23, 31, 0.96) 42%, rgba(15, 17, 21, 0.96) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.28);
+}
+
+.m-vip-strip__cover {
+  width: 62px;
+  height: 62px;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.m-vip-strip__cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.m-vip-strip__content {
+  min-width: 0;
+}
+
+.m-vip-strip__title {
+  margin: 0;
+  color: #fff;
+  font-size: 24px;
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+
+.m-vip-strip__desc {
+  margin: 8px 0 0;
+  color: rgba(255, 255, 255, 0.76);
+  font-size: 15px;
+  line-height: 1.25;
+}
+
+.m-vip-strip__switch {
+  width: 54px;
+  height: 32px;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 2px;
+  position: relative;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.m-vip-strip__thumb {
+  display: block;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.35);
+  transform: translateX(0);
+  transition: transform 0.2s ease;
+}
+
+.m-vip-strip__switch.is-on {
+  border-color: rgba(255, 107, 53, 0.65);
+  background: rgba(255, 107, 53, 0.28);
+}
+
+.m-vip-strip__switch.is-on .m-vip-strip__thumb {
+  transform: translateX(22px);
+}
+
+.m-layout {
+  border-top: 1px solid var(--border, #2b2b2b);
+}
+
+/* 兼容旧结构选择器，保留边界 */
+.m-member-strip {
+  border-bottom: 1px solid var(--border, #2b2b2b);
+}
+
+.m-layout {
+  flex: 1 1 0;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 100px 1fr;
+  grid-template-rows: minmax(0, 1fr);
+  align-items: stretch;
+}
+
+.m-category-column {
+  min-height: 0;
+  align-self: stretch;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  /* 左右不留空：选中态灰底可贴齐侧栏左右内缘（与分割线对齐） */
+  padding: 10px 0 14px;
+  border-right: 1px solid var(--border, #2b2b2b);
+  background: rgba(15, 17, 21, 0.96);
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 14px;
+  min-width: 0;
+}
+
+.m-category-column::-webkit-scrollbar {
+  display: none;
+}
+
+.m-category-btn {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  border: 0;
+  background: transparent;
+  color: var(--muted, #8b93a7);
+  padding: 12px 8px 12px 10px;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: left;
+  border-radius: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 6px;
+  line-height: 1.25;
+}
+
+.m-category-btn__label {
+  color: var(--text, #e8ecf8);
+  font-size: 14px;
+  font-weight: 700;
+  width: 100%;
+  text-align: left;
+}
+
+.m-category-btn__hint {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--muted, #8b93a7);
+  white-space: normal;
+  overflow-wrap: anywhere;
+  width: 100%;
+  text-align: left;
+  line-height: 1.35;
+}
+
+.m-category-btn.is-active {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--brand, #ff6b35);
+  border-radius: 0;
+  /* 左侧条贴齐栏最左；灰底横向铺满整列 */
+  box-shadow: inset 3px 0 0 0 var(--brand, #ff6b35);
+}
+
+.m-category-btn.is-active .m-category-btn__label {
+  color: var(--brand, #ff6b35);
+}
+
+.m-category-btn.is-active .m-category-btn__hint {
+  color: rgba(255, 140, 105, 0.95);
+}
+
+.m-list-column {
+  min-height: 0;
+  align-self: stretch;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 8px 10px calc(88px + env(safe-area-inset-bottom, 0px));
+  background: var(--bg, #0a0b0f);
+}
+
+.m-page-footer {
+  flex-shrink: 0;
+  text-align: center;
+  padding: 10px 14px calc(10px + env(safe-area-inset-bottom, 0px));
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--muted, #8b93a7);
+  background: var(--bg-secondary, #0f1115);
+  border-top: 1px solid var(--border, #2b2b2b);
+}
+
+.m-page-footer__icp {
+  color: inherit;
+  text-decoration: none;
+}
+
+.m-page-footer__icp:hover,
+.m-page-footer__icp:focus-visible {
+  color: var(--brand-light, #ff8c69);
+  outline: none;
+}
+
+.m-page-footer__icp:focus-visible {
+  text-decoration: underline;
+}
+
+.m-car-item {
+  position: relative;
+  display: grid;
+  grid-template-columns: 92px 1fr;
+  align-items: start;
+  gap: 8px;
+  padding: 10px 10px 8px;
+  border-radius: 12px;
+  background: linear-gradient(145deg, #1e2329, #181c24);
+  margin-bottom: 8px;
+  border: 1px solid var(--border, #2b2b2b);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+}
+
+/* 整卡进详情；点击穿透到下层，由「加入清单」单独接收 */
+.m-car-item__card-hit {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: inherit;
+  outline: none;
+}
+
+.m-car-item__card-hit:focus-visible {
+  outline: 2px solid var(--brand, #ff6b35);
+  outline-offset: 2px;
+}
+
+.m-car-item__img-wrap,
+.m-car-item__right {
+  position: relative;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.m-car-item__right {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.m-car-item__link {
+  color: inherit;
+  text-decoration: none;
+  min-width: 0;
+}
+
+.m-car-item__link--month {
+  display: inline-flex;
+  align-items: baseline;
+  flex-wrap: nowrap;
+  gap: 2px;
+  margin: 0;
+  min-width: 0;
+  white-space: nowrap;
+}
+
+.m-car-item__name {
+  margin: 0;
+  font-size: clamp(16px, 4.2vw, 24px);
+  line-height: 1.25;
+  font-weight: 800;
+  color: var(--text, #e8ecf8);
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  word-break: break-word;
+}
+
+.m-car-item__tagline {
+  margin: 8px 0 0;
+  font-size: 12px;
+  line-height: 1.32;
+  color: var(--muted, #8b93a7);
+}
+
+.m-car-item__tagline:empty {
+  display: none;
+}
+
+.m-car-item__price-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+/* 仅展示日租：沿用原「月租」大号样式；/天 小号灰色 */
+.m-car-item__month-num {
+  font-size: clamp(16px, 4.4vw, 24px);
+  font-weight: 800;
+  color: var(--brand, #ff6b35);
+}
+
+.m-car-item__rent-unit {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted, #8b93a7);
+}
+
+/* 高度 76px 不变，收窄可视宽度，cover 裁切左右两侧 */
+.m-car-item__img-wrap {
+  width: 92px;
+  height: 76px;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #1a1d24;
+}
+
+.m-car-item__image {
+  display: block;
+  width: 100%;
+  height: 76px;
+  object-fit: cover;
+  object-position: center center;
+}
+
+/* 日租 + 加入清单一行；与 car.css 绝对定位解耦 */
+.m-car-item .car-checklist-toggle {
+  position: relative;
+  z-index: 3;
+  pointer-events: auto;
+  top: auto;
+  left: auto;
+  right: auto;
+  flex-shrink: 0;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 5px 10px;
+}
+
+.m-catalog-error {
+  margin: 12px;
+  color: var(--danger, #ef4444);
+}
+
+.m-sort-pop {
+  position: fixed;
+  z-index: 70;
+  top: 0;
+  left: 0;
+  width: 180px;
+  background: var(--panel, #171a21);
+  border: 1px solid var(--border, #2b2b2b);
+  border-radius: 12px;
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.45);
+  overflow: hidden;
+}
+
+.m-price-pop {
+  position: fixed;
+  z-index: 70;
+  top: 0;
+  left: 0;
+  width: min(220px, calc(100vw - 24px));
+  background: var(--panel, #171a21);
+  border: 1px solid var(--border, #2b2b2b);
+  border-radius: 12px;
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.45);
+  overflow: visible;
+}
+
+.m-sort-pop__item {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  color: var(--text, #e8ecf8);
+  text-align: left;
+  padding: 10px 12px;
+  font-size: 14px;
+}
+
+.m-sort-pop__item.is-active {
+  background: rgba(255, 107, 53, 0.12);
+  color: var(--brand, #ff6b35);
+  font-weight: 700;
+}
+
+.m-price-pop__item {
+  display: none;
+}
+
+.m-price-pop__title {
+  padding: 10px 12px 6px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--brand, #ff6b35);
+}
+
+.m-price-pop__form {
+  padding: 6px 12px 12px;
+}
+
+.m-price-pop__field {
+  display: block;
+  margin-bottom: 10px;
+}
+
+.m-price-pop__field span {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 12px;
+  color: var(--muted, #8b93a7);
+}
+
+.m-price-pop__field input {
+  width: 100%;
+  height: 34px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text, #e8ecf8);
+  padding: 0 10px;
+  font-size: 13px;
+  outline: none;
+}
+
+.m-price-pop__field input:focus {
+  border-color: rgba(255, 107, 53, 0.55);
+}
+
+.m-price-pop__actions {
+  display: flex;
+  gap: 8px;
+}
+
+.m-price-pop__btn {
+  flex: 1;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.m-price-pop__btn--ghost {
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text, #e8ecf8);
+}
+
+.m-price-pop__btn--primary {
+  border-color: rgba(255, 107, 53, 0.55);
+  background: rgba(255, 107, 53, 0.16);
+  color: var(--brand, #ff6b35);
+}
+
+.m-mask {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.m-car-page .car-checklist-btn {
+  /* 抬高到备案页脚之上（页脚约一行 + 内边距） */
+  bottom: calc(48px + env(safe-area-inset-bottom, 0px));
+  right: max(12px, env(safe-area-inset-right));
+}
+
+.m-car-page .car-checklist-panel {
+  bottom: calc(112px + env(safe-area-inset-bottom, 0px));
+  right: max(12px, env(safe-area-inset-right));
+}

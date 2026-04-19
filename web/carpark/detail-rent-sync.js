@@ -118,6 +118,210 @@
     h1.appendChild(spanOnly);
   }
 
+  function pricingConfig() {
+    var cfg = window.mangoPricingConfig || {
+      day7: { multiplier: 6.5, divisor: 7 },
+      day15: { multiplier: 13, divisor: 15 },
+      day30: { multiplier: 23, divisor: 30 },
+    };
+    return cfg;
+  }
+
+  function formatDayPrice(price) {
+    // 与“加入清单”弹窗保持一致：不加千分位，统一「¥xxx/天」
+    return '¥' + String(parseInt(String(price || 0), 10) || 0) + '/天';
+  }
+
+  function ensureDesktopRentCardStyles() {
+    if (document.getElementById('mango-rent-card-desktop-style')) return;
+    var head = document.head || document.getElementsByTagName('head')[0];
+    if (!head) return;
+    var style = document.createElement('style');
+    style.id = 'mango-rent-card-desktop-style';
+    style.textContent =
+      '@media (min-width: 769px) {' +
+      '.stats-section .stats-grid.stats-grid--rent{' +
+      'display:grid !important;' +
+      'grid-template-columns:repeat(4,minmax(0,1fr)) !important;' +
+      'gap:18px !important;' +
+      'overflow:visible !important;' +
+      '}' +
+      '.stats-section .stats-grid.stats-grid--rent>.stats-rent-table-head{' +
+      'display:none !important;' +
+      '}' +
+      '.stats-section .stats-grid.stats-grid--rent>.stat-card{' +
+      'display:flex !important;' +
+      'flex-direction:column !important;' +
+      'align-items:center !important;' +
+      'justify-content:center !important;' +
+      'min-height:160px !important;' +
+      'padding:22px 16px 18px !important;' +
+      'text-align:center !important;' +
+      '}' +
+      '.stats-section .stats-grid.stats-grid--rent>.stat-card .stat-icon{' +
+      'display:flex !important;' +
+      'align-items:center !important;' +
+      'justify-content:center !important;' +
+      'order:1 !important;' +
+      'width:96px !important;' +
+      'height:56px !important;' +
+      'margin:0 0 6px !important;' +
+      'line-height:1 !important;' +
+      '}' +
+      '.stats-section .stats-grid.stats-grid--rent>.stat-card .stat-label{' +
+      'display:block !important;' +
+      'order:2 !important;' +
+      'margin:0 0 10px !important;' +
+      'font-size:12px !important;' +
+      'font-weight:500 !important;' +
+      'line-height:1.35 !important;' +
+      'color:var(--muted,#8b93a7) !important;' +
+      'text-align:center !important;' +
+      '}' +
+      '.stats-section .stats-grid.stats-grid--rent>.stat-card .stat-icon.stat-icon--rent-image img{' +
+      'display:block !important;' +
+      'width:100% !important;' +
+      'height:100% !important;' +
+      'object-fit:contain !important;' +
+      '}' +
+      '.stats-section .stats-grid.stats-grid--rent>.stat-card .stat-value{' +
+      'order:3 !important;' +
+      'margin:0 !important;' +
+      'font-size:var(--rent-month-price-size,30px) !important;' +
+      'font-weight:800 !important;' +
+      'line-height:1.2 !important;' +
+      '}' +
+      '.stats-section .stats-grid.stats-grid--rent>.stat-card.stat-card--rent-day .stat-value{' +
+      'font-size:calc(var(--rent-month-price-size,30px) - 6px) !important;' +
+      '}' +
+      '.stats-section .stats-grid.stats-grid--rent>.stat-card.stat-card--rent-week .stat-value{' +
+      'font-size:calc(var(--rent-month-price-size,30px) - 4px) !important;' +
+      '}' +
+      '.stats-section .stats-grid.stats-grid--rent>.stat-card.stat-card--rent-halfmonth .stat-value{' +
+      'font-size:calc(var(--rent-month-price-size,30px) - 2px) !important;' +
+      '}' +
+      '.stats-section .stats-grid.stats-grid--rent>.stat-card.stat-card--rent-month .stat-value{' +
+      'font-size:var(--rent-month-price-size,30px) !important;' +
+      '}' +
+      '}';
+    head.appendChild(style);
+  }
+
+  function syncStatsSectionRentCards(dailyPrice) {
+    var price = parseInt(String(dailyPrice), 10);
+    if (isNaN(price) || price <= 0) return;
+    ensureDesktopRentCardStyles();
+
+    var grid = document.querySelector('.stats-section .stats-grid');
+    if (!grid) return;
+
+    if (!grid.querySelector('.stats-rent-table-head')) {
+      var head = document.createElement('div');
+      head.className = 'stats-rent-table-head';
+      head.setAttribute('role', 'row');
+      head.innerHTML =
+        '<span class="stats-rent-table-head__days">租用天数</span>' +
+        '<span class="stats-rent-table-head__price">价格</span>';
+      grid.insertBefore(head, grid.firstChild);
+    }
+    try {
+      grid.classList.add('stats-grid--rent');
+    } catch (e) {}
+
+    var cards = grid.querySelectorAll('.stat-card');
+    if (!cards || cards.length < 4) return;
+
+    var cfg = pricingConfig();
+    var p1 = price;
+    var p7 = Math.floor((price * cfg.day7.multiplier) / cfg.day7.divisor);
+    var p15 = Math.floor((price * cfg.day15.multiplier) / cfg.day15.divisor);
+    var p30 = Math.floor((price * cfg.day30.multiplier) / cfg.day30.divisor);
+    // 与 car.js / car-mobile.js 的 openDaysSelectModal 文案完全一致
+    var items = [
+      {
+        text: '单日 (24小时)',
+        iconSrc: '../../media-webp/photos/carpark/common/日.webp',
+        iconAlt: '日租',
+        value: formatDayPrice(p1),
+        label: '',
+      },
+      {
+        text: '一周 (7天)',
+        iconSrc: '../../media-webp/photos/carpark/common/周.webp',
+        iconAlt: '周租',
+        value: formatDayPrice(p7),
+        label: '',
+      },
+      {
+        text: '半月 (15天)',
+        iconSrc: '../../media-webp/photos/carpark/common/半月.webp',
+        iconAlt: '半月租',
+        value: formatDayPrice(p15),
+        label: '',
+      },
+      {
+        text: '整月 (30天)',
+        iconSrc: '../../media-webp/photos/carpark/common/月.webp',
+        iconAlt: '月租',
+        value: formatDayPrice(p30),
+        label: '',
+      },
+    ];
+    var isDesktop = !!(
+      typeof window !== 'undefined' &&
+      window.matchMedia &&
+      window.matchMedia('(min-width: 769px)').matches
+    );
+
+    items.forEach(function (item, index) {
+      var card = cards[index];
+      if (!card) return;
+      var iconEl = card.querySelector('.stat-icon');
+      var valueEl = card.querySelector('.stat-value');
+      var labelEl = card.querySelector('.stat-label');
+      card.classList.remove(
+        'stat-card--rent-day',
+        'stat-card--rent-week',
+        'stat-card--rent-halfmonth',
+        'stat-card--rent-month'
+      );
+      if (index === 0) card.classList.add('stat-card--rent-day');
+      if (index === 1) card.classList.add('stat-card--rent-week');
+      if (index === 2) card.classList.add('stat-card--rent-halfmonth');
+      if (index === 3) card.classList.add('stat-card--rent-month');
+      if (iconEl) {
+        if (isDesktop) {
+          iconEl.classList.add('stat-icon--rent-image');
+          iconEl.innerHTML = '<img src="' + item.iconSrc + '" alt="' + item.iconAlt + '" loading="lazy">';
+        } else {
+          iconEl.classList.remove('stat-icon--rent-image');
+          iconEl.textContent = item.text;
+        }
+        iconEl.style.fontSize = '';
+        iconEl.style.fontWeight = '';
+        iconEl.style.lineHeight = '';
+        iconEl.style.marginBottom = '';
+      }
+      if (valueEl) {
+        valueEl.textContent = item.value;
+        valueEl.style.fontSize = '';
+      }
+      if (labelEl) {
+        labelEl.textContent = isDesktop ? item.text : item.label;
+        labelEl.style.display = isDesktop || item.label ? '' : 'none';
+      }
+    });
+  }
+
+  document.addEventListener('mango:daily-price-updated', function (e) {
+    var detail = e && e.detail ? e.detail : {};
+    syncStatsSectionRentCards(detail.price);
+  });
+
+  window.setTimeout(function () {
+    syncStatsSectionRentCards(body.getAttribute('data-daily-price'));
+  }, 0);
+
   var target = carNameMatchKey(displayName);
   window.__mangoRentSyncPromise = fetch(base + '/api/cars-catalog', { credentials: 'omit' })
     .then(function (r) {
@@ -145,6 +349,7 @@
           var p = parseInt(String(c.rent_price), 10);
           if (!isNaN(p) && p > 0) {
             body.setAttribute('data-daily-price', String(p));
+            syncStatsSectionRentCards(p);
             try {
               document.dispatchEvent(
                 new CustomEvent('mango:daily-price-updated', {

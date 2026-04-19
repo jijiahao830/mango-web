@@ -107,6 +107,7 @@ document.getElementById('loginForm').addEventListener('submit', async function (
 
     const card1 = document.getElementById('card1');
     const card2 = document.getElementById('card2');
+    if (card2) card2.className = 'welcome-card welcome-card--second';
     card1.className = `welcome-card active-card ${levelClass}`;
 
     const btn = document.querySelector('.btn-engine-start');
@@ -115,6 +116,82 @@ document.getElementById('loginForm').addEventListener('submit', async function (
 
     const welcomeMessage = `尊贵的${memberLevel}会员：${nameInput}，感谢您选择芒果超跑`;
     document.getElementById('welcomeMessage').innerHTML = `<p>${welcomeMessage}</p>`;
+
+    // --- 新增：为四个网格填充图片图标 ---
+    const allIcons = [
+      '1、专属会员标签.png', '2、会员价展示.png', '3、违章代办服务费.png', '4、租车折扣.png', '5、专属客服通道.png', 
+      '5、基础积分积累.png', '7、生日礼券.png', '13、积分商城进阶区.png', '8、免费接送机(次:年).png', '9、异地还车手续费减免.png', '10、免费取送车.png', 
+      '11、事故停运费减免.png', '12、免押金额度.png', '7、优先预订权.png', '15、专属活动邀约.png', '8、升舱体验卷.png'
+    ];
+
+    // 会员权益数据映射表
+    const benefitsData = [
+      {"权益项目":"专属会员标签","芒果派":"✓","青芒果":"✓","金芒果":"✓","黑芒果":"✓"},
+      {"权益项目":"会员价展示","芒果派":"✓","青芒果":"✓","金芒果":"✓","黑芒果":"✓"},
+      {"权益项目":"违章代办服务费","芒果派":"标准收费","青芒果":"5 折","金芒果":"3 折","黑芒果":"免费"},
+      {"权益项目":"租车折扣","芒果派":"95折","青芒果":"92折","金芒果":"88折","黑芒果":"85折"},
+      {"权益项目":"基础积分累积","芒果派":"✓","青芒果":"✓","金芒果":"✓","黑芒果":"✓"},
+      {"权益项目":"专属客服通道","芒果派":"—","青芒果":"✓","金芒果":"✓","黑芒果":"✓"},
+      {"权益项目":"生日礼券","芒果派":"—","青芒果":"✓","金芒果":"✓","黑芒果":"✓"},
+      {"权益项目":"积分商城进阶区","芒果派":"—","青芒果":"✓","金芒果":"✓","黑芒果":"✓"},
+      {"权益项目":"免费接送机(次/年)","芒果派":"—","青芒果":1,"金芒果":2,"黑芒果":4},
+      {"权益项目":"异地还车手续费减免","芒果派":"—","青芒果":"8.8 折","金芒果":"8.5 折","黑芒果":"8 折"},
+      {"权益项目":"免费取送车","芒果派":"—","青芒果":"7 天以上订单","金芒果":"3 天以上订单","黑芒果":"所有订单"},
+      {"权益项目":"事故停运费减免","芒果派":"—","青芒果":"减免 10%","金芒果":"减免 20%","黑芒果":"减免 30%"},
+      {"权益项目":"免押金额度","芒果派":"—","青芒果":"5千","金芒果":"1万","黑芒果":"2万"},
+      {"权益项目":"优先预订权","芒果派":"—","青芒果":"—","金芒果":"✓","黑芒果":"✓"},
+      {"权益项目":"专属活动邀约","芒果派":"—","青芒果":"—","金芒果":"试驾/品鉴","黑芒果":"晚宴/赛道日"},
+      {"权益项目":"升舱体验券","芒果派":"—","青芒果":"—","金芒果":"✓","黑芒果":"✓"}
+    ];
+
+    const generateGridImagesHtml = (levelName) => {
+      return allIcons.map((iconName, index) => {
+        // 去掉前面的数字和中文顿号（例如 "1、专属会员标签.png" -> "专属会员标签"）
+        const displayName = iconName.replace(/^\d+、/, '').replace('.png', '');
+        
+        // 获取对应权益的内容
+        const benefitItem = benefitsData[index];
+        const benefitValue = benefitItem ? String(benefitItem[levelName] || '').trim() : '';
+        
+        // 判断是否为 "—" 锁住状态
+        const isLocked = benefitValue === '—';
+        
+        // 右下角的锁图标
+        const lockIconHtml = isLocked 
+          ? `<img class="welcome-grid-icon-lock" src="media-webp/photos/vip/锁.png" alt="锁定">` 
+          : '';
+          
+        // 如果有权益（非锁定状态），给主图加一个特有的 class 以便应用淡橙色滤镜
+        const imgClass = !isLocked ? 'welcome-grid-main-icon has-benefit-icon' : 'welcome-grid-main-icon';
+          
+        // 权益描述文字（只要没有被锁住就显示对应文案，包括 '✓'）
+        const descHtml = (!isLocked) 
+          ? `<div class="welcome-grid-icon-desc">${benefitValue}</div>` 
+          : '<div class="welcome-grid-icon-desc" style="opacity:0;user-select:none;">-</div>';
+        
+        return `
+          <div class="welcome-grid-icon-wrap">
+            <div class="welcome-grid-img-container">
+              <img class="${imgClass}" src="media-webp/photos/vip/${iconName}" alt="${displayName}" loading="lazy">
+              ${lockIconHtml}
+            </div>
+            <div class="welcome-grid-icon-name">${displayName}</div>
+            ${descHtml}
+          </div>
+        `;
+      }).join('');
+    };
+
+    // 仅在存在权益网格容器时填充，避免缺少 DOM 时抛错中断登录流程
+    var gridPai = document.getElementById('grid-mango-pai');
+    var gridQing = document.getElementById('grid-mango-qing');
+    var gridJin = document.getElementById('grid-mango-jin');
+    var gridHei = document.getElementById('grid-mango-hei');
+    if (gridPai) gridPai.innerHTML = generateGridImagesHtml('芒果派');
+    if (gridQing) gridQing.innerHTML = generateGridImagesHtml('青芒果');
+    if (gridJin) gridJin.innerHTML = generateGridImagesHtml('金芒果');
+    if (gridHei) gridHei.innerHTML = generateGridImagesHtml('黑芒果');
+    // ----------------------------------
 
     setTimeout(() => {
       document.querySelector('.login-card').style.display = 'none';

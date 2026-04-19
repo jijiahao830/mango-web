@@ -1,3 +1,4 @@
+/* ===== merged legacy base start ===== */
 /* login.css */
 :root {
   --brand: #ff6b35;
@@ -714,29 +715,83 @@ body {
 }
 
 #card1.welcome-card {
-  justify-content: flex-start;
-  padding-top: 28px;
-  padding-bottom: 34px;
+  justify-content: center;
+  padding: 0;
   overflow-y: hidden;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 
-#card1 .welcome-icon {
-  margin-bottom: 12px;
+#card1.welcome-card::before,
+#card1.welcome-card::after {
+  display: none;
 }
 
-#card1 .welcome-content {
-  margin-bottom: 10px;
+.welcome-board {
+  width: min(100%, 1020px);
+  min-height: min(760px, 88dvh);
+  border-radius: 20px;
+  border: none;
+  background: linear-gradient(165deg, rgba(22, 25, 33, 0.95) 0%, rgba(16, 18, 24, 0.96) 100%);
+  box-shadow: none;
+  padding: clamp(28px, 3.8vw, 44px);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: clamp(22px, 2.6vw, 32px);
+}
+
+.welcome-heading {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(12px, 2vw, 20px);
+}
+
+.welcome-heading__logo {
+  width: clamp(38px, 3vw, 54px);
+  height: clamp(38px, 3vw, 54px);
+  object-fit: contain;
+  flex: 0 0 auto;
+  display: block;
+  background: transparent !important;
+  mix-blend-mode: screen;
+  filter: none;
 }
 
 #card1 .welcome-content p {
   font-size: clamp(20px, 2.1vw, 28px);
   line-height: 1.55;
+  margin: 0;
+}
+
+.welcome-card.level-mango .welcome-heading__logo {
+  filter: sepia(1) saturate(5.6) hue-rotate(-12deg) brightness(1.08);
+}
+
+.welcome-card.level-silver .welcome-heading__logo {
+  filter: sepia(1) saturate(5.2) hue-rotate(110deg) brightness(1.1);
+}
+
+.welcome-card.level-gold .welcome-heading__logo {
+  filter: sepia(1) saturate(5.2) hue-rotate(10deg) brightness(1.16);
+}
+
+.welcome-card.level-black .welcome-heading__logo {
+  mix-blend-mode: normal;
+  filter: sepia(1) saturate(5.8) hue-rotate(4deg) brightness(0.88) contrast(1.24)
+    drop-shadow(0 0 8px rgba(191, 142, 56, 0.42));
 }
 
 .welcome-next-btn {
-  margin-top: 44px;
+  margin-top: 10px;
   width: min(100%, 320px);
-  border: 1px solid rgba(255, 107, 53, 0.55);
+  border: none;
   border-radius: 12px;
   padding: 12px 18px;
   background: linear-gradient(135deg, rgba(255, 59, 0, 0.2), rgba(255, 107, 53, 0.22));
@@ -749,9 +804,8 @@ body {
 }
 
 .welcome-next-btn:hover {
-  border-color: rgba(255, 107, 53, 0.85);
   background: linear-gradient(135deg, rgba(255, 59, 0, 0.35), rgba(255, 107, 53, 0.36));
-  box-shadow: 0 8px 20px rgba(255, 59, 0, 0.24);
+  box-shadow: none;
 }
 
 .welcome-next-btn:active {
@@ -761,6 +815,27 @@ body {
 .welcome-next-btn:focus-visible {
   outline: 2px solid rgba(255, 107, 53, 0.9);
   outline-offset: 2px;
+}
+
+@media (max-width: 860px) {
+  .welcome-board {
+    min-height: min(640px, 86dvh);
+    padding: clamp(20px, 4.8vw, 30px);
+  }
+
+  .welcome-heading {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  #card1 .welcome-content p {
+    text-align: center;
+    font-size: clamp(17px, 4.5vw, 22px);
+  }
+
+  .welcome-next-btn {
+    width: min(100%, 280px);
+  }
 }
 
 .empty-placeholder {
@@ -2322,5 +2397,390 @@ body,
 @media (min-width: 1600px) {
   .delivery-gacha__inner {
     max-width: min(96vw, 1500px);
+  }
+}
+
+/* ===== merged legacy base end ===== */
+
+/* 新版欢迎区覆盖样式 */
+#welcomeCards {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  max-width: none;
+  max-height: none;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
+  padding: 40px;
+  box-sizing: border-box;
+  pointer-events: none; /* 让外层不拦截点击 */
+}
+
+#welcomeCards .welcome-cards__backdrop {
+  display: none;
+}
+
+#card1.welcome-card {
+  position: relative;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  overflow: visible; /* 防止外层卡片截断顶部和底部内容 */
+}
+
+#card1.welcome-card::before,
+#card1.welcome-card::after {
+  display: none;
+}
+
+#card1 .welcome-board {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: auto;
+  border: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: visible; /* 允许内容溢出时不被截断 */
+}
+
+#card1 .welcome-header {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding-bottom: 20px; /* 减小标题和网格的间距，防止挤出屏幕 */
+  pointer-events: auto; /* 恢复头部区域的交互，防止被遮挡 */
+  z-index: 10; /* 确保层级在最上层 */
+}
+
+#card1 .welcome-footer {
+  width: 100%;
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-end;
+  padding-top: 20px; /* 减小按钮和网格的间距，防止挤出屏幕 */
+  pointer-events: auto; /* 恢复底部区域的交互，确保按钮可点击 */
+  z-index: 10; /* 确保层级在最上层 */
+}
+
+#card1 .welcome-list-container {
+  width: 100%;
+  flex: 1; /* 自动撑满剩余高度 */
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 15px;
+  position: relative;
+  min-height: 400px;
+  padding: 0 10px;
+  box-sizing: border-box;
+}
+
+#card1 .welcome-list-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 10px 20px;
+  z-index: 1;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 12px;
+  border-left: 4px solid transparent;
+  transition: background 0.3s ease;
+}
+
+#card1 .welcome-list-row:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+#row-mango-pai { border-left-color: rgba(255, 107, 53, 0.6) !important; }
+#row-mango-qing { border-left-color: rgba(108, 240, 232, 0.6) !important; }
+#row-mango-jin { border-left-color: rgba(255, 215, 0, 0.6) !important; }
+#row-mango-hei { 
+  border-left-color: rgba(255, 215, 0, 0.8) !important; 
+  background: linear-gradient(90deg, rgba(255, 215, 0, 0.1) 0%, rgba(218, 165, 32, 0.02) 100%);
+}
+
+#card1 .welcome-list-title {
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  width: 110px;
+  flex-shrink: 0;
+  text-align: left;
+  margin-right: 15px;
+}
+
+#card1 .welcome-list-content {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 12px;
+  flex: 1;
+  overflow-x: auto;
+  padding-bottom: 5px; /* 为了防止横向滚动条遮挡内容 */
+}
+
+/* 隐藏滚动条 */
+#card1 .welcome-list-content::-webkit-scrollbar {
+  height: 4px;
+}
+#card1 .welcome-list-content::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.2);
+  border-radius: 4px;
+}
+
+/* 芒果π - 橙色 */
+#row-mango-pai .welcome-list-title {
+  color: #ff6b35; 
+  text-shadow: 0 0 10px rgba(255, 107, 53, 0.4);
+}
+
+/* 青芒π - 青色 */
+#row-mango-qing .welcome-list-title {
+  color: #6cf0e8;
+  text-shadow: 0 0 10px rgba(108, 240, 232, 0.4);
+}
+
+/* 金芒π - 金色 */
+#row-mango-jin .welcome-list-title {
+  color: #ffd700;
+  text-shadow: 0 0 10px rgba(255, 215, 0, 0.4);
+}
+
+/* 黑芒π - 黑色（为防止在黑底上看不见，采用非常深的灰黑色，并保留一层金色的发光） */
+#row-mango-hei .welcome-list-title {
+  color: #1a1a1a;
+  text-shadow: 0 0 15px rgba(255, 215, 0, 0.8), 0 0 5px rgba(255, 215, 0, 0.5);
+}
+
+#card1 .welcome-grid-icon-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 2px; /* 图标和文字之间的间距稍微调小 */
+  text-align: center;
+  width: 60px; /* 固定宽度保证对齐 */
+  flex-shrink: 0;
+}
+
+#card1 .welcome-grid-img-container {
+  position: relative;
+  display: inline-block;
+  margin-bottom: 2px;
+}
+
+#card1 .welcome-grid-main-icon {
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: clamp(24px, 4vh, 32px); /* 稍微再缩小一点，给权益文字腾位置 */
+  object-fit: contain;
+  transition: all 0.3s ease;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+}
+
+/* 在芒果派网格（左上角）中，如果有权益（非锁状态），则图片显示为淡橙色滤镜效果 */
+#grid-mango-pai .welcome-grid-main-icon.has-benefit-icon {
+  filter: invert(66%) sepia(87%) saturate(541%) hue-rotate(338deg) brightness(101%) contrast(104%) drop-shadow(0 2px 4px rgba(255, 107, 53, 0.4));
+}
+
+/* 青芒果区域（右上角），非锁状态显示淡青色 (#6cf0e8) */
+#grid-mango-qing .welcome-grid-main-icon.has-benefit-icon {
+  /* 调整反转亮度和对比度，使其更加清晰明亮 */
+  filter: invert(75%) sepia(45%) saturate(3000%) hue-rotate(130deg) brightness(110%) contrast(100%) drop-shadow(0 2px 4px rgba(108, 240, 232, 0.6));
+}
+
+/* 芒果π/青芒π：锁定（无权益）主图标统一灰色 */
+#grid-mango-pai .welcome-grid-main-icon:not(.has-benefit-icon),
+#grid-mango-qing .welcome-grid-main-icon:not(.has-benefit-icon) {
+  filter: grayscale(1) brightness(0.46) contrast(0.88) !important;
+  opacity: 0.82;
+}
+
+/* 金芒果区域（左下角），非锁状态显示黑金色（深灰色带一点金） */
+#grid-mango-jin .welcome-grid-main-icon.has-benefit-icon {
+  /* 亮度压低，带有微微的暖色调（金灰） - 使用原来黑芒果的配置 */
+  filter: invert(24%) sepia(12%) saturate(1239%) hue-rotate(3deg) brightness(91%) contrast(90%) drop-shadow(0 2px 4px rgba(169, 142, 85, 0.4));
+}
+
+/* 黑芒果区域（右下角），非锁状态显示黑色 */
+#grid-mango-hei .welcome-grid-main-icon.has-benefit-icon {
+  /* 极致反转和压暗亮度，转为纯黑色，加一个金色的外发光光晕 */
+  filter: invert(100%) brightness(0%) drop-shadow(0 0 10px rgba(255, 215, 0, 0.8)) drop-shadow(0 0 5px rgba(255, 215, 0, 0.5));
+}
+
+#card1 .welcome-grid-icon-lock {
+  position: absolute;
+  right: -6px;
+  bottom: -6px;
+  width: 14px; /* 锁图标的大小 */
+  height: 14px;
+  object-fit: contain;
+  filter: drop-shadow(0 1px 2px rgba(0,0,0,0.8));
+  z-index: 2;
+}
+
+/* 芒果π网格（左上角）中的锁，使用橙色滤镜 */
+#grid-mango-pai .welcome-grid-icon-lock {
+  filter: invert(66%) sepia(87%) saturate(541%) hue-rotate(338deg) brightness(101%) contrast(104%) drop-shadow(0 1px 2px rgba(0,0,0,0.8));
+}
+
+/* 青芒π网格（右上角）中的锁，使用青色滤镜 */
+#grid-mango-qing .welcome-grid-icon-lock {
+  filter: invert(86%) sepia(21%) saturate(1636%) hue-rotate(118deg) brightness(104%) contrast(92%) drop-shadow(0 1px 2px rgba(0,0,0,0.8));
+}
+
+#card1 .welcome-grid-icon-wrap:hover .welcome-grid-main-icon {
+  transform: scale(1.1);
+  /* 移除全局的发光 hover，避免和特定的 filter 冲突 */
+}
+
+/* 各区域的专属发光特效 */
+#grid-mango-pai .welcome-grid-icon-wrap:hover .welcome-grid-main-icon.has-benefit-icon {
+  filter: invert(66%) sepia(87%) saturate(541%) hue-rotate(338deg) brightness(101%) contrast(104%) drop-shadow(0 4px 8px rgba(255, 107, 53, 0.6));
+}
+
+#grid-mango-qing .welcome-grid-icon-wrap:hover .welcome-grid-main-icon.has-benefit-icon {
+  filter: invert(75%) sepia(45%) saturate(3000%) hue-rotate(130deg) brightness(120%) contrast(110%) drop-shadow(0 4px 8px rgba(108, 240, 232, 0.8));
+}
+
+#grid-mango-jin .welcome-grid-icon-wrap:hover .welcome-grid-main-icon.has-benefit-icon {
+  filter: invert(24%) sepia(12%) saturate(1239%) hue-rotate(3deg) brightness(91%) contrast(90%) drop-shadow(0 4px 8px rgba(169, 142, 85, 0.6));
+}
+
+#grid-mango-hei .welcome-grid-icon-wrap:hover .welcome-grid-main-icon.has-benefit-icon {
+  filter: invert(100%) brightness(0%) drop-shadow(0 0 15px rgba(255, 215, 0, 1)) drop-shadow(0 0 8px rgba(255, 215, 0, 0.8));
+}
+
+#card1 .welcome-grid-icon-name {
+  font-size: clamp(10px, 1.2vw, 12px); 
+  color: rgba(255, 255, 255, 0.85);
+  line-height: 1.1;
+  white-space: nowrap; 
+  transform: scale(0.85); 
+}
+
+#card1 .welcome-grid-icon-desc {
+  font-size: clamp(10px, 1.2vw, 12px);
+  color: #ff6b35; /* 权益文字用主题橙色高亮 */
+  line-height: 1.1;
+  white-space: nowrap;
+  font-weight: bold;
+  transform: scale(0.85);
+}
+
+
+
+
+#card1 .welcome-topline {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 0 !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+  border-radius: 0 !important;
+  pointer-events: auto;
+}
+
+#card1 .welcome-topline::before,
+#card1 .welcome-topline::after {
+  content: none !important;
+}
+
+#card1 #welcomeMessage {
+  margin: 0;
+  text-align: center;
+  white-space: nowrap;
+  font-size: clamp(22px, 2.2vw, 34px);
+  line-height: 1.35;
+  color: #fff;
+  font-weight: 300;
+  letter-spacing: 1px;
+  padding: 0 !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+  border-radius: 0 !important;
+}
+
+#card1 #welcomeMessage p {
+  margin: 0;
+  padding: 0 !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+  border-radius: 0 !important;
+}
+
+#card1 .welcome-next-btn {
+  position: relative;
+  margin: 0;
+  width: auto;
+  min-width: 240px;
+  pointer-events: auto; /* 按钮恢复点击 */
+}
+
+@media (max-width: 900px) {
+  #welcomeCards {
+    padding: 20px;
+  }
+
+  #card1 #welcomeMessage {
+    white-space: normal;
+    font-size: clamp(17px, 4.3vw, 24px);
+  }
+
+  #card1 .welcome-next-btn {
+    width: min(260px, 70vw);
+  }
+}
+
+/* ===== 最新版权益布局：每个会员两行展示 ===== */
+#card1 .welcome-list-row {
+  align-items: flex-start;
+  min-height: 132px;
+}
+
+#card1 .welcome-list-content {
+  display: grid !important;
+  grid-template-columns: repeat(8, minmax(62px, 1fr));
+  grid-template-rows: repeat(2, auto);
+  gap: 8px 10px;
+  overflow: hidden !important;
+  padding-bottom: 0;
+  align-content: start;
+}
+
+#card1 .welcome-grid-icon-wrap {
+  width: auto;
+  min-width: 0;
+}
+
+@media (max-width: 1400px) {
+  #card1 .welcome-list-content {
+    grid-template-columns: repeat(6, minmax(58px, 1fr));
   }
 }

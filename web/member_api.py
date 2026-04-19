@@ -13,6 +13,8 @@ import secrets
 import sqlite3
 import sys
 import unicodedata
+import urllib.error
+import urllib.request
 from datetime import date, datetime
 from decimal import Decimal
 from http import HTTPStatus
@@ -25,10 +27,11 @@ ROOT = Path(__file__).resolve().parent
 CONFIG_FILE = ROOT / "app_config.json"
 
 DEFAULT_LEVEL = "普通"
-DEFAULT_NEW_MEMBER_LEVEL = "芒果"
+DEFAULT_NEW_MEMBER_LEVEL = "芒果π"
 _IDENT = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
 
 _config_cache: dict[str, Any] | None = None
+BIGMODEL_CHAT_URL = "https://open.bigmodel.cn/api/paas/v4/chat/completions"
 
 
 def _sql_ident(s: str) -> str:
@@ -68,7 +71,7 @@ def _new_member_level(cfg: dict[str, Any]) -> str:
 
 def lookup_or_create_member(name: str) -> tuple[str, bool]:
     """
-    按姓名查询等级；不存在则插入一行（默认等级「芒果」或配置项 default_level_for_new_member）。
+    按姓名查询等级；不存在则插入一行（默认等级「芒果π」或配置项 default_level_for_new_member）。
     新用户插入时可同时写入注册时间、最近登录时间（见 write_register_and_login_on_insert）。
     返回 (level, 是否本次新建)。
     """
@@ -990,40 +993,45 @@ def api_cars_catalog():
     return _cors(jsonify(ok=True, cars=rows))
 
 
-def _cta_section_ui_flag_from_disk() -> bool:
+def _get_ui_config_from_disk() -> dict:
     """
-    app_config.json 顶层 cta-section：是否显示车型详情页「点火」CTA 区块；默认 True。
-    每次请求读盘，修改配置后无需重启进程即可生效。
+    每次请求读盘，获取 app_config.json 中的前端配置，修改配置后无需重启进程即可生效。
     """
     if not CONFIG_FILE.is_file():
-        return True
+        return {}
     try:
         with CONFIG_FILE.open(encoding="utf-8") as f:
-            cfg = json.load(f)
+            return json.load(f)
     except (json.JSONDecodeError, OSError):
-        return True
-    v = cfg.get("cta-section", True)
-    if isinstance(v, bool):
-        return v
-    if isinstance(v, (int, float)):
-        return bool(v)
-    if isinstance(v, str):
-        s = v.strip().lower()
-        if s in ("0", "false", "no", "off"):
-            return False
-        if s in ("1", "true", "yes", "on"):
-            return True
-        return True
-    return True
+        return {}
 
 
 @app.route("/api/site-ui", methods=["GET", "OPTIONS"])
 def api_site_ui():
-    """前端只读：站点 UI 开关（来自 app_config.json，仅返回非敏感字段）。"""
+    """前端只读：站点 UI 开关及配置（来自 app_config.json，仅返回非敏感字段）。"""
     if request.method == "OPTIONS":
         return _cors(make_response("", HTTPStatus.NO_CONTENT))
-    cta = _cta_section_ui_flag_from_disk()
-    return _cors(jsonify({"ok": True, "cta-section": cta}))
+    
+    cfg = _get_ui_config_from_disk()
+    
+    v = cfg.get("cta-section", True)
+    cta = True
+    if isinstance(v, bool):
+        cta = v
+    elif isinstance(v, (int, float)):
+        cta = bool(v)
+    elif isinstance(v, str):
+        s = v.strip().lower()
+        if s in ("0", "false", "no", "off"):
+            cta = False
+
+    pricing = cfg.get("pricing", {
+        "day7": {"multiplier": 6.5, "divisor": 7},
+        "day15": {"multiplier": 13, "divisor": 15},
+        "day30": {"multiplier": 23, "divisor": 30}
+    })
+
+    return _cors(jsonify({"ok": True, "cta-section": cta, "pricing": pricing}))
 
 
 def _cardata_view_http_response(
@@ -1305,6 +1313,196 @@ def api_member_lookup():
             jsonify(ok=False, error="db_error", detail=str(e)),
         ), HTTPStatus.SERVICE_UNAVAILABLE
     return _cors(jsonify(ok=True, name=req_name, level=level, created=created))
+
+
+@app.route("/api/wecom/checklist-send", methods=["POST", "OPTIONS"])
+def api_wecom_checklist_send():
+    if request.method == "OPTIONS":
+        return _cors(make_response("", HTTPStatus.NO_CONTENT))
+
+    payload = request.get_json(silent=True) or {}
+    user = str(payload.get("user") or "").strip() or "未登录用户"
+    phone = str(payload.get("phone") or "").strip()
+    lines = payload.get("lines")
+    if not isinstance(lines, list) or not lines:
+        return _cors(jsonify(ok=False, error="empty_checklist")), HTTPStatus.BAD_REQUEST
+
+    normalized: list[str] = []
+    for line in lines:
+        s = str(line or "").strip()
+        if s:
+            normalized.append(s)
+    if not normalized:
+        return _cors(jsonify(ok=False, error="empty_checklist")), HTTPStatus.BAD_REQUEST
+
+    try:
+        cfg = load_config()
+    except FileNotFoundError:
+        return (
+            _cors(jsonify(ok=False, error="config_missing", detail="未找到 app_config.json")),
+            HTTPStatus.SERVICE_UNAVAILABLE,
+        )
+    webhook = str(cfg.get("wecom_checklist_webhook") or "").strip()
+    if not webhook:
+        return (
+            _cors(
+                jsonify(
+                    ok=False,
+                    error="not_configured",
+                    detail="请在 app_config.json 中配置 wecom_checklist_webhook（企业微信群机器人 Webhook 完整地址）",
+                )
+            ),
+            HTTPStatus.SERVICE_UNAVAILABLE,
+        )
+
+    content = "用户：{u}\n用户手机号：{p}\n车辆清单：\n- {rows}".format(
+        u=user,
+        p=(phone or "未填写"),
+        rows="\n- ".join(normalized),
+    )
+    body = {
+        "msgtype": "text",
+        "text": {"content": content},
+    }
+    data = json.dumps(body, ensure_ascii=False).encode("utf-8")
+    req = urllib.request.Request(
+        webhook,
+        data=data,
+        headers={"Content-Type": "application/json"},
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=8) as resp:
+            text = resp.read().decode("utf-8", errors="replace")
+        out = json.loads(text or "{}")
+        if int(out.get("errcode", -1)) != 0:
+            return (
+                _cors(jsonify(ok=False, error="wecom_error", detail=out.get("errmsg") or "发送失败")),
+                HTTPStatus.BAD_GATEWAY,
+            )
+    except urllib.error.URLError as e:
+        return (
+            _cors(jsonify(ok=False, error="network_error", detail=str(e))),
+            HTTPStatus.BAD_GATEWAY,
+        )
+    except Exception as e:
+        return (
+            _cors(jsonify(ok=False, error="send_failed", detail=str(e))),
+            HTTPStatus.BAD_GATEWAY,
+        )
+    return _cors(jsonify(ok=True))
+
+
+@app.route("/api/ai-consult", methods=["POST", "OPTIONS"])
+def api_ai_consult():
+    if request.method == "OPTIONS":
+        return _cors(make_response("", HTTPStatus.NO_CONTENT))
+
+    payload = request.get_json(silent=True) or {}
+    msg = str(payload.get("message") or "").strip()
+    car_name = str(payload.get("car_name") or "").strip()
+    user = str(payload.get("user") or "").strip()
+    if not msg:
+        return _cors(jsonify(ok=False, error="empty_message")), HTTPStatus.BAD_REQUEST
+
+    cfg = load_config()
+    api_key = str(cfg.get("ZP_API_KEY") or "").strip()
+    knowledge_id = str(
+        cfg.get("ZP_KUN")
+        or cfg.get("ZP_KNOWLEDGE_ID")
+        or cfg.get("knowledge_id")
+        or ""
+    ).strip()
+    if not api_key:
+        return _cors(jsonify(ok=False, error="missing_api_key", detail="未配置 ZP_API_KEY")), HTTPStatus.SERVICE_UNAVAILABLE
+
+    system_prompt = str(cfg.get("ai_system_prompt") or "").strip() or (
+        "你是芒果超跑租车网站的客服助手。请用自然、简洁、礼貌的中文直接回答用户问题。"
+        "禁止提及“文档/知识库/检索/未找到资料”等内部信息；"
+        "门店的位置在：云南省昆明市西山区虹塔东路滇池卫城欣街坊B区8幢"
+        "当信息不足时，直接回复：不好意思，我现在暂时回答不了这个问题，请您直接联系客服：13033333370、13033333610。"
+    )
+
+    body = {
+        "model": "glm-4-flash",
+        "messages": [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": msg},
+        ],
+        "temperature": 0.5,
+    }
+    if knowledge_id:
+        body["tools"] = [
+            {
+                "type": "retrieval",
+                "retrieval": {
+                    "knowledge_id": knowledge_id,
+                },
+            }
+        ]
+        body["tool_choice"] = "auto"
+
+    data = json.dumps(body, ensure_ascii=False).encode("utf-8")
+    req = urllib.request.Request(
+        BIGMODEL_CHAT_URL,
+        data=data,
+        headers={
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {api_key}",
+        },
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=20) as resp:
+            text = resp.read().decode("utf-8", errors="replace")
+        out = json.loads(text or "{}")
+        choices = out.get("choices") or []
+        reply = ""
+        if choices and isinstance(choices, list):
+            msg_obj = choices[0].get("message") if isinstance(choices[0], dict) else {}
+            if isinstance(msg_obj, dict):
+                c = msg_obj.get("content")
+                if isinstance(c, str):
+                    reply = c.strip()
+                elif isinstance(c, list):
+                    parts = []
+                    for part in c:
+                        if isinstance(part, dict):
+                            t = str(part.get("text") or "").strip()
+                            if t:
+                                parts.append(t)
+                    reply = "\n".join(parts).strip()
+        # Guardrail: strip provider-style retrieval wording so final copy is purely客服话术.
+        raw_reply = reply
+        reply = re.sub(r"(?i)抱歉[，,。]?\s*文档中[^\n。！？!?]*[。！？!?]?", "", reply).strip()
+        reply = re.sub(r"(?i)文档中未找到[^\n。！？!?]*[。！？!?]?", "", reply).strip()
+        reply = re.sub(r"(?i)知识库中未找到[^\n。！？!?]*[。！？!?]?", "", reply).strip()
+        reply = re.sub(r"(?i)未找到[^\n。！？!?]*(文档|知识库)[^\n。！？!?]*[。！？!?]?", "", reply).strip()
+
+        if not reply:
+            user_msg_norm = (msg or "").strip().lower()
+            if user_msg_norm in {"hi", "hello", "你好", "您好", "嗨", "哈喽"}:
+                reply = "您好，欢迎来到芒果超跑租车，请问想了解车型、价格，还是门店信息？"
+            else:
+                reply = "收到，您可以告诉我具体想了解的车型、价格或门店信息，我来为您查询。"
+
+        if not raw_reply and not reply:
+            return (
+                _cors(jsonify(ok=False, error="empty_reply", detail="模型未返回有效内容")),
+                HTTPStatus.BAD_GATEWAY,
+            )
+        return _cors(jsonify(ok=True, reply=reply))
+    except urllib.error.HTTPError as e:
+        detail = ""
+        try:
+            detail = e.read().decode("utf-8", errors="replace")
+        except Exception:
+            detail = str(e)
+        return _cors(jsonify(ok=False, error="provider_http_error", detail=detail)), HTTPStatus.BAD_GATEWAY
+    except urllib.error.URLError as e:
+        return _cors(jsonify(ok=False, error="network_error", detail=str(e))), HTTPStatus.BAD_GATEWAY
+    except Exception as e:
+        return _cors(jsonify(ok=False, error="ai_failed", detail=str(e))), HTTPStatus.BAD_GATEWAY
 
 
 @app.route("/api/vehicle-click", methods=["POST", "OPTIONS"])

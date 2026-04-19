@@ -588,18 +588,25 @@ document.addEventListener('DOMContentLoaded', function() {
     var picked = map || readChecklistMap();
     var listEl = document.getElementById('carChecklistList');
     var emptyEl = document.getElementById('carChecklistEmpty');
-    if (!listEl || !emptyEl) return;
+    var originalEl = document.getElementById('carChecklistOriginal');
+    var totalEl = document.getElementById('carChecklistTotal');
+    if (!listEl || !emptyEl || !originalEl || !totalEl) return;
     var ids = Object.keys(picked);
+    var originalTotal = 0;
+    var total = 0;
     listEl.innerHTML = ids
       .map(function (id) {
         var item = picked[id] || {};
         var name = escHtml(String(item.model_name || item.car_name || id));
+        var daysText = item.days ? (' - ' + escHtml(item.days)) : '';
+        originalTotal += calcChecklistItemOriginal(item);
+        total += calcChecklistItemTotal(item);
         return (
           '<li class="car-checklist-item" data-car-id="' +
           escHtml(id) +
           '">' +
           '<div class="car-checklist-item__name">' +
-          name +
+          name + daysText +
           '</div>' +
           '<button type="button" class="car-checklist-item__remove" data-remove-car-id="' +
           escHtml(id) +
@@ -609,17 +616,197 @@ document.addEventListener('DOMContentLoaded', function() {
       })
       .join('');
     emptyEl.style.display = ids.length ? 'none' : '';
+    originalEl.textContent = '原价：¥' + Math.round(originalTotal).toLocaleString('zh-CN');
+    totalEl.textContent = '总价：¥' + Math.round(total).toLocaleString('zh-CN');
   }
 
-  function toggleChecklistCar(item) {
-    if (!item || !item.car_id) return;
+  function getDaysMultiplier(daysText) {
+    var s = String(daysText || '');
+    if (s.indexOf('一周') !== -1) return 7;
+    if (s.indexOf('半月') !== -1) return 15;
+    if (s.indexOf('整月') !== -1) return 30;
+    return 1;
+  }
+
+  function getDailyUnitPrice(basePrice, daysText) {
+    var p = parseInt(String(basePrice), 10);
+    if (isNaN(p) || p <= 0) return 0;
+    var cfg = window.mangoPricingConfig || {
+      day7: { multiplier: 6.5, divisor: 7 },
+      day15: { multiplier: 13, divisor: 15 },
+      day30: { multiplier: 23, divisor: 30 },
+    };
+    if (String(daysText || '').indexOf('一周') !== -1) return Math.floor((p * cfg.day7.multiplier) / cfg.day7.divisor);
+    if (String(daysText || '').indexOf('半月') !== -1) return Math.floor((p * cfg.day15.multiplier) / cfg.day15.divisor);
+    if (String(daysText || '').indexOf('整月') !== -1) return Math.floor((p * cfg.day30.multiplier) / cfg.day30.divisor);
+    return p;
+  }
+
+  function calcChecklistItemTotal(item) {
+    var it = item || {};
+    var unit = getDailyUnitPrice(it.rent_price, it.days);
+    var days = getDaysMultiplier(it.days);
+    return unit * days;
+  }
+
+  function calcChecklistItemOriginal(item) {
+    var it = item || {};
+    var p = parseInt(String(it.rent_price), 10);
+    if (isNaN(p) || p <= 0) return 0;
+    return p * getDaysMultiplier(it.days);
+  }
+
+  function buildChecklistPayload(map, phone) {
+    var picked = map || {};
+    var ids = Object.keys(picked);
+    var lines = ids.map(function (id) {
+      var item = picked[id] || {};
+      var name = String(item.model_name || item.car_name || id || '').trim();
+      var days = String(item.days || '单日 (24小时)').trim();
+      var total = Math.round(calcChecklistItemTotal(item));
+      return name + '（' + days + '） ¥' + total.toLocaleString('zh-CN');
+    });
+    return {
+      user: String(sessionStorage.getItem('mango_driver_name') || '未登录用户'),
+      phone: String(phone || '').trim(),
+      lines: lines,
+    };
+  }
+
+  function sendChecklistToWecom(phone) {
     var map = readChecklistMap();
-    if (map[item.car_id]) delete map[item.car_id];
-    else map[item.car_id] = item;
-    writeChecklistMap(map);
-    syncChecklistButtonCount(map);
-    syncCardChecklistToggleStates(map);
-    renderChecklistPanel(map);
+    var ids = Object.keys(map);
+    if (!ids.length) {
+      alert('用车清单为空，无法发送');
+      return;
+    }
+    var b = apiOriginRecommend();
+    if (!b) {
+      alert('当前环境无法连接接口，请先启动 member_api');
+      return;
+    }
+    var payload = buildChecklistPayload(map, phone);
+    fetch(b + '/api/wecom/checklist-send', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+      credentials: 'omit',
+    })
+      .then(function (res) {
+        return res.json().catch(function () { return {}; }).then(function (j) { return { ok: res.ok, j: j || {} }; });
+      })
+      .then(function (o) {
+        if (o.ok && o.j && o.j.ok) {
+          writeChecklistMap({});
+          syncChecklistButtonCount({});
+          syncCardChecklistToggleStates({});
+          renderChecklistPanel({});
+          if (checklistPanel) checklistPanel.setAttribute('hidden', '');
+          if (typeof window.showWecomSuccessModal === 'function') window.showWecomSuccessModal();
+        } else {
+          if (typeof window.showWecomFailModal === 'function') window.showWecomFailModal();
+        }
+      })
+      .catch(function () {
+        if (typeof window.showWecomFailModal === 'function') window.showWecomFailModal();
+      });
+  }
+
+  // ==== 选车天数弹窗逻辑 ====
+  var daysSelectModal = document.getElementById('daysSelectModal');
+  var daysSelectOptions = document.getElementById('daysSelectOptions');
+  var daysSelectCloseBtn = document.getElementById('daysSelectCloseBtn');
+  var currentPendingCarItem = null;
+
+  function closeDaysSelectModal() {
+    if (daysSelectModal) daysSelectModal.hidden = true;
+    currentPendingCarItem = null;
+  }
+
+  if (daysSelectCloseBtn) {
+    daysSelectCloseBtn.addEventListener('click', closeDaysSelectModal);
+  }
+
+  function openDaysSelectModal(item, rentPrice) {
+    if (!daysSelectModal || !daysSelectOptions) return;
+    currentPendingCarItem = item;
+    
+    var price = parseInt(rentPrice, 10);
+    if (isNaN(price) || price <= 0) price = 0;
+
+    // 从全局配置获取计费规则，如果不存在则使用默认值
+    var cfg = window.mangoPricingConfig || {
+      "day7": { "multiplier": 6.5, "divisor": 7 },
+      "day15": { "multiplier": 13, "divisor": 15 },
+      "day30": { "multiplier": 23, "divisor": 30 }
+    };
+
+    var p1 = price; 
+    var p7 = Math.floor((price * cfg.day7.multiplier) / cfg.day7.divisor);
+    var p15 = Math.floor((price * cfg.day15.multiplier) / cfg.day15.divisor);
+    var p30 = Math.floor((price * cfg.day30.multiplier) / cfg.day30.divisor);
+
+    var html = `
+      <div class="days-option-row">
+        <span class="days-label">单日 (24小时)</span>
+        <span class="days-price">¥${p1}/天</span>
+        <button class="days-confirm-btn" data-days="单日 (24小时)">确认</button>
+      </div>
+      <div class="days-option-row">
+        <span class="days-label">一周 (7天)</span>
+        <span class="days-price">¥${p7}/天</span>
+        <button class="days-confirm-btn" data-days="一周 (7天)">确认</button>
+      </div>
+      <div class="days-option-row">
+        <span class="days-label">半月 (15天)</span>
+        <span class="days-price">¥${p15}/天</span>
+        <button class="days-confirm-btn" data-days="半月 (15天)">确认</button>
+      </div>
+      <div class="days-option-row">
+        <span class="days-label">整月 (30天)</span>
+        <span class="days-price">¥${p30}/天</span>
+        <button class="days-confirm-btn" data-days="整月 (30天)">确认</button>
+      </div>
+    `;
+    daysSelectOptions.innerHTML = html;
+    daysSelectModal.hidden = false;
+  }
+
+  if (daysSelectOptions) {
+    daysSelectOptions.addEventListener('click', function (e) {
+      if (e.target && e.target.classList.contains('days-confirm-btn')) {
+        var days = e.target.getAttribute('data-days');
+        if (currentPendingCarItem) {
+          currentPendingCarItem.days = days;
+          
+          var map = readChecklistMap();
+          map[currentPendingCarItem.car_id] = currentPendingCarItem;
+          writeChecklistMap(map);
+          syncChecklistButtonCount(map);
+          syncCardChecklistToggleStates(map);
+          renderChecklistPanel(map);
+        }
+        closeDaysSelectModal();
+      }
+    });
+  }
+
+  function toggleChecklistCar(item, rentPrice) {
+    if (!item || !item.car_id) return;
+    item.rent_price = parseInt(String(rentPrice || item.rent_price || 0), 10) || 0;
+    var map = readChecklistMap();
+    
+    // 如果已经在清单中，则移除
+    if (map[item.car_id]) {
+      delete map[item.car_id];
+      writeChecklistMap(map);
+      syncChecklistButtonCount(map);
+      syncCardChecklistToggleStates(map);
+      renderChecklistPanel(map);
+    } else {
+      // 否则不直接加入，而是弹出天数选择框
+      openDaysSelectModal(item, rentPrice);
+    }
   }
 
   /** 车型目录名归一化：数据库/历史文案变更时，静态资源目录仍可命中 */
@@ -676,6 +863,12 @@ document.addEventListener('DOMContentLoaded', function() {
     return '¥' + x.toLocaleString('zh-CN');
   }
 
+  function calcLowestDailyPrice(rentPrice) {
+    var p = parseInt(String(rentPrice), 10);
+    if (isNaN(p) || p <= 0) return 0;
+    return Math.floor((p * 23) / 30);
+  }
+
   /** 选车卡片副标题：优先 API card_tagline，其次 car_card_taglines.json，否则 brand + model */
   function cardMetaLine(car) {
     var apiTag = String(car.card_tagline || '').trim();
@@ -708,17 +901,27 @@ document.addEventListener('DOMContentLoaded', function() {
 
   function buildCarCardHtml(car, opts) {
     opts = opts || {};
-    var href = './carpark/' + encodeURIComponent(car.car_name) + '/car.html';
+    var href = './carpark/' + encodeURIComponent(car.car_name) + '/car.html#detail-overview';
     var cov = coverUrlsForCar(car.car_name);
     var cat = escHtml(car.category);
     var rawCarId = String(car.car_name || '').trim();
     var carId = escHtml(rawCarId);
     var name = escHtml(modelOnlyNameFromCar(car));
     var badge = categoryBadgeClass(car.category);
+    var dailyRent = parseInt(String(car.rent_price || 0), 10) || 0;
+    var monthlyDaily = calcLowestDailyPrice(car.rent_price);
     var priceHtml = opts.comingSoon
-      ? '¥???<span class="car-price-unit">/天</span>'
-      : formatPriceYuan(car.rent_price) + '<span class="car-price-unit">/天</span>';
+      ? '<span class="car-price-daily">¥???<span class="car-price-unit">/天</span></span>' +
+        '<span class="car-price-monthline">月租 —/天</span>'
+      : '<span class="car-price-daily">' +
+        formatPriceYuan(dailyRent) +
+        '<span class="car-price-unit">/天</span></span>' +
+        '<span class="car-price-monthline">月租' +
+        formatPriceYuan(monthlyDaily) +
+        '/天</span>';
     var meta = escHtml(cardMetaLine(car));
+    
+    // 把 rent_price 放在 data 属性里，方便后面弹窗计算价格
     return (
       '<a class="car-card-link" href="' +
       escHtml(href) +
@@ -734,6 +937,8 @@ document.addEventListener('DOMContentLoaded', function() {
       carId +
       '" data-model-name="' +
       name +
+      '" data-rent-price="' +
+      (car.rent_price || 0) +
       '" aria-pressed="false">加入清单</span>' +
       '<picture><source srcset="' +
       escHtml(cov.primary) +
@@ -924,6 +1129,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
   function loadCatalogThenInit() {
     var url = apiCatalogBase() + '/api/cars-catalog';
+    var siteUiUrl = apiCatalogBase() + '/api/site-ui';
+
     Promise.all([
       fetchCardTaglines(),
       fetch(url, { credentials: 'omit' }).then(function (r) {
@@ -931,9 +1138,24 @@ document.addEventListener('DOMContentLoaded', function() {
           return { ok: r.ok, j: j };
         });
       }),
+      fetch(siteUiUrl, { credentials: 'omit' }).then(function (r) {
+        return r.json().catch(function () { return {}; });
+      }).catch(function () { return {}; })
     ])
       .then(function (arr) {
         var o = arr[1];
+        var siteUi = arr[2] || {};
+        
+        if (siteUi.pricing) {
+          window.mangoPricingConfig = siteUi.pricing;
+        } else {
+          window.mangoPricingConfig = {
+            "day7": { "multiplier": 6.5, "divisor": 7 },
+            "day15": { "multiplier": 13, "divisor": 15 },
+            "day30": { "multiplier": 23, "divisor": 30 }
+          };
+        }
+
         if (!o.ok || !o.j || !o.j.ok || !Array.isArray(o.j.cars)) {
           throw new Error('cars-catalog failed');
         }
@@ -1028,7 +1250,8 @@ document.addEventListener('DOMContentLoaded', function() {
   }
   
   function getCardPrice(cardLink) {
-    const priceText = cardLink.querySelector('.car-price').textContent;
+    var dailyEl = cardLink.querySelector('.car-price-daily');
+    var priceText = dailyEl ? dailyEl.textContent : (cardLink.querySelector('.car-price') || {}).textContent || '';
     const match = priceText.match(/¥([\d,]+)/);
     if (match) {
       return parseInt(match[1].replace(/,/g, ''));
@@ -1913,6 +2136,17 @@ document.addEventListener('DOMContentLoaded', function() {
   var checklistBtn = document.getElementById('carChecklistBtn');
   var checklistPanel = document.getElementById('carChecklistPanel');
   var checklistCloseBtn = document.getElementById('carChecklistCloseBtn');
+  var checklistClearBtn = document.getElementById('carChecklistClearBtn');
+  var checklistSendBtn = document.getElementById('carChecklistSendBtn');
+  var phoneModal = document.getElementById('wecomPhoneModal');
+  var phoneInput = document.getElementById('wecomPhoneInput');
+  var phoneError = document.getElementById('wecomPhoneError');
+  var phoneCancelBtn = document.getElementById('wecomPhoneCancelBtn');
+  var phoneSubmitBtn = document.getElementById('wecomPhoneSubmitBtn');
+  var successModal = document.getElementById('wecomSuccessModal');
+  var successOkBtn = document.getElementById('wecomSuccessOkBtn');
+  var failModal = document.getElementById('wecomFailModal');
+  var failOkBtn = document.getElementById('wecomFailOkBtn');
   syncChecklistButtonCount(readChecklistMap());
   renderChecklistPanel(readChecklistMap());
   syncCardChecklistToggleStates(readChecklistMap());
@@ -1929,6 +2163,67 @@ document.addEventListener('DOMContentLoaded', function() {
       checklistPanel.setAttribute('hidden', '');
     });
   }
+  if (checklistSendBtn) {
+    checklistSendBtn.addEventListener('click', function () {
+      if (phoneModal) {
+        phoneModal.hidden = false;
+        if (phoneInput) {
+          phoneInput.value = '';
+          phoneInput.focus();
+        }
+        if (phoneError) phoneError.hidden = true;
+      } else {
+        sendChecklistToWecom('');
+      }
+    });
+  }
+  if (checklistClearBtn) {
+    checklistClearBtn.addEventListener('click', function () {
+      writeChecklistMap({});
+      syncChecklistButtonCount({});
+      syncCardChecklistToggleStates({});
+      renderChecklistPanel({});
+    });
+  }
+  if (phoneCancelBtn && phoneModal) {
+    phoneCancelBtn.addEventListener('click', function () {
+      phoneModal.hidden = true;
+    });
+  }
+  if (phoneSubmitBtn && phoneModal) {
+    phoneSubmitBtn.addEventListener('click', function () {
+      var phone = phoneInput ? String(phoneInput.value || '').replace(/\s+/g, '') : '';
+      if (!/^1\d{10}$/.test(phone)) {
+        if (phoneError) phoneError.hidden = false;
+        return;
+      }
+      if (phoneError) phoneError.hidden = true;
+      phoneModal.hidden = true;
+      sendChecklistToWecom(phone);
+    });
+  }
+  if (phoneInput && phoneError) {
+    phoneInput.addEventListener('input', function () {
+      var phone = String(phoneInput.value || '').replace(/\s+/g, '');
+      phoneError.hidden = /^1\d{10}$/.test(phone);
+    });
+  }
+  window.showWecomSuccessModal = function () {
+    if (successModal) successModal.hidden = false;
+  };
+  window.showWecomFailModal = function () {
+    if (failModal) failModal.hidden = false;
+  };
+  if (successOkBtn && successModal) {
+    successOkBtn.addEventListener('click', function () {
+      successModal.hidden = true;
+    });
+  }
+  if (failOkBtn && failModal) {
+    failOkBtn.addEventListener('click', function () {
+      failModal.hidden = true;
+    });
+  }
 
   document.addEventListener('click', function (e) {
     var toggle = e.target.closest && e.target.closest('.car-checklist-toggle');
@@ -1938,11 +2233,12 @@ document.addEventListener('DOMContentLoaded', function() {
       var carId = String(toggle.getAttribute('data-car-id') || '').trim();
       var carName = String(toggle.getAttribute('data-car-name') || '').trim();
       var modelName = String(toggle.getAttribute('data-model-name') || '').trim();
+      var rentPrice = String(toggle.getAttribute('data-rent-price') || '0').trim();
       toggleChecklistCar({
         car_id: carId || carName,
         car_name: carName,
         model_name: modelName || carName,
-      });
+      }, rentPrice);
       return;
     }
     var removeBtn = e.target.closest && e.target.closest('[data-remove-car-id]');
@@ -1958,6 +2254,10 @@ document.addEventListener('DOMContentLoaded', function() {
         syncCardChecklistToggleStates(map);
         renderChecklistPanel(map);
       }
+    }
+    if (e.target && e.target.getAttribute && e.target.getAttribute('data-phone-cancel') === '1' && phoneModal) {
+      phoneModal.hidden = true;
+      return;
     }
   });
 
@@ -2058,6 +2358,24 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // 显示动画并标记为已显示
   sessionStorage.setItem('mango_splash_shown', 'true');
+
+  // 首次冷缓存时，mask 高光层可能先以矩形渲染；资源就绪后再显示高光层，避免“logo边框感”。
+  (function markSplashMaskReady() {
+    if (!splashScreen) return;
+    var src = 'media-webp/photos/index/logo/logo2.webp';
+    var probe = new Image();
+    var done = false;
+    function finish() {
+      if (done) return;
+      done = true;
+      splashScreen.classList.add('splash-mask-ready');
+    }
+    probe.onload = finish;
+    probe.onerror = finish;
+    probe.src = src;
+    if (probe.complete) finish();
+    window.setTimeout(finish, 220);
+  })();
 
   // 防止页面滚动
   document.body.style.overflow = 'hidden';

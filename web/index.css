@@ -317,6 +317,15 @@ body {
   opacity: 0;
 }
 
+/* 无障碍 / 部分安卓 WebView：动画未跑完时 opacity 会卡在 0，看起来像只有背景视频 */
+@media (prefers-reduced-motion: reduce) {
+  .animate-in {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+}
+
 @keyframes fadeInUp {
   from {
     opacity: 0;
@@ -340,6 +349,14 @@ body {
   .brand-logo, .brand-logo-center { height: 32px; }
   .index-floating-logo img {
     height: clamp(26px, 9vw, 36px);
+  }
+  /* 渐变字在部分 WebView 上 clip 异常会导致整块透明，用实色兜底 */
+  .hero-eyebrow-highlight {
+    -webkit-background-clip: unset;
+    background-clip: unset;
+    background: none;
+    -webkit-text-fill-color: #ffcc6a;
+    color: #ffcc6a;
   }
   .hero {
     padding-bottom: clamp(56px, 16vh, 160px);

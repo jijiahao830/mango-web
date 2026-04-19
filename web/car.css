@@ -545,7 +545,8 @@
   -webkit-mask-position: center;
   mask-position: center;
   mix-blend-mode: screen;
-  opacity: 0.92;
+  opacity: 0;
+  transition: opacity 0.24s ease;
 }
 
 /* 横向高光：金橙掠过高光（品牌漆） */
@@ -599,6 +600,14 @@
 }
 
 .splash-screen--keynote-pro .splash-logo-rim-sheen--reflect {
+  opacity: 0;
+}
+
+.splash-screen--keynote-pro.splash-mask-ready .splash-logo-rim-sheen {
+  opacity: 0.92;
+}
+
+.splash-screen--keynote-pro.splash-mask-ready .splash-logo-rim-sheen--reflect {
   opacity: 0.42;
 }
 
@@ -994,6 +1003,229 @@ body::-webkit-scrollbar {
   padding: 8px 16px;
 }
 
+/* =========================================================
+   选车天数弹窗 (Days Select Modal)
+   ========================================================= */
+.days-select-modal {
+  position: fixed;
+  top: 0; left: 0; width: 100vw; height: 100vh;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999; /* 必须比筛选面板等还要高 */
+  opacity: 1;
+  transition: opacity 0.3s ease;
+}
+
+.days-select-modal[hidden] {
+  display: none;
+  opacity: 0;
+}
+
+.days-select-content {
+  position: relative;
+  background: #fff; /* 恢复白底背景 */
+  color: #333; /* 恢复深色文字 */
+  width: 90%;
+  max-width: 420px;
+  border-radius: 12px;
+  padding: 32px 24px 24px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5); /* 恢复黑色阴影 */
+  animation: modal-pop 0.3s ease;
+}
+
+@keyframes modal-pop {
+  0% { transform: scale(0.95); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.days-select-header {
+  font-size: 22px;
+  font-weight: 700;
+  text-align: center;
+  margin: 0 auto 32px;
+  padding: 0;
+  border: none; /* 去掉边框 */
+  width: auto;
+  letter-spacing: 1px;
+}
+
+.days-select-options {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.days-option-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.days-label {
+  font-size: 15px;
+  font-weight: 500;
+  width: 120px; /* 把宽度稍微调大一点，容纳括号里的文字 */
+  text-align: left;
+}
+
+.days-price {
+  font-size: 16px;
+  color: #ff6b35; /* 在白底上，恢复橙色高亮价格 */
+  flex: 1;
+  text-align: center;
+  font-weight: 700;
+}
+
+.days-confirm-btn {
+  padding: 8px 24px;
+  background: linear-gradient(135deg, #ff6b35 0%, #ff8c42 100%); /* 按钮换成主题橙色 */
+  color: #fff;
+  border: none;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 10px rgba(255, 107, 53, 0.3); /* 按钮橙色光晕 */
+}
+
+.days-confirm-btn:hover {
+  background: linear-gradient(135deg, #ff8c42 0%, #ffa56a 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(255, 107, 53, 0.4);
+}
+
+.days-select-footer {
+  text-align: center;
+  font-size: 13px;
+  color: #888; /* 恢复深灰色提示文字 */
+  margin-top: 10px;
+}
+
+.days-select-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: transparent;
+  border: none;
+  font-size: 24px;
+  color: #999;
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  transition: color 0.2s ease;
+}
+
+.days-select-close:hover {
+  color: #333;
+  background: transparent; /* 去除悬浮背景，只变深颜色 */
+}
+
+.phone-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 10020;
+}
+
+.phone-modal[hidden] {
+  display: none;
+}
+
+.phone-modal__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.56);
+}
+
+.phone-modal__card {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(92vw, 420px);
+  border-radius: 14px;
+  padding: 18px 16px 14px;
+  background: rgba(17, 20, 30, 0.96);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.42);
+}
+
+.phone-modal__title {
+  margin: 0;
+  color: #fff;
+  font-size: 16px;
+  line-height: 1.45;
+}
+
+.phone-modal__input {
+  margin-top: 12px;
+  width: 100%;
+  height: 40px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  font-size: 15px;
+  padding: 0 12px;
+  outline: none;
+}
+
+.phone-modal__error {
+  margin: 8px 2px 0;
+  color: #ff8f8f;
+  font-size: 13px;
+}
+
+.phone-modal__actions {
+  margin-top: 12px;
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.phone-modal__actions--center {
+  justify-content: center;
+}
+
+.phone-modal__card--success {
+  width: min(88vw, 320px);
+}
+
+.phone-modal__card--success .phone-modal__title {
+  text-align: center;
+}
+
+.phone-modal__btn {
+  border-radius: 9px;
+  border: 1px solid transparent;
+  padding: 7px 14px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.phone-modal__btn--ghost {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.22);
+  color: #f3f5ff;
+}
+
+.phone-modal__btn--primary {
+  background: rgba(255, 107, 53, 0.24);
+  border-color: rgba(255, 107, 53, 0.62);
+  color: #ffe7dc;
+}
+
 /* Hero Section */
 /* Hero section has been moved to index.html */
 /* Keep these if needed by index but we already separated them, 
@@ -1307,6 +1539,9 @@ a.btn-primary {
   scroll-padding-bottom: calc(88px + env(safe-area-inset-bottom, 0px));
   scrollbar-width: none;
   -ms-overflow-style: none;
+  border: none;
+  box-shadow: none;
+  outline: none;
 }
 
 #carSection.content-wrapper::-webkit-scrollbar {
@@ -1321,6 +1556,9 @@ a.btn-primary {
   width: 100%;
   min-height: calc(100vh - 56px);
   min-width: 0;
+  border: none;
+  box-shadow: none;
+  outline: none;
 }
 
 /* 选车主栏：仅横向占满，高度随列表增高，不再单独纵向滚动 */
@@ -1329,6 +1567,9 @@ a.btn-primary {
   min-width: 0;
   height: auto;
   overflow: visible;
+  border: none;
+  box-shadow: none;
+  outline: none;
 }
 
 /* Sidebar Filter：基础样式；进入选车区后 body.car-section-active 时吸顶（见下方媒体查询） */
@@ -1857,8 +2098,8 @@ a.btn-primary {
   z-index: 700;
   right: clamp(16px, 4vw, 32px);
   bottom: calc(238px + env(safe-area-inset-bottom));
-  width: min(360px, calc(100vw - 24px));
-  max-height: min(62vh, 560px);
+  width: min(420px, calc(100vw - 24px));
+  max-height: min(70vh, 680px);
   border-radius: 16px;
   border: 1px solid var(--border);
   background: rgba(18, 20, 28, 0.98);
@@ -1876,7 +2117,7 @@ a.btn-primary {
 
 .car-checklist-panel__header h3 {
   margin: 0;
-  font-size: 15px;
+  font-size: 17px;
 }
 
 .car-checklist-panel__close {
@@ -1889,9 +2130,9 @@ a.btn-primary {
 }
 
 .car-checklist-panel__body {
-  padding: 10px 12px 12px;
+  padding: 12px 14px 14px;
   overflow: auto;
-  max-height: calc(min(62vh, 560px) - 56px);
+  max-height: calc(min(70vh, 680px) - 60px);
 }
 
 .car-checklist-list {
@@ -1913,24 +2154,80 @@ a.btn-primary {
 }
 
 .car-checklist-item__name {
-  font-size: 13px;
+  font-size: 15px;
   color: rgba(255, 255, 255, 0.92);
 }
 
 .car-checklist-item__remove {
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 999px;
-  padding: 4px 8px;
+  padding: 6px 10px;
   background: transparent;
   color: rgba(255, 255, 255, 0.88);
-  font-size: 12px;
+  font-size: 13px;
   cursor: pointer;
 }
 
 .car-checklist-empty {
   margin: 10px 2px 0;
   color: rgba(255, 255, 255, 0.68);
+  font-size: 14px;
+}
+
+.car-checklist-send-btn {
+  margin-top: 10px;
+  width: 100%;
+  border: 1px solid rgba(255, 107, 53, 0.55);
+  border-radius: 10px;
+  padding: 8px 12px;
+  background: rgba(255, 107, 53, 0.14);
+  color: #ffe2d5;
   font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.car-checklist-clear-btn {
+  margin-top: 10px;
+  width: 100%;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  border-radius: 10px;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.car-checklist-actions {
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.car-checklist-actions .car-checklist-send-btn,
+.car-checklist-actions .car-checklist-clear-btn {
+  margin-top: 0;
+  flex: 1;
+  width: auto;
+}
+
+.car-checklist-original {
+  margin: 8px 2px 0;
+  color: rgba(255, 255, 255, 0.52);
+  font-size: 13px;
+  text-align: right;
+  text-decoration: line-through;
+}
+
+.car-checklist-total {
+  margin: 6px 2px 0;
+  color: #ffd8c7;
+  font-size: 16px;
+  font-weight: 700;
+  text-align: right;
 }
 
 .brand-section {
@@ -2327,19 +2624,20 @@ a.btn-primary {
   right: 10px;
   z-index: 4;
   border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  padding: 5px 10px;
-  font-size: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.32);
+  padding: 7px 14px;
+  font-size: 13px;
+  font-weight: 600;
   color: #fff;
-  background: rgba(0, 0, 0, 0.45);
+  background: rgba(0, 0, 0, 0.28);
   cursor: pointer;
   user-select: none;
 }
 
 .car-checklist-toggle.is-picked {
-  border-color: rgba(255, 107, 53, 0.85);
-  background: rgba(255, 107, 53, 0.2);
-  color: #ffd7c6;
+  border-color: rgba(255, 255, 255, 0.46);
+  background: rgba(0, 0, 0, 0.38);
+  color: #fff;
 }
 
 .car-image {
@@ -2565,11 +2863,25 @@ a.btn-primary {
 }
 
 .car-price {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  margin: 0;
+  line-height: 1.15;
+}
+
+.car-price-daily {
   font-size: 24px;
   font-weight: 900;
   color: var(--brand);
-  margin: 0;
-  line-height: 1.15;
+}
+
+.car-price-monthline {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+  line-height: 1.2;
 }
 
 .car-price-unit {
@@ -2907,15 +3219,22 @@ a.btn-primary {
   }
   
   .car-price {
-    font-size: 16px;
     grid-column: 1;
     grid-row: 2;
     margin: 0;
     text-align: left;
     align-self: center;
   }
+
+  .car-price-daily {
+    font-size: 16px;
+  }
   
   .car-price-unit {
+    font-size: 11px;
+  }
+
+  .car-price-monthline {
     font-size: 11px;
   }
   
@@ -2988,8 +3307,12 @@ a.btn-primary {
     height: 32px;
   }
   
-  .car-price {
+  .car-price-daily {
     font-size: clamp(13px, 3.4vw, 16px);
+  }
+
+  .car-price-monthline {
+    font-size: clamp(10px, 2.8vw, 12px);
   }
 
   .car-image,
@@ -3035,7 +3358,7 @@ a.btn-primary {
 .car-card:nth-child(6) { animation-delay: 0.6s; }
 
 /* Glow Effects */
-.car-card:hover .car-price {
+.car-card:hover .car-price-daily {
   text-shadow: 0 0 20px rgba(255, 107, 53, 0.5);
 }
 

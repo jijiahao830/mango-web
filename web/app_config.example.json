@@ -6,7 +6,7 @@
   "cta-section": true,
   "database": {
     "type": "mysql",
-    "default_level_for_new_member": "芒果",
+    "default_level_for_new_member": "芒果π",
     "write_register_and_login_on_insert": true,
     "update_last_login": true,
     "table": "member",

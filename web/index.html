@@ -12,14 +12,31 @@
   </style>
 </head>
 <body>
-  <a href="car.html" class="index-floating-logo" aria-label="芒果超跑">
+  <a href="car.html#carSection" class="index-floating-logo" aria-label="芒果超跑">
     <img src="media-webp/photos/index/logo/logo2.webp" alt="芒果超跑" />
   </a>
   <div class="index-scrollport">
     <!-- Hero Banner -->
     <section class="hero">
       <div class="hero-video-wrapper">
-        <video class="hero-video" src="media-webp/videos/index/carvideo.mp4" autoplay loop playsinline></video>
+        <!--
+          muted：未静音时 autoplay 常被拦截。
+          playsinline / webkit-playsinline：iOS 等内联播放。
+          x5-*：微信/QQ 等安卓端腾讯 X5 内核，避免视频独占原生全屏层、盖住页面其它 DOM。
+        -->
+        <video
+          class="hero-video"
+          src="media-webp/videos/index/carvideo.mp4"
+          autoplay
+          muted
+          loop
+          playsinline
+          webkit-playsinline="true"
+          x5-playsinline="true"
+          x5-video-player-type="h5"
+          x5-video-player-fullscreen="false"
+          x5-video-orientation="portrait"
+        ></video>
         <div class="hero-video-overlay"></div>
         <div class="hero-noise"></div>
       </div>
@@ -31,8 +48,7 @@
           <h1 class="hero-title animate-in" style="--delay: 0.3s">MANGO SUPERCAR</h1>
         </div>
         <div class="hero-actions animate-in" style="--delay: 0.5s">
-          <!-- 按钮修改跳转链接到 login 页面 -->
-          <a href="login.html" class="btn-primary btn-lg hero-choose-btn">立即选车</a>
+          <a href="car.html#carSection" class="btn-primary btn-lg hero-choose-btn">立即选车</a>
         </div>
       </div>
     </section>
@@ -40,6 +56,28 @@
     <div id="scroll-trigger" class="index-scroll-trigger" aria-hidden="true"></div>
   </div>
 
+  <script src="./device-redirect.js"></script>
+  <script>
+    (function () {
+      function applyCarEntryLinks() {
+        if (!window.MangoDeviceRedirect || typeof MangoDeviceRedirect.carEntryHref !== 'function') return;
+        var href = MangoDeviceRedirect.carEntryHref();
+        document.querySelectorAll('.index-floating-logo, .hero-choose-btn').forEach(function (a) {
+          if (a && a.tagName === 'A') a.setAttribute('href', href);
+        });
+      }
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', applyCarEntryLinks);
+      } else {
+        applyCarEntryLinks();
+      }
+      var resizeT;
+      window.addEventListener('resize', function () {
+        clearTimeout(resizeT);
+        resizeT = setTimeout(applyCarEntryLinks, 200);
+      });
+    })();
+  </script>
   <script src="./index.js"></script>
 </body>
 </html>
