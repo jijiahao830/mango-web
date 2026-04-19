@@ -70,30 +70,6 @@ if (document.readyState === 'loading') {
   initScenarioShowcase570();
 }
 
-// Hero Video Control
-document.addEventListener('DOMContentLoaded', function() {
-  const heroVideo = document.querySelector('.hero-detail video');
-  const heroSection = document.querySelector('.hero-detail');
-  
-  if (heroVideo && heroSection) {
-    const videoObserver = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        // 只要有一点被遮挡（可见度小于 99%），就暂停视频
-        if (entry.isIntersecting && entry.intersectionRatio >= 0.99) {
-          heroVideo.play().catch(e => console.log("Autoplay prevented:", e));
-        } else {
-          heroVideo.pause();
-        }
-      });
-    }, {
-      root: null,
-      threshold: [0, 0.1, 0.5, 0.9, 0.99, 1.0]
-    });
-    
-    videoObserver.observe(heroSection);
-  }
-});
-
 // Gallery interaction
 const thumbnails = document.querySelectorAll('.thumbnail-item');
 const featuredSource = document.getElementById('featuredSource');
