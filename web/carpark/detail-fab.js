@@ -3,6 +3,19 @@
  * 与兰博基尼各车型 car.js 中逻辑一致。
  */
 (function () {
+  function isMobileClient() {
+    var byMedia = !!(
+      window.matchMedia &&
+      (window.matchMedia('(max-width: 900px)').matches ||
+        window.matchMedia('(hover: none) and (pointer: coarse)').matches)
+    );
+    var nav = window.navigator || {};
+    var ua = String(nav.userAgent || '');
+    var byUA = /Android|iPhone|iPad|iPod|Mobile|HarmonyOS|Windows Phone/i.test(ua);
+    var byTouch = (nav.maxTouchPoints || 0) > 0;
+    return !!(byMedia || (byTouch && byUA));
+  }
+
   var heroSection = document.querySelector('.hero-detail');
   var fab = document.getElementById('detailFabActions');
   if (!heroSection || !fab) return;
@@ -14,7 +27,7 @@
   }
 
   function syncFab() {
-    var isMobile = !!(window.matchMedia && window.matchMedia('(max-width: 768px)').matches);
+    var isMobile = isMobileClient();
     if (isMobile) {
       fab.classList.add('is-visible');
       fab.setAttribute('aria-hidden', 'false');
@@ -77,6 +90,18 @@
  */
 (function () {
   var STORAGE_KEY = 'mangoCarChecklist';
+  function isMobileClient() {
+    var byMedia = !!(
+      window.matchMedia &&
+      (window.matchMedia('(max-width: 900px)').matches ||
+        window.matchMedia('(hover: none) and (pointer: coarse)').matches)
+    );
+    var nav = window.navigator || {};
+    var ua = String(nav.userAgent || '');
+    var byUA = /Android|iPhone|iPad|iPod|Mobile|HarmonyOS|Windows Phone/i.test(ua);
+    var byTouch = (nav.maxTouchPoints || 0) > 0;
+    return !!(byMedia || (byTouch && byUA));
+  }
 
   function escHtml(s) {
     return String(s == null ? '' : s)
@@ -110,7 +135,7 @@
     var style = document.createElement('style');
     style.id = 'detailChecklistInlineStyle';
     style.textContent =
-      '.detail-checklist-btn{position:fixed;z-index:520;right:clamp(16px,4vw,32px);bottom:calc(124px + env(safe-area-inset-bottom));display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:999px;border:1px solid rgba(255,255,255,.16);background:rgba(23,26,33,.96);color:#e8ecf8;cursor:pointer;box-shadow:0 6px 22px rgba(0,0,0,.38)}' +
+      '.detail-checklist-btn{position:fixed;z-index:520;right:max(16px, env(safe-area-inset-right));bottom:calc(124px + env(safe-area-inset-bottom));display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:999px;border:1px solid rgba(255,255,255,.16);background:rgba(23,26,33,.96);color:#e8ecf8;cursor:pointer;box-shadow:0 6px 22px rgba(0,0,0,.38)}' +
       '.detail-checklist-btn__icon{color:#fff}' +
       '.detail-checklist-btn.has-items .detail-checklist-btn__icon{color:#ff8c69}' +
       '.detail-checklist-btn__count{min-width:20px;height:20px;line-height:20px;border-radius:999px;text-align:center;font-size:12px;background:#ff6b35;color:#fff}' +
@@ -177,8 +202,8 @@
       '.days-select-footer{text-align:center;font-size:13px;color:#888;margin-top:10px}' +
       '.days-select-close{position:absolute;top:16px;right:16px;background:transparent;border:none;font-size:24px;color:#999;cursor:pointer;padding:0;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;line-height:1;transition:color .2s ease}' +
       '.days-select-close:hover{color:#333;background:transparent}' +
-      '.detail-checklist-btn{display:none !important}' +
-      '#detailFabActions{width:auto !important;align-items:flex-end !important;gap:8px !important}' +
+      '@media (max-width:768px){.detail-checklist-btn{display:none !important}}' +
+      '@media (max-width:768px){#detailFabActions{width:auto !important;align-items:flex-end !important;gap:8px !important}}' +
       '.detail-fab-more{width:44px;height:44px;border-radius:10px;border:1px solid var(--brand,#ff6b35);background:rgba(20,22,28,.96);color:var(--brand,#ff6b35);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 8px 20px rgba(0,0,0,.35)}' +
       '.detail-fab-more__dots{font-size:18px;letter-spacing:3px;line-height:1;transform:translateY(-1px)}' +
       '.detail-fab-menu{display:flex;flex-direction:column;gap:8px;min-width:128px;padding:8px;border-radius:10px;border:1px solid rgba(255,255,255,.14);background:rgba(17,20,30,.96);box-shadow:0 10px 24px rgba(0,0,0,.42)}' +
@@ -293,8 +318,7 @@
 
     function mountDetailChecklistBtn() {
       var fabEl = document.getElementById('detailFabActions');
-      var mq = window.matchMedia && window.matchMedia('(max-width: 768px)');
-      if (fabEl && mq && mq.matches) {
+      if (fabEl && isMobileClient()) {
         fabEl.appendChild(btn);
       } else {
         document.body.appendChild(btn);
@@ -355,22 +379,34 @@
     var detailFabConsultBtn = null;
     var detailFabChecklistBtn = null;
     var detailFabPrimaryBtn = null;
+    var isMobileFab = false;
+
+    function isMobileViewport() {
+      return isMobileClient();
+    }
 
     if (detailFabRoot) {
-      detailFabRoot.innerHTML =
-        '<button type="button" class="detail-fab-more" id="detailFabMoreBtn" aria-expanded="false" aria-label="展开更多操作">' +
-          '<span class="detail-fab-more__dots" aria-hidden="true">•••</span>' +
-        '</button>' +
-        '<div class="detail-fab-menu" id="detailFabMenu" hidden>' +
-          '<button type="button" class="detail-fab-menu-btn" id="detailFabAddBtn">加入清单</button>' +
-          '<button type="button" class="detail-fab-menu-btn" id="detailFabConsultBtn">咨询客服</button>' +
-          '<button type="button" class="detail-fab-menu-btn" id="detailFabChecklistBtn">用车清单</button>' +
-        '</div>';
-      detailFabMoreBtn = document.getElementById('detailFabMoreBtn');
-      detailFabMenu = document.getElementById('detailFabMenu');
-      detailFabAddBtn = document.getElementById('detailFabAddBtn');
-      detailFabConsultBtn = document.getElementById('detailFabConsultBtn');
-      detailFabChecklistBtn = document.getElementById('detailFabChecklistBtn');
+      if (isMobileViewport()) {
+        isMobileFab = true;
+        detailFabRoot.innerHTML =
+          '<button type="button" class="detail-fab-more" id="detailFabMoreBtn" aria-expanded="false" aria-label="展开更多操作">' +
+            '<span class="detail-fab-more__dots" aria-hidden="true">•••</span>' +
+          '</button>' +
+          '<div class="detail-fab-menu" id="detailFabMenu" hidden>' +
+            '<button type="button" class="detail-fab-menu-btn" id="detailFabAddBtn">加入清单</button>' +
+            '<button type="button" class="detail-fab-menu-btn" id="detailFabConsultBtn">咨询客服</button>' +
+            '<button type="button" class="detail-fab-menu-btn" id="detailFabChecklistBtn">用车清单</button>' +
+          '</div>';
+        detailFabMoreBtn = document.getElementById('detailFabMoreBtn');
+        detailFabMenu = document.getElementById('detailFabMenu');
+        detailFabAddBtn = document.getElementById('detailFabAddBtn');
+        detailFabConsultBtn = document.getElementById('detailFabConsultBtn');
+        detailFabChecklistBtn = document.getElementById('detailFabChecklistBtn');
+      } else {
+        isMobileFab = false;
+        detailFabAddBtn = detailFabRoot.querySelector('.btn-primary, .btn-reserve, .detail-fab-btn.btn-primary');
+        detailFabConsultBtn = detailFabRoot.querySelector('.btn-ghost, .detail-fab-btn.btn-ghost');
+      }
     }
 
     var mq768 = window.matchMedia && window.matchMedia('(max-width: 768px)');
@@ -390,6 +426,7 @@
       var count = getCount(map);
       if (countEl) countEl.textContent = String(count);
       if (btn) btn.classList.toggle('has-items', count > 0);
+      syncPcFabWidth();
     }
 
     function syncCurrentBtn(map) {
@@ -413,6 +450,18 @@
         detailFabMoreBtn.style.display = 'inline-flex';
       }
       detailFabMoreBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    }
+
+    function syncPcFabWidth() {
+      if (!detailFabRoot || !btn) return;
+      if (isMobileClient()) {
+        detailFabRoot.style.width = '';
+        return;
+      }
+      var checklistWidth = Math.ceil(btn.getBoundingClientRect().width || 0);
+      if (checklistWidth > 0) {
+        detailFabRoot.style.width = checklistWidth + 'px';
+      }
     }
 
     function renderList(map) {
@@ -652,7 +701,7 @@
         e.preventDefault();
         e.stopPropagation();
         toggleCurrentCar();
-        setFabMenuOpen(false);
+        if (isMobileFab) setFabMenuOpen(false);
       }, true);
     }
     if (detailFabChecklistBtn) {
@@ -797,7 +846,7 @@
         e.preventDefault();
         e.stopPropagation();
         openConsultModal();
-        setFabMenuOpen(false);
+        if (isMobileFab) setFabMenuOpen(false);
       }, true);
     }
     if (consultCloseBtn && consultModal) {
@@ -861,6 +910,7 @@
       if (detailFabRoot.contains(e.target)) return;
       setFabMenuOpen(false);
     });
+    window.addEventListener('resize', syncPcFabWidth);
     setFabMenuOpen(false);
     if (phoneModal) {
       phoneModal.addEventListener('click', function (e) {
@@ -890,6 +940,8 @@
     }
 
     renderList(readChecklistMap());
+    window.setTimeout(syncPcFabWidth, 0);
+    window.setTimeout(syncPcFabWidth, 120);
   }
 
   if (document.readyState === 'loading') {
