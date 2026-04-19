@@ -6,6 +6,39 @@
  * 站点外观：GET /api/site-ui 返回的 cta-section（与 web/app_config.json 顶层 cta-section 一致，由 member_api 提供）。
  */
 (function () {
+  function isMobileClient() {
+    var byMedia = !!(
+      window.matchMedia &&
+      (window.matchMedia('(max-width: 900px)').matches ||
+        window.matchMedia('(hover: none) and (pointer: coarse)').matches)
+    );
+    var nav = window.navigator || {};
+    var ua = String(nav.userAgent || '');
+    var byUA = /Android|iPhone|iPad|iPod|Mobile|HarmonyOS|Windows Phone/i.test(ua);
+    var byTouch = (nav.maxTouchPoints || 0) > 0;
+    return !!(byMedia || (byTouch && byUA));
+  }
+
+  function fromMobileCarList() {
+    try {
+      var q = new URLSearchParams(String(location.search || ''));
+      if (q.get('from') === 'car-mobile') return true;
+    } catch (e) {}
+    var ref = String(document.referrer || '');
+    return /\/car-mobile\.html(?:[?#]|$)/i.test(ref);
+  }
+
+  function syncMobileBackLink() {
+    if (!isMobileClient() || !fromMobileCarList()) return;
+    document.querySelectorAll('.detail-header .back-btn').forEach(function (a) {
+      a.setAttribute('href', '../../car-mobile.html');
+    });
+  }
+
+  syncMobileBackLink();
+})();
+
+(function () {
   if (typeof fetch === 'undefined') return;
   function apiCatalogBase() {
     var o =

@@ -1,5 +1,6 @@
 document.addEventListener('DOMContentLoaded', function () {
   var CAR_CHECKLIST_STORAGE_KEY = 'mangoCarChecklist';
+  var MOBILE_PAGE_STATE_KEY = 'mangoMobileCarPageStateV1';
   var catalogCars = [];
   var carCardTaglines = {};
   var activeCategory = 'all';
@@ -7,6 +8,8 @@ document.addEventListener('DOMContentLoaded', function () {
   var priceMinValue = null;
   var priceMaxValue = null;
   var showVipMonthly = false;
+  var pendingRestoreScrollState = null;
+  var saveStateTimer = 0;
 
   var categoryColumn = document.getElementById('mobileCategoryColumn');
   var listRoot = document.getElementById('mobileListRoot');
@@ -49,6 +52,90 @@ document.addEventListener('DOMContentLoaded', function () {
         ? String(window.MANGO_API_ORIGIN || '').replace(/\/$/, '')
         : '';
     return o || String(location.origin || '').replace(/\/$/, '');
+  }
+
+  function readMobilePageState() {
+    try {
+      var raw = localStorage.getItem(MOBILE_PAGE_STATE_KEY) || '';
+      if (!raw) return null;
+      var obj = JSON.parse(raw);
+      return obj && typeof obj === 'object' ? obj : null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function writeMobilePageState(state) {
+    try {
+      localStorage.setItem(MOBILE_PAGE_STATE_KEY, JSON.stringify(state || {}));
+    } catch (e) {}
+  }
+
+  function normalizeStateMoney(v) {
+    var n = parseInt(String(v), 10);
+    if (!isFinite(n) || n < 0) return null;
+    return n;
+  }
+
+  function normalizeStateScroll(v) {
+    var n = parseInt(String(v), 10);
+    if (!isFinite(n) || n < 0) return 0;
+    return n;
+  }
+
+  function restoreMobilePageState() {
+    var saved = readMobilePageState();
+    if (!saved) return;
+    var nextCat = String(saved.activeCategory || '').trim();
+    if (nextCat) activeCategory = nextCat;
+
+    var nextSort = String(saved.sortMode || '').trim();
+    if (nextSort === 'recommend' || nextSort === 'price-asc' || nextSort === 'price-desc') {
+      sortMode = nextSort;
+    }
+
+    priceMinValue = normalizeStateMoney(saved.priceMinValue);
+    priceMaxValue = normalizeStateMoney(saved.priceMaxValue);
+    if (priceMinValue != null && priceMaxValue != null && priceMinValue > priceMaxValue) {
+      var t = priceMinValue;
+      priceMinValue = priceMaxValue;
+      priceMaxValue = t;
+    }
+
+    showVipMonthly = !!saved.showVipMonthly;
+    if (searchInput) {
+      searchInput.value = String(saved.searchKeyword || '');
+    }
+    if (vipSwitch) {
+      vipSwitch.classList.toggle('is-on', showVipMonthly);
+      vipSwitch.setAttribute('aria-checked', showVipMonthly ? 'true' : 'false');
+    }
+    pendingRestoreScrollState = {
+      categoryScrollTop: normalizeStateScroll(saved.categoryScrollTop),
+      listScrollTop: normalizeStateScroll(saved.listScrollTop),
+    };
+  }
+
+  function saveMobilePageState() {
+    writeMobilePageState({
+      activeCategory: activeCategory,
+      sortMode: sortMode,
+      priceMinValue: priceMinValue,
+      priceMaxValue: priceMaxValue,
+      showVipMonthly: showVipMonthly,
+      searchKeyword: searchInput ? String(searchInput.value || '') : '',
+      categoryScrollTop: categoryColumn ? categoryColumn.scrollTop : 0,
+      listScrollTop: listRoot ? listRoot.scrollTop : 0,
+      updatedAt: Date.now(),
+    });
+  }
+
+  function queueSaveMobilePageState() {
+    if (saveStateTimer) window.clearTimeout(saveStateTimer);
+    saveStateTimer = window.setTimeout(function () {
+      saveStateTimer = 0;
+      saveMobilePageState();
+    }, 60);
   }
 
   function escHtml(s) {
@@ -343,6 +430,14 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   }
 
+  function syncSortPopActiveState() {
+    if (!sortPop) return;
+    sortPop.querySelectorAll('[data-sort]').forEach(function (el) {
+      var val = String(el.getAttribute('data-sort') || '');
+      el.classList.toggle('is-active', val === sortMode);
+    });
+  }
+
   function syncPriceInputsFromState() {
     if (priceMinInput) priceMinInput.value = priceMinValue == null ? '' : String(priceMinValue);
     if (priceMaxInput) priceMaxInput.value = priceMaxValue == null ? '' : String(priceMaxValue);
@@ -442,7 +537,7 @@ document.addEventListener('DOMContentLoaded', function () {
       var vipDaily = monthlyVipDaily(c.rent_price);
       var shownDaily = (showVipMonthly && vipDaily > 0) ? vipDaily : daily;
       var carId = escHtml(String(c.car_name || '').trim());
-      var href = './carpark/' + encodeURIComponent(c.car_name) + '/car.html#detail-overview';
+      var href = './carpark/' + encodeURIComponent(c.car_name) + '/car.html?from=car-mobile#detail-overview';
       var titleAttr = escHtml(titlePlain);
       var modelForList = escHtml(titlePlain);
       return (
@@ -549,8 +644,10 @@ document.addEventListener('DOMContentLoaded', function () {
         el.classList.toggle('is-active', el === btn);
       });
       syncFilterTriggerActiveState();
+      syncSortPopActiveState();
       closeFilterPops();
       renderCars();
+      saveMobilePageState();
     });
   }
   if (priceApplyBtn) {
@@ -558,6 +655,7 @@ document.addEventListener('DOMContentLoaded', function () {
       applyPriceRangeFromInputs();
       closeFilterPops();
       renderCars();
+      saveMobilePageState();
     });
   }
   if (priceResetBtn) {
@@ -568,6 +666,7 @@ document.addEventListener('DOMContentLoaded', function () {
       syncFilterTriggerActiveState();
       closeFilterPops();
       renderCars();
+      saveMobilePageState();
     });
   }
 
@@ -585,11 +684,13 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     renderCars();
     scrollCarListToTop();
+    saveMobilePageState();
   });
 
   if (searchInput) {
     searchInput.addEventListener('input', function () {
       renderCars();
+      saveMobilePageState();
     });
   }
   if (vipSwitch) {
@@ -598,8 +699,24 @@ document.addEventListener('DOMContentLoaded', function () {
       vipSwitch.classList.toggle('is-on', showVipMonthly);
       vipSwitch.setAttribute('aria-checked', showVipMonthly ? 'true' : 'false');
       renderCars();
+      saveMobilePageState();
     });
   }
+
+  if (categoryColumn) {
+    categoryColumn.addEventListener('scroll', queueSaveMobilePageState, { passive: true });
+  }
+  if (listRoot) {
+    listRoot.addEventListener('scroll', queueSaveMobilePageState, { passive: true });
+  }
+  document.addEventListener('click', function (e) {
+    var hit = e.target && e.target.closest ? e.target.closest('.m-car-item__card-hit') : null;
+    if (hit) saveMobilePageState();
+  });
+  window.addEventListener('pagehide', saveMobilePageState);
+  document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState === 'hidden') saveMobilePageState();
+  });
 
   if (daysSelectCloseBtn) daysSelectCloseBtn.addEventListener('click', closeDaysSelectModal);
   if (daysSelectOptions) {
@@ -735,8 +852,20 @@ document.addEventListener('DOMContentLoaded', function () {
           throw new Error('cars-catalog failed');
         }
         catalogCars = carsResp.j.cars.slice();
+        if (
+          activeCategory !== 'all' &&
+          !catalogCars.some(function (c) { return String(c.category || '').trim() === activeCategory; })
+        ) {
+          activeCategory = 'all';
+        }
         renderCategories(catalogCars);
         renderCars();
+        if (pendingRestoreScrollState) {
+          if (categoryColumn) categoryColumn.scrollTop = pendingRestoreScrollState.categoryScrollTop;
+          if (listRoot) listRoot.scrollTop = pendingRestoreScrollState.listScrollTop;
+          pendingRestoreScrollState = null;
+        }
+        saveMobilePageState();
       })
       .catch(function () {
         if (errorEl) {
@@ -746,8 +875,11 @@ document.addEventListener('DOMContentLoaded', function () {
       });
   }
 
+  restoreMobilePageState();
   syncChecklistButtonCount(readChecklistMap());
   renderChecklistPanel(readChecklistMap());
+  syncPriceInputsFromState();
   syncFilterTriggerActiveState();
+  syncSortPopActiveState();
   loadCatalog();
 });
