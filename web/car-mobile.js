@@ -587,7 +587,7 @@ document.addEventListener('DOMContentLoaded', function () {
       var monthDaily = vipDaily > 0 ? vipDaily : daily;
       var shownDaily = (showVipMonthly && vipDaily > 0) ? vipDaily : daily;
       var carId = escHtml(String(c.car_name || '').trim());
-      var href = './carpark/' + encodeURIComponent(c.car_name) + '/car.html?from=car-mobile#detail-overview';
+      var href = './carpark/' + encodeURIComponent(c.car_name) + '/car.html?from=car-mobile&view=mobile';
       var titleAttr = escHtml(titlePlain);
       var modelForList = escHtml(titlePlain);
       return (
