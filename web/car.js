@@ -5,6 +5,16 @@ document.addEventListener('DOMContentLoaded', function() {
   /** 从详情返回选车页时恢复列表滚动位置（与 sessionStorage 配合） */
   const CAR_LIST_SCROLL_KEY = 'mango_car_list_scroll_y';
 
+  function isPageReloadNavigation() {
+    try {
+      var nav = performance.getEntriesByType && performance.getEntriesByType('navigation')[0];
+      if (nav && nav.type === 'reload') return true;
+    } catch (e) {}
+    return false;
+  }
+
+  const isReload = isPageReloadNavigation();
+
   function saveCarListScrollBeforeDetailNav() {
     document.addEventListener(
       'click',
@@ -167,6 +177,7 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   const scenarioBtns = document.querySelectorAll('.filter-btn[data-scenario]');
+  const packageBtns = document.querySelectorAll('.filter-btn[data-package]');
   let categoryBtns = document.querySelectorAll('#categoryFilterButtons .filter-btn[data-category]');
   let brandBtns = document.querySelectorAll('#brandFilterButtons .filter-btn[data-brand]');
   const priceMinSlider = document.getElementById('priceMin');
@@ -310,10 +321,14 @@ document.addEventListener('DOMContentLoaded', function() {
     try {
       const parsed = JSON.parse(savedStateRaw);
       state = { ...state, ...parsed };
+      // 兼容旧版“使用场景=自驾”缓存：当前筛选已改为超值套餐，旧值回退为全部
+      if (state.scenario === 'self-drive') state.scenario = 'all';
     } catch (e) {
       console.error("恢复筛选状态失败", e);
     }
   }
+  // 选车页“超值套餐”仅做跳转，不参与筛选，强制关闭旧场景筛选状态
+  state.scenario = 'all';
   if (!savedStateRaw) {
     scenarioBtns.forEach(function (b) {
       b.classList.toggle('active', b.dataset.scenario === 'all');
@@ -333,11 +348,30 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   function saveState() {
+    // 选车页“超值套餐”仅做跳转，不参与筛选，避免旧缓存带回场景筛选
+    state.scenario = 'all';
     writePersistedFilterJson(JSON.stringify(state));
     var d = sessionStorage.getItem('mango_driver_name');
     if (d) {
       writeFilterOwner(d);
     }
+  }
+
+  function bindPackageRedirectButtons() {
+    if (!packageBtns || !packageBtns.length) return;
+    const packageRouteMap = {
+      business: 'package-business.html',
+      wedding: 'package-wedding.html',
+      event: 'package-event.html'
+    };
+    packageBtns.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const key = (btn.dataset.package || '').trim();
+        const target = packageRouteMap[key];
+        if (!target) return;
+        window.open(target, '_blank', 'noopener');
+      });
+    });
   }
 
   let globalMinPrice = 0;
@@ -2131,6 +2165,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 
+  bindPackageRedirectButtons();
   loadCatalogThenInit();
 
   var checklistBtn = document.getElementById('carChecklistBtn');
@@ -2147,6 +2182,15 @@ document.addEventListener('DOMContentLoaded', function() {
   var successOkBtn = document.getElementById('wecomSuccessOkBtn');
   var failModal = document.getElementById('wecomFailModal');
   var failOkBtn = document.getElementById('wecomFailOkBtn');
+
+  if (isReload) {
+    try {
+      localStorage.removeItem(CAR_CHECKLIST_STORAGE_KEY);
+    } catch (e) {}
+    var reloadSearchEl = document.getElementById('carSearchInput');
+    if (reloadSearchEl) reloadSearchEl.value = '';
+  }
+
   syncChecklistButtonCount(readChecklistMap());
   renderChecklistPanel(readChecklistMap());
   syncCardChecklistToggleStates(readChecklistMap());

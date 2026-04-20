@@ -4,16 +4,57 @@ document.addEventListener('DOMContentLoaded', () => {
   const scrollport = document.querySelector('.index-scrollport');
   if (!video || !scrollport) return;
 
-  /* 再次保证静音，避免部分浏览器忽略 HTML 属性导致 autoplay 失败 */
-  video.muted = true;
-  video.defaultMuted = true;
+  const desktopSrc = video.dataset.srcDesktop || '';
+  const mobileSrc = video.dataset.srcMobile || desktopSrc;
+  const widthFallbackMq = window.matchMedia('(max-width: 1024px)');
+  let isMobilePad = false;
+
+  function detectMobilePad() {
+    try {
+      if (window.MangoDeviceRedirect && typeof window.MangoDeviceRedirect.isMobileOrTablet === 'function') {
+        return !!window.MangoDeviceRedirect.isMobileOrTablet();
+      }
+    } catch (e) {}
+
+    const ua = navigator.userAgent || '';
+    const isIOSPad = /iPad/i.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    const isAndroid = /Android/i.test(ua);
+    const isIPhone = /iPhone|iPod/i.test(ua);
+    if (isIOSPad || isAndroid || isIPhone) return true;
+
+    return widthFallbackMq.matches;
+  }
+
+  function setupSourceAndAudioPolicy() {
+    isMobilePad = detectMobilePad();
+    const nextSrc = isMobilePad ? mobileSrc : desktopSrc;
+    if (nextSrc && video.currentSrc.indexOf(nextSrc) === -1) {
+      video.src = nextSrc;
+      video.load();
+    }
+
+    if (isMobilePad) {
+      video.muted = true;
+      video.defaultMuted = true;
+      video.volume = 0;
+      video.setAttribute('muted', '');
+    } else {
+      video.muted = false;
+      video.defaultMuted = false;
+      video.volume = 1;
+      video.removeAttribute('muted');
+    }
+  }
+
+  setupSourceAndAudioPolicy();
+
   video.controls = false;
   video.playsInline = true;
   video.setAttribute('playsinline', '');
   video.setAttribute('webkit-playsinline', 'true');
   /* 腾讯 X5（微信内置浏览器等）：播放前设置才可靠 */
   video.setAttribute('x5-playsinline', 'true');
-  video.setAttribute('x5-video-player-type', 'h5');
+  video.setAttribute('x5-video-player-type', 'h5-page');
   video.setAttribute('x5-video-player-fullscreen', 'false');
   video.setAttribute('x5-video-orientation', 'portrait');
   video.setAttribute('disablepictureinpicture', '');
@@ -21,7 +62,39 @@ document.addEventListener('DOMContentLoaded', () => {
   video.setAttribute('controlslist', 'nodownload noplaybackrate noremoteplayback nofullscreen');
   video.setAttribute('tabindex', '-1');
   video.setAttribute('aria-hidden', 'true');
-  video.play().catch(() => {});
+  video.removeAttribute('controls');
+  video.setAttribute('x-webkit-airplay', 'deny');
+
+  ['click', 'touchstart', 'touchend', 'contextmenu'].forEach((evt) => {
+    video.addEventListener(
+      evt,
+      (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+      },
+      { passive: false }
+    );
+  });
+
+  function tryPlayWithPolicy() {
+    video.play().catch(() => {
+      if (!isMobilePad) {
+        // 桌面端若被自动播放策略拦截，先静音保底播放；首个用户手势后恢复声音。
+        video.muted = true;
+        video.defaultMuted = true;
+        video.play().catch(() => {});
+        const restoreAudioOnce = () => {
+          video.muted = false;
+          video.defaultMuted = false;
+          video.play().catch(() => {});
+        };
+        window.addEventListener('pointerdown', restoreAudioOnce, { once: true });
+        window.addEventListener('keydown', restoreAudioOnce, { once: true });
+      }
+    });
+  }
+
+  tryPlayWithPolicy();
 
   /**
    * 安卓部分浏览器（含部分内置 WebView）对 video 的 object-fit 支持异常，
@@ -52,6 +125,18 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   window.setTimeout(applyVideoCoverFallback, 0);
   window.setTimeout(applyVideoCoverFallback, 220);
+
+  if (typeof widthFallbackMq.addEventListener === 'function') {
+    widthFallbackMq.addEventListener('change', () => {
+      setupSourceAndAudioPolicy();
+      tryPlayWithPolicy();
+    });
+  } else if (typeof widthFallbackMq.addListener === 'function') {
+    widthFallbackMq.addListener(() => {
+      setupSourceAndAudioPolicy();
+      tryPlayWithPolicy();
+    });
+  }
 
   /**
    * 部分安卓内置 WebView：CSS 入场动画未结束时 opacity 一直为 0，整屏像「只有视频」。

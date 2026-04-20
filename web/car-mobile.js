@@ -11,6 +11,33 @@ document.addEventListener('DOMContentLoaded', function () {
   var pendingRestoreScrollState = null;
   var saveStateTimer = 0;
 
+  function isPageReloadNavigation() {
+    try {
+      var nav = performance.getEntriesByType && performance.getEntriesByType('navigation')[0];
+      if (nav && nav.type === 'reload') return true;
+    } catch (e) {}
+    return false;
+  }
+
+  var isReload = isPageReloadNavigation();
+
+  function fileNameFromPath(pathname) {
+    var p = String(pathname || '');
+    var arr = p.split('/');
+    return String(arr.pop() || '').toLowerCase();
+  }
+
+  function isFromIndexEntry() {
+    try {
+      var ref = String(document.referrer || '').trim();
+      if (!ref) return false;
+      var u = new URL(ref, location.href);
+      var f = fileNameFromPath(u.pathname);
+      if (f === 'index.html') return true;
+    } catch (e) {}
+    return false;
+  }
+
   var categoryColumn = document.getElementById('mobileCategoryColumn');
   var listRoot = document.getElementById('mobileListRoot');
   var searchInput = document.getElementById('carSearchInput');
@@ -71,6 +98,12 @@ document.addEventListener('DOMContentLoaded', function () {
     } catch (e) {}
   }
 
+  function clearMobilePageStateStorage() {
+    try {
+      localStorage.removeItem(MOBILE_PAGE_STATE_KEY);
+    } catch (e) {}
+  }
+
   function normalizeStateMoney(v) {
     var n = parseInt(String(v), 10);
     if (!isFinite(n) || n < 0) return null;
@@ -102,9 +135,10 @@ document.addEventListener('DOMContentLoaded', function () {
       priceMaxValue = t;
     }
 
-    showVipMonthly = !!saved.showVipMonthly;
+    // 移动端“月租开关”已替换为“超值套餐”入口，不再恢复该开关状态
+    showVipMonthly = false;
     if (searchInput) {
-      searchInput.value = String(saved.searchKeyword || '');
+      searchInput.value = isReload ? '' : String(saved.searchKeyword || '');
     }
     if (vipSwitch) {
       vipSwitch.classList.toggle('is-on', showVipMonthly);
@@ -114,6 +148,21 @@ document.addEventListener('DOMContentLoaded', function () {
       categoryScrollTop: normalizeStateScroll(saved.categoryScrollTop),
       listScrollTop: normalizeStateScroll(saved.listScrollTop),
     };
+  }
+
+  function resetMobilePageUiState() {
+    activeCategory = 'all';
+    sortMode = 'recommend';
+    priceMinValue = null;
+    priceMaxValue = null;
+    showVipMonthly = false;
+    pendingRestoreScrollState = {
+      categoryScrollTop: 0,
+      listScrollTop: 0,
+    };
+    if (searchInput) searchInput.value = '';
+    if (categoryColumn) categoryColumn.scrollTop = 0;
+    if (listRoot) listRoot.scrollTop = 0;
   }
 
   function saveMobilePageState() {
@@ -535,6 +584,7 @@ document.addEventListener('DOMContentLoaded', function () {
       var tagline = escHtml(taglineForCar(c));
       var daily = parseInt(String(c.rent_price || 0), 10) || 0;
       var vipDaily = monthlyVipDaily(c.rent_price);
+      var monthDaily = vipDaily > 0 ? vipDaily : daily;
       var shownDaily = (showVipMonthly && vipDaily > 0) ? vipDaily : daily;
       var carId = escHtml(String(c.car_name || '').trim());
       var href = './carpark/' + encodeURIComponent(c.car_name) + '/car.html?from=car-mobile#detail-overview';
@@ -560,11 +610,16 @@ document.addEventListener('DOMContentLoaded', function () {
         '</p>' +
         '</div>' +
         '<div class="m-car-item__price-row">' +
+        '<div class="m-car-item__price-stack">' +
+        '<div class="m-car-item__month-hint">月租 ¥' +
+        monthDaily.toLocaleString('zh-CN') +
+        '/天</div>' +
         '<div class="m-car-item__link m-car-item__link--month">' +
         '<strong class="m-car-item__month-num">¥' +
         shownDaily.toLocaleString('zh-CN') +
         '</strong>' +
         '<span class="m-car-item__rent-unit">/天</span>' +
+        '</div>' +
         '</div>' +
         '<span class="car-checklist-toggle" role="button" tabindex="0" data-car-id="' +
         carId +
@@ -875,7 +930,22 @@ document.addEventListener('DOMContentLoaded', function () {
       });
   }
 
-  restoreMobilePageState();
+  var shouldResetMobilePageState = isReload || isFromIndexEntry();
+
+  if (isReload) {
+    try {
+      localStorage.removeItem(CAR_CHECKLIST_STORAGE_KEY);
+    } catch (e) {}
+    if (searchInput) searchInput.value = '';
+  }
+
+  if (shouldResetMobilePageState) {
+    clearMobilePageStateStorage();
+    resetMobilePageUiState();
+  } else {
+    restoreMobilePageState();
+  }
+
   syncChecklistButtonCount(readChecklistMap());
   renderChecklistPanel(readChecklistMap());
   syncPriceInputsFromState();

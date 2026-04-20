@@ -113,6 +113,7 @@ body.m-car-page {
   grid-template-columns: 90px 1fr auto;
   gap: 14px;
   align-items: center;
+  text-decoration: none;
   border-radius: 12px;
   background: linear-gradient(135deg, rgba(255, 107, 53, 0.12) 0%, rgba(20, 23, 31, 0.96) 42%, rgba(15, 17, 21, 0.96) 100%);
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -155,36 +156,11 @@ body.m-car-page {
   line-height: 1.25;
 }
 
-.m-vip-strip__switch {
-  width: 54px;
-  height: 32px;
-  border: 1px solid rgba(255, 255, 255, 0.24);
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.1);
-  padding: 2px;
-  position: relative;
-  cursor: pointer;
-  transition: border-color 0.2s ease, background 0.2s ease;
-}
-
-.m-vip-strip__thumb {
-  display: block;
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  background: #fff;
-  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.35);
-  transform: translateX(0);
-  transition: transform 0.2s ease;
-}
-
-.m-vip-strip__switch.is-on {
-  border-color: rgba(255, 107, 53, 0.65);
-  background: rgba(255, 107, 53, 0.28);
-}
-
-.m-vip-strip__switch.is-on .m-vip-strip__thumb {
-  transform: translateX(22px);
+.m-vip-strip__enter {
+  color: var(--brand, #ff6b35);
+  font-size: 14px;
+  font-weight: 700;
+  white-space: nowrap;
 }
 
 .m-layout {
@@ -388,7 +364,7 @@ body.m-car-page {
 }
 
 .m-car-item__tagline {
-  margin: 8px 0 0;
+  margin: 5px 0 0;
   font-size: 12px;
   line-height: 1.32;
   color: var(--muted, #8b93a7);
@@ -404,7 +380,20 @@ body.m-car-page {
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  margin-top: 8px;
+  margin-top: 4px;
+}
+
+.m-car-item__price-stack {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.m-car-item__month-hint {
+  font-size: 11px;
+  line-height: 1.25;
+  color: var(--muted, #8b93a7);
 }
 
 /* 仅展示日租：沿用原「月租」大号样式；/天 小号灰色 */

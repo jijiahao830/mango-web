@@ -27,15 +27,17 @@
         -->
         <video
           class="hero-video"
-          src="media-webp/videos/index/carvideo.mp4"
+          data-src-desktop="media-webp/videos/index/carvideo.mp4"
+          data-src-mobile="media-webp/videos/index/carvideo_noaudio.mp4"
           autoplay
           muted
           loop
-          preload="metadata"
-          playsinline
+          preload="auto"
+          playsinline="true"
           webkit-playsinline="true"
+          x-webkit-airplay="deny"
           x5-playsinline="true"
-          x5-video-player-type="h5"
+          x5-video-player-type="h5-page"
           x5-video-player-fullscreen="false"
           x5-video-orientation="portrait"
           disablepictureinpicture

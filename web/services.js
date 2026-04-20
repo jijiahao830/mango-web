@@ -6,6 +6,30 @@ document.addEventListener('DOMContentLoaded', function() {
   let touchStartY = 0;
   let touchEndY = 0;
 
+  function applyInitialSlideByPackage() {
+    if (!slides.length || !dots.length) return;
+    let pkg = '';
+    try {
+      pkg = new URLSearchParams(window.location.search).get('package') || '';
+    } catch (e) {
+      pkg = '';
+    }
+    const packageStartIndexMap = {
+      business: 0,
+      wedding: 2,
+      event: 4
+    };
+    if (!(pkg in packageStartIndexMap)) return;
+    const target = packageStartIndexMap[pkg];
+    slides.forEach((slide, idx) => {
+      slide.classList.toggle('active', idx === target);
+    });
+    dots.forEach((dot, idx) => {
+      dot.classList.toggle('active', idx === target);
+    });
+    currentIndex = target;
+  }
+
   // 切换到指定幻灯片
   function goToSlide(index) {
     if (isAnimating || index === currentIndex) return;
@@ -153,6 +177,8 @@ document.addEventListener('DOMContentLoaded', function() {
       // startAutoplay();
     }
   });
+
+  applyInitialSlideByPackage();
 
   // 初始化
   console.log('Services carousel initialized with', slides.length, 'slides');
