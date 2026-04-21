@@ -68,6 +68,90 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
 
+  function installDetailNavigationGate() {
+    var isNavigating = false;
+    var loadingMask = null;
+
+    function isPrimaryClickEvent(e) {
+      return !!e && e.button === 0 && !e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey;
+    }
+
+    function isDetailHref(href) {
+      if (!href) return false;
+      try {
+        var u = new URL(href, location.href);
+        var p = decodeURIComponent(String(u.pathname || '')).toLowerCase();
+        return p.indexOf('/carpark/') !== -1 && /\/car\.html$/.test(p);
+      } catch (e) {
+        return false;
+      }
+    }
+
+    function ensureLoadingMask() {
+      if (loadingMask) return loadingMask;
+      var mask = document.createElement('div');
+      mask.className = 'detail-nav-loading-mask';
+      mask.innerHTML =
+        '<div class="detail-nav-loading-mask__inner">' +
+        '<span class="detail-nav-loading-mask__spinner" aria-hidden="true"></span>' +
+        '<span class="detail-nav-loading-mask__text">页面加载中...</span>' +
+        '</div>';
+      document.body.appendChild(mask);
+      loadingMask = mask;
+      return loadingMask;
+    }
+
+    function openLoadingMask() {
+      var mask = ensureLoadingMask();
+      requestAnimationFrame(function () {
+        mask.classList.add('is-visible');
+      });
+    }
+
+    function preloadDetailDocument(url) {
+      return new Promise(function (resolve) {
+        var settled = false;
+        function done() {
+          if (settled) return;
+          settled = true;
+          resolve();
+        }
+        setTimeout(done, 900);
+        if (typeof fetch !== 'function') {
+          done();
+          return;
+        }
+        fetch(url, { method: 'GET', credentials: 'omit', cache: 'force-cache' })
+          .then(done)
+          .catch(done);
+      });
+    }
+
+    document.addEventListener(
+      'click',
+      function (e) {
+        var a = e.target && e.target.closest ? e.target.closest('a.car-card-link') : null;
+        if (!a) return;
+        if (!isPrimaryClickEvent(e)) return;
+        if (a.target && String(a.target).toLowerCase() === '_blank') return;
+        var href = a.getAttribute('href') || '';
+        if (!isDetailHref(href)) return;
+        if (isNavigating) {
+          e.preventDefault();
+          return;
+        }
+        e.preventDefault();
+        isNavigating = true;
+        var to = a.href;
+        openLoadingMask();
+        preloadDetailDocument(to).then(function () {
+          window.location.assign(to);
+        });
+      },
+      true
+    );
+  }
+
   function scheduleRestoreCarListScrollAfterLayout() {
     if (!shouldRestoreCarListScroll()) {
       clearCarListScrollKeyIfStale();
@@ -132,6 +216,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
   saveCarListScrollBeforeDetailNav();
   clearCarListScrollKeyIfStale();
+  installDetailNavigationGate();
 
   window.addEventListener('pageshow', function (e) {
     if (e.persisted) {

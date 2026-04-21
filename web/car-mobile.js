@@ -72,6 +72,63 @@ document.addEventListener('DOMContentLoaded', function () {
   var daysSelectOptions = document.getElementById('daysSelectOptions');
   var daysSelectCloseBtn = document.getElementById('daysSelectCloseBtn');
   var currentPendingCarItem = null;
+  var detailNavNavigating = false;
+  var detailNavLoadingMask = null;
+
+  function isPrimaryClickEvent(e) {
+    return !!e && e.button === 0 && !e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey;
+  }
+
+  function isDetailHref(href) {
+    if (!href) return false;
+    try {
+      var u = new URL(href, location.href);
+      var p = decodeURIComponent(String(u.pathname || '')).toLowerCase();
+      return p.indexOf('/carpark/') !== -1 && /\/car\.html$/.test(p);
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function ensureDetailNavLoadingMask() {
+    if (detailNavLoadingMask) return detailNavLoadingMask;
+    var mask = document.createElement('div');
+    mask.className = 'detail-nav-loading-mask';
+    mask.innerHTML =
+      '<div class="detail-nav-loading-mask__inner">' +
+      '<span class="detail-nav-loading-mask__spinner" aria-hidden="true"></span>' +
+      '<span class="detail-nav-loading-mask__text">页面加载中...</span>' +
+      '</div>';
+    document.body.appendChild(mask);
+    detailNavLoadingMask = mask;
+    return detailNavLoadingMask;
+  }
+
+  function openDetailNavLoadingMask() {
+    var mask = ensureDetailNavLoadingMask();
+    requestAnimationFrame(function () {
+      mask.classList.add('is-visible');
+    });
+  }
+
+  function preloadDetailDocument(url) {
+    return new Promise(function (resolve) {
+      var settled = false;
+      function done() {
+        if (settled) return;
+        settled = true;
+        resolve();
+      }
+      setTimeout(done, 900);
+      if (typeof fetch !== 'function') {
+        done();
+        return;
+      }
+      fetch(url, { method: 'GET', credentials: 'omit', cache: 'force-cache' })
+        .then(done)
+        .catch(done);
+    });
+  }
 
   function apiBase() {
     var o =
@@ -768,6 +825,30 @@ document.addEventListener('DOMContentLoaded', function () {
     var hit = e.target && e.target.closest ? e.target.closest('.m-car-item__card-hit') : null;
     if (hit) saveMobilePageState();
   });
+  document.addEventListener(
+    'click',
+    function (e) {
+      var hit = e.target && e.target.closest ? e.target.closest('.m-car-item__card-hit') : null;
+      if (!hit) return;
+      if (!isPrimaryClickEvent(e)) return;
+      if (hit.target && String(hit.target).toLowerCase() === '_blank') return;
+      var href = hit.getAttribute('href') || '';
+      if (!isDetailHref(href)) return;
+      if (detailNavNavigating) {
+        e.preventDefault();
+        return;
+      }
+      e.preventDefault();
+      detailNavNavigating = true;
+      saveMobilePageState();
+      var to = hit.href;
+      openDetailNavLoadingMask();
+      preloadDetailDocument(to).then(function () {
+        window.location.assign(to);
+      });
+    },
+    true
+  );
   window.addEventListener('pagehide', saveMobilePageState);
   document.addEventListener('visibilitychange', function () {
     if (document.visibilityState === 'hidden') saveMobilePageState();

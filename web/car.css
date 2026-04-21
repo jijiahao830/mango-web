@@ -25,6 +25,49 @@
   --car-sidebar-viewport-height: calc(100vh - 56px);
 }
 
+.detail-nav-loading-mask {
+  position: fixed;
+  inset: 0;
+  z-index: 10010;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(5, 8, 14, 0.9);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.16s ease;
+}
+
+.detail-nav-loading-mask.is-visible {
+  opacity: 1;
+  visibility: visible;
+}
+
+.detail-nav-loading-mask__inner {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: #eef3ff;
+  font-size: 14px;
+  letter-spacing: 0.08em;
+}
+
+.detail-nav-loading-mask__spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.22);
+  border-top-color: var(--brand);
+  border-radius: 50%;
+  animation: detailNavSpin 0.75s linear infinite;
+}
+
+@keyframes detailNavSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 /* 开屏动画：苹果发布会风（纯黑场、Logo 由虚到实「对焦」、舞台柔光、倒影、克制缓动） */
 .splash-screen--apple {
   background: #000000;
@@ -3574,4 +3617,3 @@ body.page-services .mobile-filter-btn {
     line-height: 1.3;
   }
 }
-
