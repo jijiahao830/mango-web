@@ -293,7 +293,7 @@ document.addEventListener('DOMContentLoaded', function () {
       var id = String(el.getAttribute('data-car-id') || '').trim();
       var isPicked = !!(id && picked[id]);
       el.classList.toggle('is-picked', isPicked);
-      el.textContent = isPicked ? '已加入' : '加入清单';
+      el.textContent = '+';
       el.setAttribute('aria-pressed', isPicked ? 'true' : 'false');
     });
   }
@@ -629,7 +629,7 @@ document.addEventListener('DOMContentLoaded', function () {
         modelForList +
         '" data-rent-price="' +
         shownDaily +
-        '" aria-pressed="false">加入清单</span>' +
+        '" aria-pressed="false">+</span>' +
         '</div>' +
         '</div>' +
         '</article>'

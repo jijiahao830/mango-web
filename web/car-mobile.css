@@ -19,7 +19,7 @@ body.m-car-page {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: calc(30px + env(safe-area-inset-top, 0px)) 12px 10px;
+  padding: 5px 12px 5px;
   background: var(--bg-secondary, #0f1115);
   border-bottom: 1px solid var(--border, #2b2b2b);
 }
@@ -40,7 +40,7 @@ body.m-car-page {
   display: flex;
   gap: 14px;
   align-items: center;
-  padding: 10px 12px;
+  padding: 5px 12px;
   background: var(--bg-secondary, #0f1115);
   border-bottom: 1px solid var(--border, #2b2b2b);
 }
@@ -55,7 +55,7 @@ body.m-car-page {
   color: var(--text, #e8ecf8);
   height: 28px;
   padding: 0;
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 700;
   white-space: nowrap;
 }
@@ -66,7 +66,7 @@ body.m-car-page {
 }
 
 .m-filter-trigger__caret {
-  font-size: 12px;
+  font-size: 10px;
   opacity: 0.92;
 }
 
@@ -92,7 +92,7 @@ body.m-car-page {
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 10px;
   padding: 0 12px;
-  font-size: 14px;
+  font-size: 13px;
   outline: none;
   background: rgba(255, 255, 255, 0.06);
   color: var(--text, #e8ecf8);
@@ -110,7 +110,7 @@ body.m-car-page {
   padding: 8px 12px;
   box-sizing: border-box;
   display: grid;
-  grid-template-columns: 90px 1fr auto;
+  grid-template-columns: 90px 1fr;
   gap: 14px;
   align-items: center;
   text-decoration: none;
@@ -154,13 +154,6 @@ body.m-car-page {
   color: rgba(255, 255, 255, 0.76);
   font-size: 12px;
   line-height: 1.25;
-}
-
-.m-vip-strip__enter {
-  color: var(--brand, #ff6b35);
-  font-size: 14px;
-  font-weight: 700;
-  white-space: nowrap;
 }
 
 .m-layout {
@@ -435,9 +428,16 @@ body.m-car-page {
   left: auto;
   right: auto;
   flex-shrink: 0;
-  font-size: 11px;
+  width: 24px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  padding: 0;
+  font-size: 14px;
   font-weight: 600;
-  padding: 5px 10px;
+  line-height: 1;
 }
 
 .m-catalog-error {

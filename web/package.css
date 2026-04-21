@@ -119,6 +119,30 @@ body.page-package {
   color: #fff;
   font-size: 24px;
   font-weight: 700;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: nowrap;
+}
+
+.package-section__title-main {
+  white-space: nowrap;
+  flex: 0 0 auto;
+}
+
+.package-section__title-note {
+  font-size: 14px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.68);
+  white-space: normal;
+  overflow: hidden;
+  text-overflow: initial;
+  flex: 1 1 auto;
+  min-width: 0;
+  line-height: 1.25;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
 }
 
 .package-live-video {
