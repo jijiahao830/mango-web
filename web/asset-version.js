@@ -1,1 +1,0 @@
-window.__MANGO_ASSET_VERSION__ = "202604211713";
