@@ -16,6 +16,14 @@
     return !!(byMedia || (byTouch && byUA));
   }
 
+  if (isMobileClient()) {
+    var backBtn = document.querySelector('.back-btn');
+    if (backBtn) {
+      backBtn.textContent = '←';
+      backBtn.setAttribute('aria-label', '返回车库');
+    }
+  }
+
   var heroSection = document.querySelector('.hero-detail');
   var fab = document.getElementById('detailFabActions');
   if (!heroSection || !fab) return;
