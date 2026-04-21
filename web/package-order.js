@@ -84,6 +84,33 @@ document.addEventListener('DOMContentLoaded', function () {
     return total;
   }
 
+  function parsePriceNumber(priceText) {
+    var s = String(priceText || '').trim().replace(/,/g, '');
+    var m = s.match(/(\d+(?:\.\d+)?)/);
+    if (!m) return null;
+    var n = Number(m[1]);
+    return isFinite(n) ? n : null;
+  }
+
+  function escHtml(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  function formatCarLineForWrap(text) {
+    // 关键分隔符插入可换行断点，保证括号内容和组合车型能自然换行。
+    return escHtml(text)
+      .replace(/（/g, '（<wbr>')
+      .replace(/）/g, '<wbr>）')
+      .replace(/\//g, '/<wbr>')
+      .replace(/\+/g, '+<wbr>')
+      .replace(/×/g, '<wbr>×<wbr>');
+  }
+
   function parsePackageFromDom() {
     var steps = Array.prototype.slice.call(document.querySelectorAll('.package-steps .package-step'));
     return steps.map(function (step, idx) {
@@ -97,7 +124,19 @@ document.addEventListener('DOMContentLoaded', function () {
       }).filter(function (r) {
         return r.car;
       });
-      var totalText = String((step.querySelector('.package-plan-total-price') || {}).textContent || '').trim() || '按需核算';
+      var totalText = String((step.querySelector('.package-plan-total-price') || {}).textContent || '').trim();
+      if (!totalText) {
+        var nums = rows.map(function (r) {
+          return parsePriceNumber(r.price);
+        });
+        var allKnown = nums.length > 0 && nums.every(function (n) { return n != null; });
+        if (allKnown) {
+          var sum = nums.reduce(function (a, b) { return a + b; }, 0);
+          totalText = '¥' + Math.round(sum).toLocaleString('zh-CN');
+        } else {
+          totalText = rows.length === 1 && rows[0].price ? rows[0].price : '按需核算';
+        }
+      }
       var count = rows.reduce(function (sum, r) {
         return sum + parseCarCount(r.car);
       }, 0);
@@ -135,10 +174,22 @@ document.addEventListener('DOMContentLoaded', function () {
     if (!packageSelectModal || !packageSelectOptions) return;
     packageSelectOptions.innerHTML = packages
       .map(function (p, idx) {
+        var linesHtml = p.rows
+          .map(function (r) {
+            return (
+              '<div class="package-option-line">' +
+                '<span class="package-option-car">' + formatCarLineForWrap(r.car) + '</span>' +
+              '</div>'
+            );
+          })
+          .join('');
         return (
-          '<div class="days-option-row">' +
-            '<span class="days-label">' + p.name + '</span>' +
-            '<span class="days-price">' + p.countText + ' · ' + p.totalText + '</span>' +
+          '<div class="days-option-row package-option-row">' +
+            '<div class="package-option-main">' +
+              '<div class="days-label">' + escHtml(p.name) + '</div>' +
+              '<div class="package-option-lines">' + linesHtml + '</div>' +
+            '</div>' +
+            '<span class="package-option-total">价格：' + escHtml(p.totalText) + '</span>' +
             '<button class="days-confirm-btn" data-package-index="' + idx + '">确认</button>' +
           '</div>'
         );

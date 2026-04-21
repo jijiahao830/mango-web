@@ -292,6 +292,49 @@ body.page-package {
   font-weight: 700;
 }
 
+.package-option-row {
+  align-items: center;
+  gap: 12px;
+}
+
+.package-option-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.package-option-row .days-label {
+  width: auto;
+  display: block;
+  font-size: 15px;
+  line-height: 1.35;
+}
+
+.package-option-lines {
+  margin-top: 6px;
+  display: grid;
+  gap: 6px;
+}
+
+.package-option-line {
+  display: block;
+}
+
+.package-option-car {
+  color: #3f4652;
+  font-size: 13px;
+  line-height: 1.35;
+  white-space: normal;
+  word-break: break-word;
+}
+
+.package-option-total {
+  color: #ffb26b;
+  font-size: 14px;
+  font-weight: 700;
+  white-space: nowrap;
+  align-self: center;
+}
+
 .package-cta {
   margin-top: 16px;
   display: flex;
