@@ -4,6 +4,48 @@ document.addEventListener('DOMContentLoaded', () => {
   const scrollport = document.querySelector('.index-scrollport');
   if (!video || !scrollport) return;
 
+  function isAndroidClient() {
+    const ua = String((navigator && navigator.userAgent) || '');
+    return /Android/i.test(ua);
+  }
+
+  function isInAppOrWebView() {
+    const ua = String((navigator && navigator.userAgent) || '');
+    // 微信/QQ/微博/抖音/头条/支付宝/钉钉等内置浏览器，以及 Android WebView。
+    return (
+      /MicroMessenger|QQ\/|MQQBrowser|Weibo|Toutiao|NewsArticle|AlipayClient|DingTalk|wv\)/i.test(ua) ||
+      (/\bVersion\/[\d.]+/i.test(ua) && /\bMobile\b/i.test(ua) && /\bSafari\b/i.test(ua) === false)
+    );
+  }
+
+  function shouldForceStaticHero() {
+    // 全面防劫持策略：
+    // 1) 安卓端浏览器统一静态背景（最容易被原生播放器层接管）
+    // 2) 各类 APP 内置浏览器 / WebView 统一静态背景
+    return isAndroidClient() || isInAppOrWebView();
+  }
+
+  function applyStaticHeroFallback() {
+    const fallbackImage = 'media-webp/photos/index/time/商务/商务1.webp';
+    try {
+      video.pause();
+    } catch (e) {}
+    video.removeAttribute('src');
+    video.load();
+    video.style.display = 'none';
+    if (videoWrap) {
+      videoWrap.style.backgroundImage = "url('" + fallbackImage + "')";
+      videoWrap.style.backgroundSize = 'cover';
+      videoWrap.style.backgroundPosition = 'center center';
+      videoWrap.style.backgroundRepeat = 'no-repeat';
+    }
+  }
+
+  if (shouldForceStaticHero()) {
+    applyStaticHeroFallback();
+    return;
+  }
+
   const desktopSrc = video.dataset.srcDesktop || '';
   const mobileSrc = video.dataset.srcMobile || desktopSrc;
   const widthFallbackMq = window.matchMedia('(max-width: 1024px)');
