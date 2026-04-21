@@ -62,11 +62,20 @@
       });
     }
 
-    window.addEventListener("load", function () {
+    function revealSoon() {
       requestAnimationFrame(function () {
-        reveal();
+        requestAnimationFrame(function () {
+          reveal();
+        });
       });
-    });
+    }
+
+    if (document.readyState === "interactive" || document.readyState === "complete") {
+      revealSoon();
+    } else {
+      document.addEventListener("DOMContentLoaded", revealSoon, { once: true });
+    }
+    window.addEventListener("load", revealSoon, { once: true });
     window.addEventListener("pageshow", function () {
       reveal();
     });
@@ -87,7 +96,7 @@
       },
       true
     );
-    setTimeout(reveal, 2200);
+    setTimeout(reveal, 800);
   }
 
   installGlobalPaintGuard();

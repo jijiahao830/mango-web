@@ -119,9 +119,9 @@ document.addEventListener('DOMContentLoaded', function () {
         settled = true;
         resolve();
       }
-      setTimeout(done, 900);
+      /* 仅给遮罩一个短暂渲染窗口，不再等待完整预加载 */
+      setTimeout(done, 140);
       if (typeof fetch !== 'function') {
-        done();
         return;
       }
       fetch(url, { method: 'GET', credentials: 'omit', cache: 'force-cache' })
