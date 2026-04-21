@@ -4,11 +4,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const scrollport = document.querySelector('.index-scrollport');
   if (!video || !scrollport) return;
 
-  function isAndroidClient() {
-    const ua = String((navigator && navigator.userAgent) || '');
-    return /Android/i.test(ua);
-  }
-
   function isInAppOrWebView() {
     const ua = String((navigator && navigator.userAgent) || '');
     // 微信/QQ/微博/抖音/头条/支付宝/钉钉等内置浏览器，以及 Android WebView。
@@ -19,14 +14,12 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function shouldForceStaticHero() {
-    // 全面防劫持策略：
-    // 1) 安卓端浏览器统一静态背景（最容易被原生播放器层接管）
-    // 2) 各类 APP 内置浏览器 / WebView 统一静态背景
-    return isAndroidClient() || isInAppOrWebView();
+    // 仅在内置浏览器 / WebView 中强制静态兜底，普通安卓浏览器继续使用视频背景
+    return isInAppOrWebView();
   }
 
   function applyStaticHeroFallback() {
-    const fallbackImage = 'media-webp/photos/index/time/商务/商务1.webp';
+    const fallbackImage = 'media-webp/photos/index/time/自驾/自驾1.webp';
     try {
       video.pause();
     } catch (e) {}
