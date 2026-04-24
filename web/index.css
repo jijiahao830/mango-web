@@ -24,7 +24,7 @@ html {
   overscroll-behavior: none;
 }
 
-/* hero + 底部 1px：滚过首屏时触发 IO，用于暂停背景视频 */
+/* hero + 底部信息区：滚过首屏时触发暂停背景视频，同时展示备案与联系方式 */
 .index-scrollport {
   position: relative;
   width: 100%;
@@ -47,10 +47,45 @@ html {
 }
 
 .index-scroll-trigger {
-  height: 1px;
+  min-height: 56px;
   width: 100%;
-  background-color: #000;
+  background: rgba(8, 10, 14, 0.96);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 12px calc(10px + env(safe-area-inset-bottom, 0px));
+}
+
+.index-scroll-trigger__inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--text-muted);
+}
+
+.index-scroll-trigger__icp,
+.index-scroll-trigger__phone {
+  color: inherit;
+  text-decoration: none;
+}
+
+.index-scroll-trigger__icp:hover,
+.index-scroll-trigger__icp:focus-visible,
+.index-scroll-trigger__phone:hover,
+.index-scroll-trigger__phone:focus-visible {
+  color: var(--brand-light);
+}
+
+.index-scroll-trigger__icp:focus-visible,
+.index-scroll-trigger__phone:focus-visible {
+  outline: none;
+  text-decoration: underline;
 }
 
 body {

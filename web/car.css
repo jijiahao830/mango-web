@@ -2986,6 +2986,26 @@ a.btn-primary {
   font-size: 14px;
 }
 
+.footer-link {
+  color: inherit;
+  text-decoration: none;
+}
+
+.footer-link:hover,
+.footer-link:focus-visible {
+  color: var(--brand-light);
+}
+
+.footer-link:focus-visible {
+  outline: none;
+  text-decoration: underline;
+}
+
+.footer-sep {
+  margin: 0 8px;
+  opacity: 0.8;
+}
+
 /* Responsive */
 @media (max-width: 1400px) {
   .car-grid {
