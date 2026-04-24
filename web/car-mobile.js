@@ -111,22 +111,10 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
-  function preloadDetailDocument(url) {
-    return new Promise(function (resolve) {
-      var settled = false;
-      function done() {
-        if (settled) return;
-        settled = true;
-        resolve();
-      }
-      /* 仅给遮罩一个短暂渲染窗口，不再等待完整预加载 */
-      setTimeout(done, 140);
-      if (typeof fetch !== 'function') {
-        return;
-      }
-      fetch(url, { method: 'GET', credentials: 'omit', cache: 'force-cache' })
-        .then(done)
-        .catch(done);
+  function navigateToDetailNow(url) {
+    // 避免移动端出现“页面加载中”停留过久：显示遮罩后立即跳转，不等待预加载
+    requestAnimationFrame(function () {
+      window.location.assign(url);
     });
   }
 
@@ -843,9 +831,7 @@ document.addEventListener('DOMContentLoaded', function () {
       saveMobilePageState();
       var to = hit.href;
       openDetailNavLoadingMask();
-      preloadDetailDocument(to).then(function () {
-        window.location.assign(to);
-      });
+      navigateToDetailNow(to);
     },
     true
   );
