@@ -13,6 +13,8 @@ body {
   width: 100%;
   height: 100%;
   overflow: hidden;
+  /* 减轻移动端「连点触发双击缩放」；双指缩放仍可用 */
+  touch-action: manipulation;
 }
 
 body {
