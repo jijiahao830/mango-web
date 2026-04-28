@@ -1,0 +1,822 @@
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html {
+  background: #000;
+  scrollbar-width: none;
+}
+html::-webkit-scrollbar { display: none; }
+
+body {
+  background: #000;
+  overflow-x: hidden;
+  -ms-overflow-style: none;
+}
+
+/* ════════════════════════════════════════
+   ① 封面区
+   容器高度 = 100vh(显示) + 300vh(动画滚动量) = 400vh
+   sticky 子元素吸顶，在容器内提供 300vh 可用滚动距离
+   ════════════════════════════════════════ */
+.m2-cover-wrapper {
+  height: 280vh;
+}
+
+.m2-cover-sticky {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* 封面图：铺满 sticky 容器 */
+.m2-car__bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  z-index: 0;
+}
+
+/* 白色遮罩 + 镂空文字 */
+.m2-car__knockout {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: #fff;
+  mix-blend-mode: screen;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+/* 容器：多行时纵向堆叠；具体行在 .m2-car__knockout-line 内 nowrap（与 25 款库里南一致） */
+.m2-car__knockout-text {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: 28vw;
+  font-weight: 900;
+  font-style: italic;
+  color: #000;
+  line-height: 0.92;
+  letter-spacing: -0.02em;
+  user-select: none;
+  white-space: normal;
+}
+
+.m2-car__knockout-line {
+  display: block;
+  white-space: nowrap;
+  line-height: 0.9;
+}
+
+/* ════════════════════════════════════════
+   ② 价格区
+   租金行动画在封面末由 car.js 完成；此处略大于一屏以释放 sticky，避免过长空白滚动在移动端卡住
+   ════════════════════════════════════════ */
+.m2-pricing-wrapper {
+  height: 115vh;
+}
+
+.m2-car__pricing {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  background: url('../../../media-webp/photos/index/m2/通用背景图.webp') center / cover no-repeat;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  flex-direction: column;
+}
+
+/* 价格卡片：全宽，纵向排列，标题居上、价格列表居中 */
+.m2-car__pricing-card {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 0 7vw;
+  gap: 0;
+}
+
+/* 标题：用 flex order 放在前面，padding-bottom 与列表拉开距离 */
+.m2-car__pricing-title {
+  font-size: clamp(44px, 14vw, 80px);
+  font-weight: 300;
+  color: #fff;
+  letter-spacing: 0.02em;
+  text-align: center;
+  margin-bottom: clamp(24px, 6vw, 40px);
+  margin-top: -25dvh;
+  opacity: 0;
+  transform: translateX(-28px);
+}
+
+.m2-car__pricing-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: clamp(14px, 4vw, 20px) 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.18);
+  opacity: 0;
+  transform: translateX(-28px);
+}
+
+.m2-car__pricing-label {
+  font-size: 18px;
+  color: #fff;
+  font-weight: 300;
+}
+
+.m2-car__pricing-value {
+  font-size: 18px;
+  color: #fff;
+  font-weight: 300;
+  letter-spacing: 0.02em;
+}
+
+.m2-car__pricing-num {
+  font-size: 24px;
+  font-style: normal;
+  font-weight: 400;
+}
+
+/* ════════════════════════════════════════
+   ③ 特征区（100vh，普通流）
+   ════════════════════════════════════════ */
+.m2-car__features {
+  height: 100vh;
+  background: url('../../../media-webp/photos/index/m2/通用背景图.webp') center / cover no-repeat;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(16px, 4vh, 28px);
+  overflow: hidden;
+  padding: 0 0 clamp(20px, 4vh, 36px);
+}
+
+/* 轮播视口：超出部分可见（peek effect） */
+.m2-features__viewport {
+  width: 100%;
+  overflow: visible;
+  flex-shrink: 0;
+  margin-top: -5vh;
+}
+
+.m2-features__track {
+  display: flex;
+  gap: 14px;
+  /* 初始 translateX 由 JS 设置 */
+  transition: transform 0.42s cubic-bezier(0.32, 0.72, 0, 1);
+  will-change: transform;
+}
+
+/* 每张幻灯：80vw 宽，左右各露出约 10vw 的相邻卡 */
+.m2-features__slide {
+  flex: 0 0 80vw;
+}
+
+.m2-features__card {
+  overflow: hidden;
+  background: #1a1d26;
+  position: relative;
+}
+
+.m2-features__img {
+  width: 100%;
+  height: 55vh;
+  object-fit: cover;
+  display: block;
+}
+
+/* 文字区：悬浮在图片底部，白色毛玻璃 */
+.m2-features__text {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px 18px 20px;
+  background: rgba(255, 255, 255, 0.01);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border-top: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.m2-features__title {
+  font-size: clamp(16px, 4.5vw, 20px);
+  font-weight: 600;
+  color: #fff;
+  line-height: 1.3;
+}
+
+.m2-features__desc {
+  font-size: clamp(12px, 3.2vw, 14px);
+  color: rgba(255, 255, 255, 0.72);
+  line-height: 1.65;
+}
+
+/* 六边形导航 */
+.m2-features__nav {
+  display: flex;
+  gap: clamp(24px, 8vw, 48px);
+  flex-shrink: 0;
+}
+
+.m2-features__hex {
+  width: 52px;
+  height: 52px;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: opacity 0.2s ease;
+}
+
+.m2-features__hex:active { opacity: 0.6; }
+.m2-features__hex:disabled { opacity: 0.25; cursor: default; }
+
+/* ════════════════════════════════════════
+   ④ 使用场景区
+   ════════════════════════════════════════ */
+.m2-car__scenario-section {
+  min-height: 100vh;
+  background: url('../../../media-webp/photos/index/m2/通用背景图.webp') center / cover no-repeat;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: max(env(safe-area-inset-top), 18px) 14px max(env(safe-area-inset-bottom), 18px);
+  overflow: hidden;
+}
+
+.m2-scenario-card {
+  position: relative;
+  width: min(92vw, 520px);
+  height: min(76vh, 680px);
+  overflow: hidden;
+  background: #05070d;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.52);
+}
+
+.m2-scenario-card::before {
+  content: "";
+  position: absolute;
+  inset: 14px;
+  z-index: 2;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  pointer-events: none;
+}
+
+.m2-scenario-card::after {
+  content: "";
+  position: absolute;
+  left: 28px;
+  top: 32px;
+  z-index: 3;
+  width: 64px;
+  height: 2px;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0));
+  box-shadow: 0 0 18px rgba(255, 255, 255, 0.28);
+  pointer-events: none;
+}
+
+.m2-scenario-card__image {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 48% center;
+  display: block;
+  transform: scale(1.03);
+}
+
+.m2-scenario-card__shade {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background:
+    radial-gradient(circle at 72% 30%, rgba(255, 255, 255, 0.08), transparent 34%),
+    linear-gradient(180deg, rgba(2, 4, 10, 0.1) 0%, rgba(2, 4, 10, 0.08) 42%, rgba(2, 4, 10, 0.48) 100%),
+    linear-gradient(90deg, rgba(0, 0, 0, 0.42) 0%, rgba(0, 0, 0, 0.04) 56%, rgba(0, 0, 0, 0.2) 100%);
+}
+
+.m2-scenario-card__content {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 24px 22px 26px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(8, 10, 16, 0.34));
+  backdrop-filter: blur(28px) saturate(180%);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  border-top: 1px solid rgba(255, 255, 255, 0.28);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.24);
+}
+
+.m2-scenario-card__title {
+  font-size: clamp(30px, 8vw, 44px);
+  line-height: 1.06;
+  font-weight: 700;
+  color: #fff;
+  text-shadow: 0 12px 28px rgba(0, 0, 0, 0.42);
+}
+
+.m2-scenario-card__desc {
+  max-width: 34em;
+  font-size: clamp(13px, 3.35vw, 15px);
+  line-height: 1.68;
+  color: rgba(255, 255, 255, 0.84);
+}
+
+.m2-scenario-card__list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.m2-scenario-card__list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  font-size: clamp(12px, 3.15vw, 14px);
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.m2-scenario-card__list li span {
+  flex: 0 0 auto;
+  min-width: 18px;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 12px;
+  line-height: 1.45;
+  font-weight: 700;
+}
+
+/* ════════════════════════════════════════
+   ⑤ 图赏区
+   ════════════════════════════════════════ */
+.m2-car__gallery {
+  min-height: 100vh;
+  background: url('../../../media-webp/photos/index/m2/通用背景图.webp') center / cover no-repeat;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(14px, 3.5vh, 24px);
+  overflow: hidden;
+  padding: max(env(safe-area-inset-top), 14px) 0 max(env(safe-area-inset-bottom), 20px);
+}
+
+.m2-gallery__viewport {
+  width: 100%;
+  overflow: visible;
+  flex-shrink: 0;
+  height: 66vh;
+  display: flex;
+  align-items: center;
+  transform: translateY(-5vh);
+}
+
+.m2-gallery__track {
+  display: flex;
+  gap: 24px;
+  transition: transform 0.42s cubic-bezier(0.32, 0.72, 0, 1);
+  will-change: transform;
+}
+
+.m2-gallery__slide {
+  flex: 0 0 82vw;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.3s ease;
+  opacity: 0.82;
+}
+
+.m2-gallery__slide.is-active {
+  opacity: 1;
+}
+
+.m2-gallery__img {
+  width: 100%;
+  height: 48vh;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+  transition: height 0.42s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.m2-gallery__slide.is-active .m2-gallery__img {
+  height: 55vh;
+}
+
+.m2-gallery__nav {
+  display: flex;
+  gap: clamp(24px, 8vw, 48px);
+  flex-shrink: 0;
+  margin-top: -5vh;
+  transform: translateY(-5vh);
+}
+
+/* ════════════════════════════════════════
+   ⑥ 同价位其他车
+   ════════════════════════════════════════ */
+.m2-car__same-price {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #7f7f7f;
+}
+
+.m2-same-price__vehicle-zone {
+  height: 90vh;
+  background: url('../../../media-webp/photos/index/m2/通用背景图.webp') center / cover no-repeat;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.m2-same-price__empty {
+  width: min(84vw, 360px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  color: #fff;
+}
+
+.m2-same-price__empty-image {
+  width: min(52vw, 220px);
+  height: auto;
+  display: block;
+}
+
+.m2-same-price__empty-title {
+  margin-top: 26px;
+  font-size: clamp(24px, 7.2vw, 34px);
+  line-height: 1.3;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.m2-same-price__empty-desc {
+  margin-top: 100px;
+  font-size: clamp(15px, 4.4vw, 20px);
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.m2-same-price__contact-btn {
+  margin-top: 32px;
+  width: min(48vw, 220px);
+  height: 56px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.75);
+  color: #111;
+  font-size: clamp(20px, 5.5vw, 28px);
+  line-height: 56px;
+  text-align: center;
+  text-decoration: none;
+}
+
+.m2-same-price__has {
+  --m2-same-car-media-width: min(84vw, 500px);
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.m2-same-price__empty[hidden],
+.m2-same-price__has[hidden] {
+  display: none !important;
+}
+
+.m2-same-price__car-link {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  position: relative;
+}
+
+.m2-same-price__car-name {
+  position: absolute;
+  top: 23vh;
+  right: 11vw;
+  width: auto;
+  max-width: min(62vw, 360px);
+  text-align: right;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  letter-spacing: 0.02em;
+  color: #fff;
+  z-index: 2;
+}
+
+.m2-same-price__car-brand {
+  font-size: clamp(24px, 5.6vw, 36px);
+  line-height: 1.2;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.m2-same-price__car-model {
+  font-size: clamp(26px, 8.4vw, 52px);
+  line-height: 1.12;
+  word-break: normal;
+  overflow-wrap: anywhere;
+  white-space: normal;
+  width: var(--m2-same-car-media-width);
+  max-width: var(--m2-same-car-media-width);
+}
+
+.m2-same-price__car-image {
+  width: var(--m2-same-car-media-width);
+  max-width: var(--m2-same-car-media-width);
+  height: auto;
+  object-fit: contain;
+  display: block;
+}
+
+.m2-same-price__dots {
+  position: absolute;
+  bottom: 30vh;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  z-index: 2;
+}
+
+.m2-same-price__dots.is-overflow {
+  width: min(274px, calc(100vw - 64px));
+  justify-content: flex-start;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.m2-same-price__dots.is-overflow::-webkit-scrollbar {
+  display: none;
+}
+
+.m2-same-price__switch-nav {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  transform: translateY(calc(-50% - 9vh));
+  height: 52px;
+  z-index: 3;
+  pointer-events: none;
+}
+
+.m2-same-price__switch-nav .m2-features__hex {
+  position: absolute;
+  top: 0;
+  pointer-events: auto;
+}
+
+#m2SamePricePrev {
+  left: 4vw;
+}
+
+#m2SamePriceNext {
+  right: 4vw;
+}
+
+.m2-same-price__dot {
+  width: 42px;
+  height: 6px;
+  flex: 0 0 42px;
+  border-radius: 999px;
+  border: none;
+  background: rgba(255, 255, 255, 0.55);
+  cursor: pointer;
+  padding: 0;
+}
+
+.m2-same-price__dot.is-active {
+  background: rgba(255, 255, 255, 0.95);
+}
+
+.m2-same-price__record-zone {
+  height: 10vh;
+  min-height: 80px;
+  background: #000;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 0 16px;
+  font-size: clamp(14px, 4.1vw, 18px);
+  line-height: 1.35;
+}
+
+/* ════════════════════════════════════════
+   右侧快捷栏（与首页：加入清单 / 咨询 / 用车清单）
+   ════════════════════════════════════════ */
+.m2-car-rail {
+  --m2-car-rail-h: 226px;
+  position: fixed;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 48;
+  display: flex;
+  align-items: center;
+  pointer-events: none;
+  /* 封面区内不展示，滑过 .m2-cover-wrapper 进入月租区后由 JS 加 .is-past-cover */
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity 0.35s ease, visibility 0.35s ease;
+}
+
+.m2-car-rail.is-past-cover {
+  visibility: visible;
+  opacity: 1;
+}
+
+.m2-car-rail > * {
+  pointer-events: auto;
+}
+
+.m2-car-rail__panel {
+  --m2-car-rail-item-h: 44px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 15px 3px 8px;
+  max-width: 80px;
+  /* 白色毛玻璃 */
+  background: rgba(255, 255, 255, 0.38);
+  backdrop-filter: blur(18px) saturate(180%);
+  -webkit-backdrop-filter: blur(18px) saturate(180%);
+  border-radius: 16px 0 0 16px;
+  border-left: 1px solid rgba(255, 255, 255, 0.55);
+  height: var(--m2-car-rail-h);
+  min-height: var(--m2-car-rail-h);
+  box-sizing: border-box;
+}
+
+.m2-car-rail__action {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  width: 100%;
+  height: var(--m2-car-rail-item-h);
+  min-height: var(--m2-car-rail-item-h);
+  padding: 8px 5px;
+  margin: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  color: #fff;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  font: inherit;
+  transition: opacity 0.2s ease;
+}
+
+.m2-car-rail__action:active {
+  opacity: 0.72;
+}
+
+.m2-car-rail__icon {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+  display: block;
+}
+
+.m2-car-rail__label {
+  font-size: 9px;
+  line-height: 1.25;
+  letter-spacing: 0.02em;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.m2-car-rail__close {
+  margin-top: -2px;
+  width: 100%;
+  height: var(--m2-car-rail-item-h);
+  min-height: var(--m2-car-rail-item-h);
+  min-width: 0;
+  padding: 0 5px 8px;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  color: #fff;
+  font-size: 22px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: opacity 0.2s ease;
+}
+
+.m2-car-rail__close:active {
+  opacity: 0.65;
+}
+
+/* 收起后：仅保留右侧拉手（图2） */
+.m2-car-rail.is-collapsed .m2-car-rail__panel {
+  display: none;
+}
+
+.m2-car-rail.is-collapsed .m2-car-rail__peek {
+  display: flex;
+}
+
+.m2-car-rail:not(.is-collapsed) .m2-car-rail__peek {
+  display: none;
+}
+
+.m2-car-rail__peek {
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: var(--m2-car-rail-h);
+  min-height: var(--m2-car-rail-h);
+  margin: 0;
+  padding: 0 1px 0 0;
+  border: none;
+  border-radius: 14px 0 0 14px;
+  background: rgba(255, 255, 255, 0.42);
+  backdrop-filter: blur(14px) saturate(170%);
+  -webkit-backdrop-filter: blur(14px) saturate(170%);
+  border-left: 1px solid rgba(255, 255, 255, 0.6);
+  color: #fff;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: opacity 0.2s ease;
+}
+
+.m2-car-rail__peek:active {
+  opacity: 0.92;
+}
+
+.m2-car-rail__peek-chevron {
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+/* ════════════════════════════════════════
+   返回按钮（fixed，始终可见）
+   ════════════════════════════════════════ */
+.m2-car__back {
+  position: fixed;
+  top: calc(env(safe-area-inset-top) + 16px);
+  left: 16px;
+  z-index: 10;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(16px) saturate(160%);
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  text-decoration: none;
+  transition: background 0.2s ease;
+}
+.m2-car__back:active { background: rgba(255, 255, 255, 0.32); }

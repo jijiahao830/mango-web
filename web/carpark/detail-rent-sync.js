@@ -236,7 +236,7 @@
     var p7 = Math.floor((price * cfg.day7.multiplier) / cfg.day7.divisor);
     var p15 = Math.floor((price * cfg.day15.multiplier) / cfg.day15.divisor);
     var p30 = Math.floor((price * cfg.day30.multiplier) / cfg.day30.divisor);
-    // 与 car.js / car-mobile.js 的 openDaysSelectModal 文案完全一致
+    // 与 car.js 的 openDaysSelectModal 文案完全一致
     var items = [
       {
         text: '单日 (24小时)',

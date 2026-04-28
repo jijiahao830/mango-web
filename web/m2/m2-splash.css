@@ -1,0 +1,757 @@
+/* 与 1.0 car.css 开屏一致，路径相对于 m2/ */
+/* 详情页返回：head 内联脚本在 index.js 加载前就加上 class，避免开屏 CSS 已跑半拍 */
+html.m2-splash-suppressed #splashScreen,
+html.m2-splash-suppressed .splash-screen {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  animation: none !important;
+  opacity: 0 !important;
+}
+
+:root {
+  --brand: #ff6b35;
+  --brand-light: #ff8c69;
+  --gold-end: #ffcc6a;
+}
+
+/* 开屏动画：苹果发布会风（纯黑场、Logo 由虚到实「对焦」、舞台柔光、倒影、克制缓动） */
+.splash-screen--apple {
+  background: #000000;
+  animation: splashFadeOut 0.85s cubic-bezier(0.25, 0.1, 0.25, 1) 3.65s forwards;
+}
+
+.splash-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  overflow: hidden;
+}
+
+.splash-screen.splash-hidden {
+  display: none;
+}
+
+.splash-bg-apple {
+  position: absolute;
+  inset: 0;
+  background: #000000;
+  pointer-events: none;
+}
+
+/* 近年发布会常见：极淡冷暖光晕层（慢显，不抢 Logo） */
+.splash-bg-apple::before {
+  content: '';
+  position: absolute;
+  inset: -5%;
+  background:
+    radial-gradient(ellipse 70% 55% at 45% 42%, rgba(45, 78, 120, 0.12) 0%, transparent 55%),
+    radial-gradient(ellipse 55% 45% at 62% 58%, rgba(95, 40, 65, 0.08) 0%, transparent 50%);
+  opacity: 0;
+  animation: appleAmbientMesh 4s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
+}
+
+@keyframes appleAmbientMesh {
+  0%,
+  12% {
+    opacity: 0;
+  }
+  38% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.85;
+  }
+}
+
+/* 顶部柔光（略带动，接近盘点片里的舞台灯感） */
+.splash-spotlight {
+  position: absolute;
+  inset: -20%;
+  background: radial-gradient(ellipse 58% 48% at 50% 38%, rgba(55, 55, 58, 0.5) 0%, transparent 58%);
+  pointer-events: none;
+  opacity: 0;
+  animation: appleSpotlightIn 3.8s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
+}
+
+@keyframes appleSpotlightIn {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0) scale(1);
+  }
+  28% {
+    opacity: 1;
+  }
+  55% {
+    transform: translate(-1.5%, 0.8%) scale(1.02);
+  }
+  100% {
+    opacity: 0.92;
+    transform: translate(0.5%, -0.3%) scale(1);
+  }
+}
+
+.splash-vignette-apple {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  box-shadow:
+    inset 0 0 100px rgba(0, 0, 0, 0.85),
+    inset 0 -80px 140px rgba(0, 0, 0, 0.55);
+}
+
+.splash-floor-glow {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: 150%;
+  max-width: 1000px;
+  height: 46vh;
+  transform: translateX(-50%);
+  background: radial-gradient(ellipse 48% 36% at 50% 100%, rgba(255, 255, 255, 0.09) 0%, transparent 70%);
+  pointer-events: none;
+  opacity: 0;
+  animation: appleFloorGlow 3.9s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
+}
+
+@keyframes appleFloorGlow {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) scale(0.88);
+  }
+  32% {
+    opacity: 1;
+    transform: translateX(-50%) scale(1);
+  }
+  100% {
+    opacity: 0.92;
+    transform: translateX(-50%) scale(1);
+  }
+}
+
+/* 中心扩散环（历年 Keynote / 盘点类视频里常见的 ripple） */
+.splash-pulse-rings {
+  position: absolute;
+  left: 50%;
+  top: 38%;
+  z-index: 1;
+  width: min(300px, 78vw);
+  height: min(300px, 78vw);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.splash-pulse-ring {
+  position: absolute;
+  inset: 0;
+  box-sizing: border-box;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 50%;
+  opacity: 0;
+  animation: appleRipple 2.2s cubic-bezier(0.25, 0.1, 0.25, 1) 0.15s forwards;
+}
+
+.splash-pulse-ring--delayed {
+  animation-delay: 0.45s;
+}
+
+@keyframes appleRipple {
+  0% {
+    opacity: 0;
+    transform: scale(0.72);
+  }
+  12% {
+    opacity: 0.55;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.4);
+  }
+}
+
+.splash-content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(18px, 4vh, 28px);
+  animation: splashContentFade 4s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
+}
+
+/* Logo + 倒影：整体做「对焦」模糊 → 清晰（类 AE / Keynote） */
+.splash-logo-stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  will-change: transform, filter, opacity;
+  animation: appleLogoStage 4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.splash-logo-img {
+  display: block;
+  width: min(200px, 48vw);
+  height: auto;
+  position: relative;
+  z-index: 1;
+}
+
+/* Logo 与倒影之间的细亮缝（舞台边缘感） */
+.splash-stage-line {
+  width: min(200px, 48vw);
+  height: 1px;
+  margin-top: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.12) 20%,
+    rgba(255, 255, 255, 0.22) 50%,
+    rgba(255, 255, 255, 0.12) 80%,
+    transparent 100%
+  );
+  opacity: 0;
+  animation: appleStageLine 4s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
+}
+
+@keyframes appleStageLine {
+  0%,
+  20% {
+    opacity: 0;
+    transform: scaleX(0.6);
+  }
+  32%,
+  72% {
+    opacity: 1;
+    transform: scaleX(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scaleX(1);
+  }
+}
+
+.splash-reflection {
+  width: min(200px, 48vw);
+  margin-top: 0;
+  height: clamp(52px, 15vw, 76px);
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.5) 0%, transparent 90%);
+  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.5) 0%, transparent 90%);
+  pointer-events: none;
+}
+
+.splash-logo-img--mirror {
+  width: 100%;
+  height: auto;
+  transform: scaleY(-1);
+  opacity: 0.32;
+  filter: blur(0.3px);
+}
+
+.splash-tagline {
+  margin: 0;
+  font-size: clamp(12px, 2.8vw, 14px);
+  font-weight: 400;
+  letter-spacing: 0.28em;
+  text-indent: 0.28em;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Helvetica, Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
+  color: rgba(255, 255, 255, 0.38);
+  opacity: 0;
+  transform: translateY(12px);
+  animation: appleTagline 4s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
+}
+
+/* 淡入 + 轻微缩放，无「对焦」模糊（末段仅透明度淡出） */
+@keyframes appleLogoStage {
+  0% {
+    opacity: 0;
+    filter: brightness(1.12);
+    transform: scale(1.12);
+  }
+  14% {
+    opacity: 0.5;
+    filter: brightness(1.06);
+    transform: scale(1.05);
+  }
+  28% {
+    opacity: 1;
+    filter: brightness(1);
+    transform: scale(1);
+  }
+  38% {
+    filter: brightness(1);
+    transform: scale(1.014);
+  }
+  42% {
+    transform: scale(1);
+  }
+  72% {
+    opacity: 1;
+    filter: brightness(1);
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    filter: brightness(1.04);
+    transform: scale(1.04);
+  }
+}
+
+@keyframes appleTagline {
+  0%,
+  18% {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  32%,
+  68% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes splashFadeOut {
+  0% {
+    opacity: 1;
+    visibility: visible;
+  }
+  100% {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+
+@keyframes splashContentFade {
+  0%,
+  100% {
+    opacity: 0;
+  }
+  6%,
+  90% {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .splash-bg-apple::before {
+    animation: none;
+    opacity: 0.6;
+  }
+  .splash-bg-apple,
+  .splash-spotlight,
+  .splash-floor-glow,
+  .splash-stage-line,
+  .splash-pulse-ring {
+    animation: none;
+  }
+  .splash-pulse-ring,
+  .splash-pulse-ring--delayed {
+    opacity: 0;
+  }
+  .splash-spotlight {
+    opacity: 0.9;
+    transform: none;
+  }
+  .splash-floor-glow {
+    opacity: 0.85;
+    transform: translateX(-50%) scale(1);
+  }
+  .splash-stage-line {
+    opacity: 0.5;
+    transform: none;
+  }
+  .splash-logo-stage {
+    opacity: 1;
+    filter: none;
+    transform: none;
+    animation: none;
+  }
+  .splash-tagline {
+    opacity: 1;
+    transform: none;
+    animation: none;
+  }
+  .splash-content {
+    animation: none;
+  }
+  .splash-screen--apple {
+    animation: splashFadeOut 0.5s ease-out 1s forwards;
+  }
+}
+
+/* ─── Pro 片头结构 + 品牌橙（--brand / --brand-light）影棚光与车漆高光 ─── */
+.splash-screen--keynote-pro {
+  background: #000000;
+  animation: splashFadeOut 0.85s cubic-bezier(0.25, 0.1, 0.25, 1) 3.65s forwards;
+}
+
+.splash-screen--keynote-pro .splash-pulse-rings {
+  display: none;
+}
+
+.splash-screen--keynote-pro .splash-bg-apple,
+.splash-screen--keynote-pro .splash-bg-apple::before {
+  background: #000000;
+  animation: none;
+  opacity: 0;
+}
+
+/* 顶光：暖橙柔光（品牌色） */
+.splash-screen--keynote-pro .splash-spotlight {
+  background: radial-gradient(
+    ellipse 52% 44% at 50% 36%,
+    color-mix(in srgb, var(--brand) 22%, transparent) 0%,
+    color-mix(in srgb, var(--brand-light) 8%, transparent) 40%,
+    transparent 62%
+  );
+  animation: keynoteSpotlightIn 4.4s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
+}
+
+@keyframes keynoteSpotlightIn {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0) scale(1);
+  }
+  26% {
+    opacity: 1;
+  }
+  72% {
+    opacity: 0.62;
+    transform: translate(0.2%, -0.15%) scale(1.008);
+  }
+  100% {
+    opacity: 0.52;
+    transform: translate(0.15%, -0.1%) scale(1);
+  }
+}
+
+.splash-screen--keynote-pro .splash-vignette-apple {
+  box-shadow:
+    inset 0 0 140px rgba(0, 0, 0, 0.94),
+    inset 0 -120px 200px rgba(12, 4, 0, 0.55),
+    inset 0 -40px 80px color-mix(in srgb, var(--brand) 12%, transparent);
+}
+
+.splash-screen--keynote-pro .splash-floor-glow {
+  background: radial-gradient(
+    ellipse 48% 34% at 50% 100%,
+    color-mix(in srgb, var(--brand) 28%, transparent) 0%,
+    color-mix(in srgb, var(--brand-light) 6%, transparent) 45%,
+    transparent 76%
+  );
+  animation: keynoteFloorGlow 4.3s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
+}
+
+@keyframes keynoteFloorGlow {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) scale(0.92);
+  }
+  30% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.72;
+    transform: translateX(-50%) scale(1.015);
+  }
+}
+
+/* 与 car.js 4.5s 对齐；Pro 片头常见极轻 dolly-in */
+.splash-screen--keynote-pro .splash-content {
+  animation: keynoteSplashContent 4.5s cubic-bezier(0.2, 0.08, 0.2, 1) forwards;
+}
+
+@keyframes keynoteSplashContent {
+  0% {
+    opacity: 0;
+    transform: scale(0.988);
+  }
+  10% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  80% {
+    opacity: 1;
+    transform: scale(1.022);
+  }
+  92% {
+    opacity: 0.88;
+    transform: scale(1.026);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.03);
+  }
+}
+
+.splash-screen--keynote-pro .splash-logo-stage {
+  animation: keynoteLogoStage 4.5s cubic-bezier(0.18, 1, 0.3, 1) forwards;
+}
+
+.splash-screen--keynote-pro .splash-logo-rim {
+  position: relative;
+  width: min(200px, 48vw);
+  line-height: 0;
+}
+
+.splash-screen--keynote-pro .splash-logo-img {
+  position: relative;
+  z-index: 0;
+  display: block;
+  width: 100%;
+  height: auto;
+  filter: brightness(0)
+    drop-shadow(0 0 0.5px color-mix(in srgb, var(--brand-light) 95%, white))
+    drop-shadow(0 0 2px color-mix(in srgb, var(--brand) 75%, transparent))
+    drop-shadow(0 0 5px color-mix(in srgb, var(--brand) 55%, transparent))
+    drop-shadow(-1px -2px 7px color-mix(in srgb, var(--brand) 40%, transparent))
+    drop-shadow(2px 2px 12px color-mix(in srgb, var(--gold-end) 35%, var(--brand) 65%))
+    drop-shadow(0 0 28px color-mix(in srgb, var(--brand) 28%, transparent));
+}
+
+.splash-screen--keynote-pro .splash-logo-rim-sheen {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  overflow: hidden;
+  pointer-events: none;
+  -webkit-mask-image: url("../media-webp/photos/index/logo/logo2.webp");
+  mask-image: url("../media-webp/photos/index/logo/logo2.webp");
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  mix-blend-mode: screen;
+  opacity: 0;
+  transition: opacity 0.24s ease;
+}
+
+/* 横向高光：金橙掠过高光（品牌漆） */
+.splash-screen--keynote-pro .splash-logo-rim-sheen-inner {
+  position: absolute;
+  left: -30%;
+  top: -35%;
+  width: 55%;
+  height: 200%;
+  margin: 0;
+  background: linear-gradient(
+    105deg,
+    transparent 0%,
+    transparent 28%,
+    color-mix(in srgb, var(--brand) 18%, transparent) 40%,
+    color-mix(in srgb, var(--gold-end) 45%, white) 48%,
+    color-mix(in srgb, var(--brand-light) 70%, white) 52%,
+    color-mix(in srgb, var(--brand) 35%, transparent) 60%,
+    transparent 72%,
+    transparent 100%
+  );
+  filter: blur(0.35px);
+  transform: translateX(-120%) skewX(-10deg);
+  opacity: 0;
+  animation: keynoteSpecularSweep 4.5s cubic-bezier(0.33, 0, 0.2, 1) forwards;
+}
+
+@keyframes keynoteSpecularSweep {
+  0% {
+    transform: translateX(-130%) skewX(-10deg);
+    opacity: 0;
+  }
+  8% {
+    opacity: 1;
+  }
+  42% {
+    transform: translateX(42%) skewX(-10deg);
+    opacity: 1;
+  }
+  68% {
+    opacity: 0.35;
+  }
+  100% {
+    transform: translateX(130%) skewX(-10deg);
+    opacity: 0;
+  }
+}
+
+.splash-screen--keynote-pro .splash-logo-rim--reflect {
+  width: 100%;
+}
+
+.splash-screen--keynote-pro .splash-logo-rim-sheen--reflect {
+  opacity: 0;
+}
+
+.splash-screen--keynote-pro.splash-mask-ready .splash-logo-rim-sheen {
+  opacity: 0.92;
+}
+
+.splash-screen--keynote-pro.splash-mask-ready .splash-logo-rim-sheen--reflect {
+  opacity: 0.42;
+}
+
+.splash-screen--keynote-pro .splash-logo-rim-sheen--reflect .splash-logo-rim-sheen-inner {
+  animation: keynoteSpecularSweepReflect 4.5s cubic-bezier(0.33, 0, 0.2, 1) 0.12s forwards;
+}
+
+@keyframes keynoteSpecularSweepReflect {
+  0% {
+    transform: translateX(125%) skewX(10deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.85;
+  }
+  48% {
+    transform: translateX(-38%) skewX(10deg);
+    opacity: 0.55;
+  }
+  100% {
+    transform: translateX(-125%) skewX(10deg);
+    opacity: 0;
+  }
+}
+
+.splash-screen--keynote-pro .splash-logo-img--mirror {
+  opacity: 0.44;
+  filter: brightness(0)
+    drop-shadow(0 0 0.5px color-mix(in srgb, var(--brand-light) 80%, transparent))
+    drop-shadow(0 0 3px color-mix(in srgb, var(--brand) 45%, transparent))
+    drop-shadow(0 0 10px color-mix(in srgb, var(--brand) 25%, transparent));
+}
+
+.splash-screen--keynote-pro .splash-reflection {
+  width: min(200px, 48vw);
+}
+
+@keyframes keynoteLogoStage {
+  0% {
+    opacity: 0;
+    filter: brightness(1.06);
+  }
+  12% {
+    opacity: 0.88;
+    filter: brightness(1);
+  }
+  24% {
+    opacity: 1;
+    filter: brightness(1);
+  }
+  78% {
+    opacity: 1;
+    filter: brightness(1);
+  }
+  100% {
+    opacity: 0;
+    filter: brightness(1.02);
+  }
+}
+
+.splash-screen--keynote-pro .splash-stage-line {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    color-mix(in srgb, var(--brand) 22%, transparent) 22%,
+    color-mix(in srgb, var(--brand-light) 55%, white) 50%,
+    color-mix(in srgb, var(--brand) 22%, transparent) 78%,
+    transparent 100%
+  );
+  animation: keynoteStageLine 4.5s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
+}
+
+@keyframes keynoteStageLine {
+  0%,
+  18% {
+    opacity: 0;
+    transform: scaleX(0.58);
+  }
+  28%,
+  76% {
+    opacity: 1;
+    transform: scaleX(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scaleX(1);
+  }
+}
+
+.splash-screen--keynote-pro .splash-tagline {
+  color: color-mix(in srgb, var(--brand-light) 72%, rgba(255, 248, 245, 0.9));
+  font-weight: 400;
+  letter-spacing: 0.32em;
+  text-indent: 0.32em;
+  animation: keynoteTagline 4.5s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
+}
+
+@keyframes keynoteTagline {
+  0%,
+  15% {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  26%,
+  75% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .splash-screen--keynote-pro .splash-logo-rim-sheen-inner {
+    animation: none;
+    opacity: 0;
+    transform: none;
+  }
+  .splash-screen--keynote-pro .splash-spotlight,
+  .splash-screen--keynote-pro .splash-floor-glow,
+  .splash-screen--keynote-pro .splash-stage-line {
+    animation: none;
+  }
+  .splash-screen--keynote-pro .splash-spotlight {
+    opacity: 0.42;
+    transform: none;
+  }
+  .splash-screen--keynote-pro .splash-floor-glow {
+    opacity: 0.48;
+    transform: translateX(-50%) scale(1);
+  }
+  .splash-screen--keynote-pro .splash-stage-line {
+    opacity: 0.4;
+    transform: none;
+  }
+  .splash-screen--keynote-pro .splash-logo-stage {
+    animation: none;
+    opacity: 1;
+    filter: none;
+    transform: none;
+  }
+  .splash-screen--keynote-pro .splash-content {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+  .splash-screen--keynote-pro .splash-tagline {
+    opacity: 1;
+    transform: none;
+    animation: none;
+  }
+  .splash-screen--keynote-pro {
+    animation: splashFadeOut 0.5s ease-out 1s forwards;
+  }
+}

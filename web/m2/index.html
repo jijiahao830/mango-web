@@ -1,0 +1,657 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <script>window.__MANGO_ASSET_VERSION__='202604282144';</script>
+  <!-- 与 member_api 不同源时：设 window.MANGO_API_ORIGIN，或 URL 加 ?m2api=http://电脑局域网IP:8765（手机测 file:// 时） -->
+  <script>window.MANGO_API_ORIGIN = window.MANGO_API_ORIGIN || '';</script>
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <link rel="icon" href="../favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" href="../favicon.png">
+
+  <title>芒果超跑运营中心</title>
+  <link rel="preload" href="./index.js?v=202604282144" as="script">
+  <link rel="preload" href="./m2-actions.js?v=202604282144" as="script">
+  <link rel="preload" href="../media-webp/photos/index/m2/首页.webp" as="image">
+  <link rel="preload" href="../media-webp/photos/index/m2/选车.webp" as="image">
+  <link rel="preload" href="../media-webp/photos/index/m2/加入清单.webp" as="image">
+  <link rel="preload" href="../media-webp/photos/index/m2/咨询客服.webp" as="image">
+  <link rel="preload" href="../media-webp/photos/index/m2/用车清单.webp" as="image">
+  <link rel="preload" href="../media-webp/photos/index/m2/筛选.webp" as="image">
+  <link rel="stylesheet" href="./index.css?v=202604282144">
+  <link rel="stylesheet" href="./m2-splash.css?v=202604282144">
+  <script>
+  /* 须早于 body 开屏节点：file:// 下 index.js 在文末才执行，否则动画已播放 */
+  (function () {
+    function wantSkip() {
+      try {
+        var sp = new URLSearchParams(String(location.search || '').replace(/^\?/, ''));
+        var q = String(sp.get('m2ns') || '').toLowerCase();
+        if (q === '1' || q === 'true' || q === 'yes') return true;
+        var fh = String(location.hash || '').replace(/^#/, '');
+        if (/--m2ns$/i.test(fh)) return true;
+        if (String(sessionStorage.getItem('m2_skip_next_index_splash') || '') === '1') return true;
+        if (fh.indexOf('&') === -1) return false;
+        var segs = fh.split('&');
+        for (var i = 1; i < segs.length; i++) {
+          var seg = segs[i];
+          var eq = seg.indexOf('=');
+          var k = String(eq === -1 ? seg : seg.slice(0, eq))
+            .trim()
+            .toLowerCase();
+          var v = String(eq === -1 ? '' : seg.slice(eq + 1))
+            .trim()
+            .toLowerCase();
+          if (k === 'm2ns' && (v === '1' || v === 'true' || v === 'yes' || v === '')) return true;
+        }
+      } catch (e) {}
+      return false;
+    }
+    if (wantSkip()) {
+      document.documentElement.classList.add('m2-splash-suppressed');
+      try {
+        window.__m2SkipSplashEarly = true;
+      } catch (e2) {}
+    }
+  })();
+  </script>
+  <script>
+  /* 开屏阶段即拉取车型目录（与 index.js loadCatalog 同源策略一致，结果供 loadCatalog 复用） */
+  (function () {
+    function apiBases() {
+      var list = [];
+      function add(u) {
+        u = String(u || '').replace(/\/$/, '');
+        if (!u || list.indexOf(u) !== -1) return;
+        list.push(u);
+      }
+      try {
+        var sp = new URLSearchParams(String(location.search || '').replace(/^\?/, ''));
+        var q = String(sp.get('m2api') || '').trim();
+        if (q) add(q);
+      } catch (eQ) {}
+      try {
+        if (typeof window !== 'undefined' && window.MANGO_API_ORIGIN) {
+          add(String(window.MANGO_API_ORIGIN));
+        }
+      } catch (e0) {}
+      var origin = String(location.origin || '').replace(/\/$/, '');
+      if (origin && origin !== 'null' && origin.indexOf('file:') !== 0) {
+        add(origin);
+        try {
+          var h = String(location.hostname || '').toLowerCase();
+          if (h === 'localhost' || h === '127.0.0.1') {
+            add('http://127.0.0.1:8765');
+            add('http://127.0.0.1:8787');
+          } else if (/^\d+\.\d+\.\d+\.\d+$/.test(h)) {
+            add('http://' + h + ':8765');
+            add('http://' + h + ':8787');
+          }
+        } catch (e1) {}
+      } else {
+        add('https://www.mangov8.com');
+        add('http://127.0.0.1:8765');
+        add('http://localhost:8765');
+        add('http://127.0.0.1:8787');
+        add('http://localhost:8787');
+      }
+      return list.length ? list : ['https://www.mangov8.com'];
+    }
+    function fetchOne(base) {
+      return fetch(base + '/api/cars-catalog', { credentials: 'omit' }).then(function (r) {
+        return r.json().then(function (j) {
+          if (!r.ok || !j || !j.ok || !Array.isArray(j.cars)) throw new Error('invalid cars-catalog');
+          return j.cars;
+        });
+      });
+    }
+    var bases = apiBases();
+    var i = 0;
+    function folderForBanner(carName) {
+      var raw = String(carName || '').trim();
+      if (!raw) return '';
+      var compact = raw.replace(/[\s\u00a0\u3000]+/g, ' ').trim();
+      var alias = {
+        '兰博基尼 V12 大牛 LP750-4 SV': '兰博基尼 LP750-4 SV',
+        '兰博基尼V12 大牛 LP750-4 SV': '兰博基尼 LP750-4 SV',
+      };
+      return alias[compact] || compact;
+    }
+    function preloadFirstBanners(cars) {
+      if (!cars || !cars.length) return;
+      var n = Math.min(5, cars.length);
+      for (var k = 0; k < n; k++) {
+        var nm = String((cars[k] && cars[k].car_name) || '').trim();
+        if (!nm) continue;
+        var folder = encodeURIComponent(folderForBanner(nm));
+        var img = new Image();
+        img.src='../media-webp/photos/carpark/' + folder + '/详情页-banner.webp';
+      }
+    }
+    function next() {
+      if (i >= bases.length) return;
+      var base = bases[i++];
+      fetchOne(base)
+        .then(function (cars) {
+          window.__m2PrefetchedCatalog = cars;
+          try {
+            preloadFirstBanners(cars);
+          } catch (e) {}
+        })
+        .catch(function () {
+          next();
+        });
+    }
+    next();
+  })();
+  </script>
+</head>
+<body>
+
+  <!-- 开屏：与 1.0 car.html 同款 Pro 片头；总时长与 index.js 开屏逻辑 4.5s 一致 -->
+  <div class="splash-screen splash-screen--apple splash-screen--keynote-pro" id="splashScreen" aria-hidden="true">
+    <div class="splash-bg-apple" aria-hidden="true"></div>
+    <div class="splash-spotlight" aria-hidden="true"></div>
+    <div class="splash-vignette-apple" aria-hidden="true"></div>
+    <div class="splash-floor-glow" aria-hidden="true"></div>
+    <div class="splash-pulse-rings" aria-hidden="true">
+      <span class="splash-pulse-ring"></span>
+      <span class="splash-pulse-ring splash-pulse-ring--delayed"></span>
+    </div>
+    <div class="splash-content">
+      <div class="splash-logo-stage">
+        <div class="splash-logo-rim">
+          <img src="../media-webp/photos/index/logo/logo2.webp" alt="" class="splash-logo-img" decoding="async">
+          <div class="splash-logo-rim-sheen" aria-hidden="true">
+            <div class="splash-logo-rim-sheen-inner"></div>
+          </div>
+        </div>
+        <div class="splash-stage-line" aria-hidden="true"></div>
+        <div class="splash-reflection" aria-hidden="true">
+          <div class="splash-logo-rim splash-logo-rim--reflect">
+            <img src="../media-webp/photos/index/logo/logo2.webp" alt="" class="splash-logo-img splash-logo-img--mirror" decoding="async">
+            <div class="splash-logo-rim-sheen splash-logo-rim-sheen--reflect" aria-hidden="true">
+              <div class="splash-logo-rim-sheen-inner"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p class="splash-tagline">芒果超跑 · 极速出行</p>
+    </div>
+  </div>
+
+  <main class="m2-home">
+    <section class="m2-home__hero" id="m2Hero" aria-label="芒果超跑运营中心首页视觉">
+      <div class="m2-home__overlay"></div>
+      <div class="m2-home__content">
+        <h1 class="m2-home__title">芒果超跑运营中心</h1>
+        <p class="m2-home__line">
+          驭风显锋<span class="m2-home__accent">芒</span>
+        </p>
+        <p class="m2-home__line">
+          <span class="m2-home__accent">果</span>敢任驰骋
+        </p>
+      </div>
+    </section>
+
+    <section class="m2-chooser" id="m2Chooser" aria-label="选车区">
+      <div class="m2-chooser__bg-wrap" aria-hidden="true">
+        <img class="m2-chooser__bg-base" src="../media-webp/photos/index/m2/选车.webp" alt="">
+      </div>
+      <div class="m2-chooser__banner-wrap">
+        <img id="m2ChooserBannerImage" class="m2-chooser__banner-image" src="" alt="" aria-hidden="true">
+      </div>
+      <button id="m2BannerPrev" class="m2-chooser__banner-arrow m2-chooser__banner-arrow--prev is-hidden" type="button" aria-label="上一辆">
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 6 9 12 15 18"></polyline></svg>
+      </button>
+      <button id="m2BannerNext" class="m2-chooser__banner-arrow m2-chooser__banner-arrow--next is-hidden" type="button" aria-label="下一辆">
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"></polyline></svg>
+      </button>
+      <div class="m2-chooser__overlay"></div>
+
+      <div class="m2-chooser__top">
+        <nav id="m2CategoryTabs" class="m2-chooser__tabs" aria-label="车辆分类"></nav>
+      </div>
+
+      <div class="m2-chooser__center">
+        <div id="m2BrandTabs" class="m2-chooser__subtabs" aria-label="车辆品牌"></div>
+        <h2 id="m2ChooserCarTitle" class="m2-chooser__title"></h2>
+      </div>
+
+      <a class="m2-chooser__detail-btn" id="m2DetailBtn" href="#">查看车辆详情</a>
+
+      <div class="m2-chooser__bottom">
+        <button type="button" id="m2BtnAddChecklist" class="m2-chooser__bottom-btn">
+          <img src="../media-webp/photos/index/m2/加入清单.webp" alt="" aria-hidden="true" class="m2-chooser__bottom-icon">
+          <span>加入清单</span>
+        </button>
+        <button type="button" id="m2BtnConsult" class="m2-chooser__bottom-btn">
+          <img src="../media-webp/photos/index/m2/咨询客服.webp" alt="" aria-hidden="true" class="m2-chooser__bottom-icon">
+          <span>咨询客服</span>
+        </button>
+        <button type="button" id="m2BtnChecklist" class="m2-chooser__bottom-btn">
+          <img src="../media-webp/photos/index/m2/用车清单.webp" alt="" aria-hidden="true" class="m2-chooser__bottom-icon">
+          <span>用车清单</span>
+        </button>
+        <button type="button" id="m2BtnFilter" class="m2-chooser__bottom-btn">
+          <img src="../media-webp/photos/index/m2/筛选.webp" alt="" aria-hidden="true" class="m2-chooser__bottom-icon">
+          <span>筛选</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- 筛选底部弹出层 -->
+    <div class="m2-filter-mask" id="m2FilterMask" aria-hidden="true"></div>
+    <div class="m2-filter-sheet" id="m2FilterSheet" role="dialog" aria-label="筛选">
+      <div class="m2-filter-sheet__handle"></div>
+      <div class="m2-filter-search-wrap">
+        <input class="m2-filter-search" id="m2FilterSearch" type="search" placeholder="搜索车型...">
+      </div>
+      <div class="m2-filter-section">
+        <p class="m2-filter-section__label">分类</p>
+        <div class="m2-filter-tags" id="m2FilterCats"></div>
+      </div>
+      <div class="m2-filter-section">
+        <p class="m2-filter-section__label">品牌</p>
+        <div class="m2-filter-tags" id="m2FilterBrands"></div>
+      </div>
+      <div class="m2-filter-actions">
+        <button class="m2-filter-reset" id="m2FilterReset" type="button">重置</button>
+        <button class="m2-filter-confirm" id="m2FilterConfirm" type="button">确认</button>
+      </div>
+    </div>
+
+    <section class="m2-packages" id="m2Packages" aria-label="套餐区">
+      <div class="m2-packages__bg" id="m2PkgBg"></div>
+      <div class="m2-packages__bg-gradient"></div>
+
+      <div class="m2-packages__body">
+        <div class="m2-packages__track" id="m2PkgTrack">
+          <div class="m2-packages__item" data-pkg-key="business" data-pkg-img="../media-webp/photos/index/m2/商务接待.webp" data-pkg-href="./package-business.html?v=202604282144">
+            <div class="m2-packages__card">
+              <img class="m2-packages__img" src="../media-webp/photos/index/m2/商务接待.webp" alt="商务接待">
+              <div class="m2-packages__card-overlay">
+                <h2 class="m2-packages__title">商务接待</h2>
+                <p class="m2-packages__desc">专属豪华座驾，彰显企业气质</p>
+              </div>
+            </div>
+          </div>
+          <div class="m2-packages__item" data-pkg-key="wedding" data-pkg-img="../media-webp/photos/index/m2/婚礼.webp" data-pkg-href="./package-wedding.html?v=202604282144">
+            <div class="m2-packages__card">
+              <img class="m2-packages__img" src="../media-webp/photos/index/m2/婚礼.webp" alt="婚礼">
+              <div class="m2-packages__card-overlay">
+                <h2 class="m2-packages__title">婚礼</h2>
+                <p class="m2-packages__desc">浪漫婚车定制，让幸福时刻加倍</p>
+              </div>
+            </div>
+          </div>
+          <div class="m2-packages__item" data-pkg-key="drive" data-pkg-img="../media-webp/photos/index/m2/自驾.webp" data-pkg-href="./package-drive.html?v=202604282144">
+            <div class="m2-packages__card">
+              <img class="m2-packages__img" src="../media-webp/photos/index/m2/自驾.webp" alt="自驾">
+              <div class="m2-packages__card-overlay">
+                <h2 class="m2-packages__title">自驾</h2>
+                <p class="m2-packages__desc">自由路线出行，尽享驾驶乐趣</p>
+              </div>
+            </div>
+          </div>
+          <div class="m2-packages__item" data-pkg-key="event" data-pkg-img="../media-webp/photos/index/m2/摆展.webp" data-pkg-href="./package-event.html?v=202604282144">
+            <div class="m2-packages__card">
+              <img class="m2-packages__img" src="../media-webp/photos/index/m2/摆展.webp" alt="摆展">
+              <div class="m2-packages__card-overlay">
+                <h2 class="m2-packages__title">摆展</h2>
+                <p class="m2-packages__desc">豪车摆展租赁，提升品牌形象</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <a class="m2-packages__btn" id="m2PkgBtn" href="./package-business.html?v=202604282144">点击了解</a>
+      </div>
+    </section>
+
+    <section class="m2-service" id="m2Service" aria-label="服务区">
+      <div class="m2-service__bg" style="background-image:url('../media-webp/photos/index/m2/服务.webp')"></div>
+      <div class="m2-service__header">
+        <p class="m2-service__brand"><span>Mango</span> Elite Rental</p>
+        <p class="m2-service__slogan">芒果<span>优</span>·<span>享</span>出行</p>
+      </div>
+      <div class="m2-service__bottom">
+        <h2 class="m2-service__title">"优·享"服务</h2>
+        <a class="m2-service__btn" href="./services.html?v=202604282144">了解更多</a>
+      </div>
+    </section>
+
+    <section class="m2-about" id="m2About" aria-label="关于区">
+      <div class="m2-about__bg" style="background-image:url('../media-webp/photos/index/m2/关于.webp')"></div>
+      <div class="m2-about__top">
+        <h2 class="m2-about__title">关于我们</h2>
+        <a class="m2-about__btn" href="./about.html?v=202604282144">了解更多</a>
+      </div>
+      <footer class="m2-about__footer">
+        <p class="m2-about__footer-text">备案号：滇ICP备2025055273号-3</p>
+        <p class="m2-about__footer-text">客服联系方式：13033333370</p>
+      </footer>
+    </section>
+  </main>
+  <script src="./index.js?v=202604282144"></script>
+  <script src="./m2-actions.js?v=202604282144"></script>
+  <script>
+  /* ===== 筛选面板 ===== */
+  (function () {
+    var mask    = document.getElementById('m2FilterMask');
+    var sheet   = document.getElementById('m2FilterSheet');
+    var filterBtn = document.getElementById('m2BtnFilter');
+    var searchEl  = document.getElementById('m2FilterSearch');
+    var catsEl    = document.getElementById('m2FilterCats');
+    var brandsEl  = document.getElementById('m2FilterBrands');
+    var resetBtn  = document.getElementById('m2FilterReset');
+    var confirmBtn = document.getElementById('m2FilterConfirm');
+
+    if (!mask || !sheet || !filterBtn) return;
+
+    var selCat = '';
+    var selBrand = '';
+
+    function open() {
+      var chooser = window.m2Chooser;
+      if (!chooser) return;
+      selCat   = chooser.getActiveCategory();
+      selBrand = chooser.getActiveBrand();
+      renderCats(chooser.getCars(), '');
+      renderBrands(chooser.getCars(), selCat, '');
+      mask.classList.add('is-open');
+      sheet.classList.add('is-open');
+      searchEl.value = '';
+    }
+
+    function close() {
+      mask.classList.remove('is-open');
+      sheet.classList.remove('is-open');
+    }
+
+    function uniqueVals(cars, key) {
+      var seen = Object.create(null);
+      var result = [];
+      cars.forEach(function (c) {
+        var v = String(c[key] || '').trim();
+        if (v && !seen[v]) { seen[v] = true; result.push(v); }
+      });
+      return result.sort(function (a, b) { return a.localeCompare(b, 'zh-Hans-CN'); });
+    }
+
+    function renderCats(cars, search) {
+      var cats = uniqueVals(cars, 'category');
+      if (search) cats = cats.filter(function (c) { return c.indexOf(search) !== -1; });
+      catsEl.innerHTML = cats.map(function (c) {
+        return '<button class="m2-filter-tag' + (c === selCat ? ' is-active' : '') +
+          '" data-cat="' + escHtml(c) + '">' + escHtml(c) + '</button>';
+      }).join('');
+    }
+
+    function renderBrands(cars, cat, search) {
+      var filtered = cat ? cars.filter(function (c) { return String(c.category || '').trim() === cat; }) : cars;
+      var brands = uniqueVals(filtered, 'brand');
+      if (search) brands = brands.filter(function (b) { return b.indexOf(search) !== -1; });
+      brandsEl.innerHTML = brands.map(function (b) {
+        return '<button class="m2-filter-tag' + (b === selBrand ? ' is-active' : '') +
+          '" data-brand="' + escHtml(b) + '">' + escHtml(b) + '</button>';
+      }).join('');
+    }
+
+    function escHtml(s) {
+      return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
+    }
+
+    /* 搜索：按车名/品牌/分类过滤 */
+    searchEl.addEventListener('input', function () {
+      var q = searchEl.value.trim();
+      var cars = window.m2Chooser ? window.m2Chooser.getCars() : [];
+      var filtered = q ? cars.filter(function (c) {
+        return (c.car_name || '').indexOf(q) !== -1 ||
+               (c.brand || '').indexOf(q) !== -1 ||
+               (c.category || '').indexOf(q) !== -1;
+      }) : cars;
+      renderCats(filtered, '');
+      renderBrands(filtered, selCat, '');
+    });
+
+    /* 点击分类标签：切换高亮，品牌列表按当前搜索结果重新渲染 */
+    catsEl.addEventListener('click', function (e) {
+      var btn = e.target.closest('.m2-filter-tag');
+      if (!btn) return;
+      selCat = btn.dataset.cat;
+      selBrand = '';
+      catsEl.querySelectorAll('.m2-filter-tag').forEach(function (b) {
+        b.classList.toggle('is-active', b.dataset.cat === selCat);
+      });
+      /* 品牌列表按当前搜索词过滤 */
+      var q = searchEl.value.trim();
+      var cars = window.m2Chooser ? window.m2Chooser.getCars() : [];
+      var filtered = q ? cars.filter(function (c) {
+        return (c.car_name || '').indexOf(q) !== -1 ||
+               (c.brand || '').indexOf(q) !== -1 ||
+               (c.category || '').indexOf(q) !== -1;
+      }) : cars;
+      renderBrands(filtered, selCat, '');
+    });
+
+    /* 点击品牌标签：只切换高亮，不重新渲染列表 */
+    brandsEl.addEventListener('click', function (e) {
+      var btn = e.target.closest('.m2-filter-tag');
+      if (!btn) return;
+      selBrand = btn.dataset.brand;
+      brandsEl.querySelectorAll('.m2-filter-tag').forEach(function (b) {
+        b.classList.toggle('is-active', b.dataset.brand === selBrand);
+      });
+    });
+
+    /* 重置 */
+    resetBtn.addEventListener('click', function () {
+      selCat = '';
+      selBrand = '';
+      searchEl.value = '';
+      var cars = window.m2Chooser ? window.m2Chooser.getCars() : [];
+      renderCats(cars, '');
+      renderBrands(cars, '', '');
+      if (window.m2Chooser) window.m2Chooser.applyFilter('', '', '');
+      close();
+    });
+
+    /* 确认 */
+    confirmBtn.addEventListener('click', function () {
+      if (window.m2Chooser) window.m2Chooser.applyFilter(selCat, selBrand, searchEl.value.trim());
+      close();
+    });
+
+    filterBtn.addEventListener('click', open);
+    mask.addEventListener('click', close);
+  })();
+  </script>
+  <script>
+  (function () {
+    var PKG_STORAGE = 'm2PkgKey';
+
+    var track = document.getElementById('m2PkgTrack');
+    var bg = document.getElementById('m2PkgBg');
+    if (!track || !bg) return;
+
+    var items = Array.from(track.querySelectorAll('.m2-packages__item'));
+    if (!items.length) return;
+
+    var currentImg = '';
+    var switchTimer = null;
+    var FADE_MS = 200;
+
+    function applyBg(img) {
+      if (!img || img === currentImg) return;
+      currentImg = img;
+      bg.classList.add('is-fading');
+      if (switchTimer) clearTimeout(switchTimer);
+      switchTimer = setTimeout(function () {
+        bg.style.backgroundImage = 'url("' + img + '")';
+        bg.classList.remove('is-fading');
+        switchTimer = null;
+      }, FADE_MS);
+    }
+
+    function applyItem(el) {
+      if (!el) return;
+      applyBg(el.getAttribute('data-pkg-img') || '');
+      if (btn) {
+        btn.href = el.getAttribute('data-pkg-href') || '#';
+        btn.dataset.pkgKey = el.getAttribute('data-pkg-key') || '';
+      }
+    }
+
+    var btn = document.getElementById('m2PkgBtn');
+
+    /* 初始背景 */
+    var firstImg = items[0].getAttribute('data-pkg-img') || '';
+    bg.style.backgroundImage = 'url("' + firstImg + '")';
+    currentImg = firstImg;
+
+    /* 初始按钮链接 */
+    if (btn && items[0]) {
+      btn.href = items[0].getAttribute('data-pkg-href') || '#';
+      btn.dataset.pkgKey = items[0].getAttribute('data-pkg-key') || '';
+    }
+
+    function readSavedPkgKey() {
+      try {
+        var q = new URLSearchParams(location.search || '');
+        var fromUrl = String(q.get('pkg') || '').trim();
+        if (fromUrl) return fromUrl;
+        var hasChooser = q.has('cat') || q.has('brand') || q.has('search') || q.has('carIndex');
+        /* 有选车参数且当前不是套餐区块时，不读 session，避免与详情返回抢选车区 */
+        if (hasChooser) {
+          var h = String(location.hash || '').replace(/^#/, '');
+          try {
+            h = decodeURIComponent(h).trim();
+          } catch (e0) {}
+          if (!/^m2packages$/i.test(h)) return '';
+        }
+      } catch (e) {}
+      try {
+        return String(sessionStorage.getItem(PKG_STORAGE) || '').trim();
+      } catch (e) {
+        return '';
+      }
+    }
+
+    function persistPkgKey(key) {
+      var k = String(key || '').trim();
+      if (!k) return;
+      try {
+        sessionStorage.setItem(PKG_STORAGE, k);
+      } catch (e) {}
+    }
+
+    function itemByKey(key) {
+      var k = String(key || '').trim();
+      if (!k) return null;
+      for (var i = 0; i < items.length; i++) {
+        if (items[i].getAttribute('data-pkg-key') === k) return items[i];
+      }
+      return null;
+    }
+
+    /** 仅当用户明确回到套餐区（URL 带 pkg 或 #m2Packages）时才滚动页面；仅有 session 记忆时不滚，避免从首页进选车却落在套餐区 */
+    function shouldScrollPageToPackages() {
+      try {
+        var q = new URLSearchParams(location.search || '');
+        if (String(q.get('pkg') || '').trim()) return true;
+      } catch (e) {}
+      var h = String(location.hash || '').replace(/^#/, '');
+      try {
+        h = decodeURIComponent(h).trim();
+      } catch (e0) {}
+      return /^m2packages$/i.test(h);
+    }
+
+    function restoreSavedPkg() {
+      if (window.m2HomeHashSkipsPkgRestore && window.m2HomeHashSkipsPkgRestore()) return;
+      var key = readSavedPkgKey();
+      var el = itemByKey(key);
+      if (!el) return;
+      persistPkgKey(key);
+      function doScroll() {
+        if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+        try {
+          el.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'auto' });
+        } catch (e) {}
+        applyItem(el);
+      }
+      if (!shouldScrollPageToPackages()) {
+        applyItem(el);
+        return;
+      }
+      requestAnimationFrame(function () {
+        requestAnimationFrame(function () {
+          doScroll();
+          setTimeout(doScroll, 0);
+          setTimeout(doScroll, 80);
+        });
+      });
+    }
+
+    function hrefFileName(href) {
+      var s = String(href || '').trim().replace(/[?#].*$/, '');
+      var parts = s.split('/').filter(Boolean);
+      return parts.length ? parts[parts.length - 1] : '';
+    }
+
+    function persistFromBtn() {
+      if (!btn) return;
+      var hRaw = String(btn.getAttribute('href') || '').trim();
+      var hResolved = '';
+      try {
+        hResolved = String(btn.href || '');
+      } catch (e) {}
+      var tail = hrefFileName(hRaw) || hrefFileName(hResolved);
+      for (var i = 0; i < items.length; i++) {
+        var href = String(items[i].getAttribute('data-pkg-href') || '').trim();
+        if (href && (href === hRaw || href === hResolved)) {
+          persistPkgKey(items[i].getAttribute('data-pkg-key'));
+          return;
+        }
+        if (tail && hrefFileName(href) === tail) {
+          persistPkgKey(items[i].getAttribute('data-pkg-key'));
+          return;
+        }
+      }
+      persistPkgKey(btn.dataset.pkgKey || '');
+    }
+
+    if (btn) {
+      btn.addEventListener('pointerdown', persistFromBtn, { passive: true });
+      btn.addEventListener('click', persistFromBtn);
+    }
+
+    window.addEventListener('pageshow', function (ev) {
+      if (!ev.persisted) return;
+      var key = readSavedPkgKey();
+      if (key && itemByKey(key)) restoreSavedPkg();
+    });
+
+    window.addEventListener('m2-catalog-loaded', function () {
+      var key = readSavedPkgKey();
+      if (key && itemByKey(key)) restoreSavedPkg();
+    });
+
+    /* IntersectionObserver 检测哪张在视口中央 */
+    var observer = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting && entry.intersectionRatio >= 0.5) {
+          applyItem(entry.target);
+        }
+      });
+    }, { root: track, threshold: 0.5 });
+
+    items.forEach(function (item) { observer.observe(item); });
+
+    restoreSavedPkg();
+  })();
+  </script>
+</body>
+</html>

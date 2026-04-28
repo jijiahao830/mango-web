@@ -535,14 +535,70 @@
       return p * getDaysMultiplier(it.days);
     }
 
-    function apiOrigin() {
-      if (typeof window.MANGO_API_ORIGIN !== 'undefined' && window.MANGO_API_ORIGIN) {
-        return String(window.MANGO_API_ORIGIN).replace(/\/$/, '');
+    /** 与 m2/m2-actions.js 一致：静态页与 member_api 不同端口时可回退到 8765/8787 */
+    function apiBaseCandidates() {
+      var list = [];
+      function add(u) {
+        u = String(u || '').replace(/\/$/, '');
+        if (!u || list.indexOf(u) !== -1) return;
+        list.push(u);
       }
-      if (typeof window.location !== 'undefined' && window.location.protocol !== 'file:') {
-        return String(window.location.origin).replace(/\/$/, '');
+      try {
+        var sp = new URLSearchParams(String(location.search || '').replace(/^\?/, ''));
+        var q = String(sp.get('m2api') || '').trim();
+        if (q) add(q);
+      } catch (eQ) {}
+      try {
+        if (typeof window !== 'undefined' && window.MANGO_API_ORIGIN) {
+          add(String(window.MANGO_API_ORIGIN));
+        }
+      } catch (e0) {}
+      var origin = String(typeof location !== 'undefined' ? location.origin : '').replace(/\/$/, '');
+      if (origin && origin !== 'null' && origin.indexOf('file:') !== 0) {
+        add(origin);
+        try {
+          var h = String(location.hostname || '').toLowerCase();
+          if (h === 'localhost' || h === '127.0.0.1') {
+            add('http://127.0.0.1:8765');
+            add('http://127.0.0.1:8787');
+          } else if (/^\d+\.\d+\.\d+\.\d+$/.test(h)) {
+            add('http://' + h + ':8765');
+            add('http://' + h + ':8787');
+          }
+        } catch (e1) {}
+      } else {
+        add('https://www.mangov8.com');
+        add('http://127.0.0.1:8765');
+        add('http://localhost:8765');
+        add('http://127.0.0.1:8787');
+        add('http://localhost:8787');
       }
-      return '';
+      return list.length ? list : ['https://www.mangov8.com'];
+    }
+
+    function fetchPostWithFallback(path, body) {
+      var candidates = apiBaseCandidates();
+      var i = 0;
+      function next() {
+        if (i >= candidates.length) return Promise.reject(new Error('all failed'));
+        var base = candidates[i++];
+        return fetch(base + path, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+          credentials: 'omit',
+        })
+          .then(function (res) {
+            return res.json().catch(function () { return {}; }).then(function (j) {
+              if (!res.ok && (res.status === 404 || res.status === 405) && i < candidates.length) {
+                return next();
+              }
+              return { ok: res.ok, j: j || {} };
+            });
+          })
+          .catch(next);
+      }
+      return next();
     }
 
     function buildPayload(map, phone) {
@@ -566,23 +622,10 @@
       var map = readChecklistMap();
       var ids = Object.keys(map || {});
       if (!ids.length) {
-        alert('用车清单为空，无法发送');
+        alert('用车清单为空，请先添加车辆');
         return;
       }
-      var b = apiOrigin();
-      if (!b) {
-        alert('当前环境无法连接接口，请先启动 member_api');
-        return;
-      }
-      fetch(b + '/api/wecom/checklist-send', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(buildPayload(map, phone)),
-        credentials: 'omit'
-      })
-        .then(function (res) {
-          return res.json().catch(function () { return {}; }).then(function (j) { return { ok: res.ok, j: j || {} }; });
-        })
+      fetchPostWithFallback('/api/wecom/checklist-send', buildPayload(map, phone))
         .then(function (o) {
           if (o.ok && o.j && o.j.ok) {
             writeChecklistMap({});
@@ -803,26 +846,13 @@
       if (!q) return;
       appendConsultMsg('user', q);
       if (consultInput) consultInput.value = '';
-      var b = apiOrigin();
-      if (!b) {
-        appendConsultMsg('assistant', '当前无法连接客服服务，请稍后再试。');
-        return;
-      }
       consultBusy = true;
       if (consultSendBtn) consultSendBtn.disabled = true;
-      fetch(b + '/api/ai-consult', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          message: q,
-          car_name: currentCarName,
-          user: String(sessionStorage.getItem('mango_driver_name') || '')
-        }),
-        credentials: 'omit'
+      fetchPostWithFallback('/api/ai-consult', {
+        message: q,
+        car_name: currentCarName,
+        user: String(sessionStorage.getItem('mango_driver_name') || ''),
       })
-        .then(function (res) {
-          return res.json().catch(function () { return {}; }).then(function (j) { return { ok: res.ok, j: j || {} }; });
-        })
         .then(function (o) {
           if (o.ok && o.j && o.j.ok && o.j.reply) appendConsultMsg('assistant', o.j.reply);
           else appendConsultMsg('assistant', '客服暂时繁忙，请稍后重试。');

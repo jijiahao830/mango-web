@@ -22,16 +22,18 @@
   function fromMobileCarList() {
     try {
       var q = new URLSearchParams(String(location.search || ''));
-      if (q.get('from') === 'car-mobile') return true;
+      if (q.get('from') === 'car-mobile' || q.get('from') === 'm2') return true;
+      if (q.get('m2from')) return true;
     } catch (e) {}
     var ref = String(document.referrer || '');
-    return /\/car-mobile\.html(?:[?#]|$)/i.test(ref);
+    if (/\/car-mobile\.html(?:[?#]|$)/i.test(ref)) return true;
+    return /\/m2\/index\.html/i.test(ref);
   }
 
   function syncMobileBackLink() {
     if (!isMobileClient() || !fromMobileCarList()) return;
     document.querySelectorAll('.detail-header .back-btn').forEach(function (a) {
-      a.setAttribute('href', '../../car-mobile.html');
+      a.setAttribute('href', '../../m2/index.html#m2Chooser');
     });
   }
 

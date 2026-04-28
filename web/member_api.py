@@ -1323,17 +1323,53 @@ def api_wecom_checklist_send():
     payload = request.get_json(silent=True) or {}
     user = str(payload.get("user") or "").strip() or "未登录用户"
     phone = str(payload.get("phone") or "").strip()
-    lines = payload.get("lines")
-    if not isinstance(lines, list) or not lines:
-        return _cors(jsonify(ok=False, error="empty_checklist")), HTTPStatus.BAD_REQUEST
 
-    normalized: list[str] = []
-    for line in lines:
-        s = str(line or "").strip()
-        if s:
-            normalized.append(s)
-    if not normalized:
-        return _cors(jsonify(ok=False, error="empty_checklist")), HTTPStatus.BAD_REQUEST
+    def _normalize_str_lines(raw: object) -> list[str]:
+        if not isinstance(raw, list):
+            return []
+        out: list[str] = []
+        for line in raw:
+            s = str(line or "").strip()
+            if s:
+                out.append(s)
+        return out
+
+    content = ""
+    sections = payload.get("sections")
+    if isinstance(sections, dict):
+        vehicles = _normalize_str_lines(sections.get("vehicles"))
+        packages = _normalize_str_lines(sections.get("packages"))
+        value_add = _normalize_str_lines(
+            sections.get("value_add")
+            or sections.get("valueAdd")
+            or sections.get("services")
+        )
+        if vehicles or packages or value_add:
+            blocks: list[str] = []
+            if vehicles:
+                blocks.append("车辆清单：\n- " + "\n- ".join(vehicles))
+            if packages:
+                blocks.append("套餐：\n- " + "\n- ".join(packages))
+            if value_add:
+                blocks.append("增值服务：\n- " + "\n- ".join(value_add))
+            content = "用户：{u}\n用户手机号：{p}\n".format(
+                u=user,
+                p=(phone or "未填写"),
+            ) + "\n\n".join(blocks)
+
+    if not content:
+        lines = payload.get("lines")
+        if not isinstance(lines, list) or not lines:
+            return _cors(jsonify(ok=False, error="empty_checklist")), HTTPStatus.BAD_REQUEST
+
+        normalized = _normalize_str_lines(lines)
+        if not normalized:
+            return _cors(jsonify(ok=False, error="empty_checklist")), HTTPStatus.BAD_REQUEST
+        content = "用户：{u}\n用户手机号：{p}\n车辆清单：\n- {rows}".format(
+            u=user,
+            p=(phone or "未填写"),
+            rows="\n- ".join(normalized),
+        )
 
     try:
         cfg = load_config()
@@ -1355,11 +1391,6 @@ def api_wecom_checklist_send():
             HTTPStatus.SERVICE_UNAVAILABLE,
         )
 
-    content = "用户：{u}\n用户手机号：{p}\n车辆清单：\n- {rows}".format(
-        u=user,
-        p=(phone or "未填写"),
-        rows="\n- ".join(normalized),
-    )
     body = {
         "msgtype": "text",
         "text": {"content": content},

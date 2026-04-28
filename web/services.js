@@ -5,6 +5,7 @@ document.addEventListener('DOMContentLoaded', function() {
   let isAnimating = false;
   let touchStartY = 0;
   let touchEndY = 0;
+  let touchMoved = false;
 
   function applyInitialSlideByPackage() {
     if (!slides.length || !dots.length) return;
@@ -85,13 +86,17 @@ document.addEventListener('DOMContentLoaded', function() {
   // 触摸事件（移动端）
   function handleTouchStart(e) {
     touchStartY = e.touches[0].clientY;
+    touchEndY = touchStartY;
+    touchMoved = false;
   }
 
   function handleTouchMove(e) {
     touchEndY = e.touches[0].clientY;
+    touchMoved = true;
   }
 
   function handleTouchEnd() {
+    if (!touchMoved) return;
     const deltaY = touchStartY - touchEndY;
     
     // 滑动距离超过50px才触发切换

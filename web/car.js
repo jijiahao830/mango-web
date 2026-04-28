@@ -19,6 +19,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.addEventListener(
       'click',
       function (e) {
+        if (e.target && e.target.closest && e.target.closest('.car-checklist-toggle')) return;
         var a = e.target.closest && e.target.closest('a.car-card-link');
         if (!a) return;
         var href = a.getAttribute('href') || '';
@@ -130,6 +131,7 @@ document.addEventListener('DOMContentLoaded', function() {
       function (e) {
         var a = e.target && e.target.closest ? e.target.closest('a.car-card-link') : null;
         if (!a) return;
+        if (e.target && e.target.closest && e.target.closest('.car-checklist-toggle')) return;
         if (!isPrimaryClickEvent(e)) return;
         if (a.target && String(a.target).toLowerCase() === '_blank') return;
         var href = a.getAttribute('href') || '';
@@ -140,6 +142,9 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         e.preventDefault();
         isNavigating = true;
+        try {
+          sessionStorage.setItem('mango_skip_next_car_splash', '1');
+        } catch (eSs) {}
         var to = a.href;
         openLoadingMask();
         preloadDetailDocument(to).then(function () {
@@ -631,12 +636,45 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 
-  function apiCatalogBase() {
-    var o =
-      typeof window.MANGO_API_ORIGIN !== 'undefined'
-        ? String(window.MANGO_API_ORIGIN || '').replace(/\/$/, '')
-        : '';
-    return o || (typeof location !== 'undefined' ? String(location.origin).replace(/\/$/, '') : '');
+  /** 与 m2/index.js apiBaseCandidates 一致：静态页与 member_api 不同端口时仍可落到 8765；支持 ?m2api= 与局域网 IP */
+  function apiCatalogBaseCandidates() {
+    var list = [];
+    function add(u) {
+      u = String(u || '').replace(/\/$/, '');
+      if (!u || list.indexOf(u) !== -1) return;
+      list.push(u);
+    }
+    try {
+      var sp = new URLSearchParams(String(location.search || '').replace(/^\?/, ''));
+      var q = String(sp.get('m2api') || '').trim();
+      if (q) add(q);
+    } catch (eQ) {}
+    try {
+      if (typeof window !== 'undefined' && window.MANGO_API_ORIGIN) {
+        add(String(window.MANGO_API_ORIGIN));
+      }
+    } catch (e0) {}
+    var origin = String(typeof location !== 'undefined' ? location.origin : '').replace(/\/$/, '');
+    if (origin && origin !== 'null' && origin.indexOf('file:') !== 0) {
+      add(origin);
+      try {
+        var h = String(location.hostname || '').toLowerCase();
+        if (h === 'localhost' || h === '127.0.0.1') {
+          add('http://127.0.0.1:8765');
+          add('http://127.0.0.1:8787');
+        } else if (/^\d+\.\d+\.\d+\.\d+$/.test(h)) {
+          add('http://' + h + ':8765');
+          add('http://' + h + ':8787');
+        }
+      } catch (e1) {}
+    } else {
+      add('https://www.mangov8.com');
+      add('http://127.0.0.1:8765');
+      add('http://localhost:8765');
+      add('http://127.0.0.1:8787');
+      add('http://localhost:8787');
+    }
+    return list.length ? list : ['https://www.mangov8.com'];
   }
 
   function escHtml(s) {
@@ -794,7 +832,7 @@ document.addEventListener('DOMContentLoaded', function() {
     var map = readChecklistMap();
     var ids = Object.keys(map);
     if (!ids.length) {
-      alert('用车清单为空，无法发送');
+      alert('用车清单为空，请先添加车辆');
       return;
     }
     var b = apiOriginRecommend();
@@ -1244,50 +1282,74 @@ document.addEventListener('DOMContentLoaded', function() {
     syncCardChecklistToggleStates(readChecklistMap());
   }
 
+  function fetchCatalogFromBase(base) {
+    var url = String(base || '').replace(/\/$/, '') + '/api/cars-catalog';
+    return fetch(url, { credentials: 'omit' }).then(function (r) {
+      return r.json().then(function (j) {
+        return { ok: r.ok, j: j, base: base };
+      });
+    });
+  }
+
   function loadCatalogThenInit() {
-    var url = apiCatalogBase() + '/api/cars-catalog';
-    var siteUiUrl = apiCatalogBase() + '/api/site-ui';
-
-    Promise.all([
-      fetchCardTaglines(),
-      fetch(url, { credentials: 'omit' }).then(function (r) {
-        return r.json().then(function (j) {
-          return { ok: r.ok, j: j };
+    var candidates = apiCatalogBaseCandidates();
+    var ci = 0;
+    function tryCatalog() {
+      if (ci >= candidates.length) {
+        return Promise.reject(new Error('cars-catalog failed: all bases'));
+      }
+      var base = candidates[ci++];
+      return fetchCatalogFromBase(base)
+        .then(function (o) {
+          if (!o.ok || !o.j || !o.j.ok || !Array.isArray(o.j.cars)) throw new Error('invalid cars-catalog');
+          return { base: o.base, cars: o.j.cars };
+        })
+        .catch(function () {
+          return tryCatalog();
         });
-      }),
-      fetch(siteUiUrl, { credentials: 'omit' }).then(function (r) {
-        return r.json().catch(function () { return {}; });
-      }).catch(function () { return {}; })
-    ])
-      .then(function (arr) {
-        var o = arr[1];
-        var siteUi = arr[2] || {};
-        
-        if (siteUi.pricing) {
-          window.mangoPricingConfig = siteUi.pricing;
-        } else {
-          window.mangoPricingConfig = {
-            "day7": { "multiplier": 6.5, "divisor": 7 },
-            "day15": { "multiplier": 13, "divisor": 15 },
-            "day30": { "multiplier": 23, "divisor": 30 }
-          };
-        }
+    }
 
-        if (!o.ok || !o.j || !o.j.ok || !Array.isArray(o.j.cars)) {
-          throw new Error('cars-catalog failed');
-        }
-        applyCarsCatalog(o.j.cars);
-        initPrices();
-        refreshCars();
-        refreshTodayRecommend();
-        scheduleRestoreCarListScrollAfterLayout();
+    Promise.all([fetchCardTaglines(), tryCatalog()])
+      .then(function (arr) {
+        var resolved = arr[1];
+        var catalogCars = resolved.cars;
+        var base = resolved.base;
+
+        var siteUiUrl = String(base || '').replace(/\/$/, '') + '/api/site-ui';
+        return fetch(siteUiUrl, { credentials: 'omit' })
+          .then(function (r) {
+            return r.json().catch(function () {
+              return {};
+            });
+          })
+          .catch(function () {
+            return {};
+          })
+          .then(function (siteUi) {
+            siteUi = siteUi || {};
+            if (siteUi.pricing) {
+              window.mangoPricingConfig = siteUi.pricing;
+            } else {
+              window.mangoPricingConfig = {
+                day7: { multiplier: 6.5, divisor: 7 },
+                day15: { multiplier: 13, divisor: 15 },
+                day30: { multiplier: 23, divisor: 30 }
+              };
+            }
+
+            applyCarsCatalog(catalogCars);
+            initPrices();
+            refreshCars();
+            refreshTodayRecommend();
+            scheduleRestoreCarListScrollAfterLayout();
+          });
       })
       .catch(function (e) {
         console.warn('[cars-catalog]', e);
         var errEl = document.getElementById('carparkCatalogError');
         if (errEl) {
           errEl.textContent =
-            '无法加载车辆列表：请启动 member_api 并配置 database.mysql（含 cars 表），或将 window.MANGO_API_ORIGIN 指向 API 根地址。';
+            '无法加载车辆列表：请启动 member_api 并配置 database.mysql（含 cars 表）；或设置 window.MANGO_API_ORIGIN；或在地址栏加 ?m2api=http://127.0.0.1:8765（与接口不同端口预览时）。';
           errEl.style.display = '';
         }
         initPrices();
@@ -2452,7 +2514,28 @@ document.addEventListener('DOMContentLoaded', function() {
   var splashScreen = document.getElementById('splashScreen');
   if (!splashScreen) return;
 
-  // 检查是否是从详情页返回的
+  var skipFromSession = false;
+  try {
+    if (sessionStorage.getItem('mango_skip_next_car_splash') === '1') {
+      skipFromSession = true;
+      sessionStorage.removeItem('mango_skip_next_car_splash');
+    }
+  } catch (eS) {}
+
+  var skipFromQuery = false;
+  try {
+    var spNs = new URLSearchParams(String(location.search || '').replace(/^\?/, '') || '');
+    var ns = String(spNs.get('ns') || '').toLowerCase();
+    if (ns === '1' || ns === 'true' || ns === 'yes') {
+      skipFromQuery = true;
+      spNs.delete('ns');
+      var tailNs = spNs.toString();
+      var nextSearchNs = tailNs ? '?' + tailNs : '';
+      history.replaceState(null, '', location.pathname + nextSearchNs + (location.hash || ''));
+    }
+  } catch (eQ) {}
+
+  // 检查是否是从详情页返回的（部分浏览器会省略 referrer，需配合 session / ?ns=1）
   var referrer = document.referrer || '';
   var isFromCarDetail = referrer.indexOf('/carpark/') !== -1 && referrer.indexOf('car.html') !== -1;
 
@@ -2471,7 +2554,9 @@ document.addEventListener('DOMContentLoaded', function() {
   // 浏览器刷新：在选车页也要重新播放开屏（reload 时不走下方跳过逻辑）
   var shouldSkipSplash =
     !isReload &&
-    (isFromCarDetail ||
+    (skipFromSession ||
+      skipFromQuery ||
+      isFromCarDetail ||
       isFromServicesOrAbout ||
       (isBackForward && hasShownSplash === 'true'));
 

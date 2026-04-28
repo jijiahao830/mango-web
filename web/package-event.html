@@ -7,8 +7,8 @@
   <link rel="icon" href="/favicon.ico" sizes="any">
   <link rel="icon" type="image/png" href="/favicon.png">
   <title>芒果超跑 · 摆展套餐</title>
-  <link rel="stylesheet" href="./car.css?v=202604242005">
-  <link rel="stylesheet" href="./package.css?v=202604242005">
+  <link rel="stylesheet" href="./car.css?v=202604282144">
+  <link rel="stylesheet" href="./package.css?v=202604282144">
 </head>
 <body class="page-package page-package-event">
   <header class="site-header">
@@ -19,20 +19,20 @@
     </div>
     <div class="header-center">
       <nav class="header-nav">
-        <a href="car-mobile.html?v=202604242005">车库</a>
-        <a href="package-business.html?v=202604242005">商务</a>
-        <a href="package-wedding.html?v=202604242005">婚庆</a>
-        <a href="package-event.html?v=202604242005" class="is-active">摆展</a>
+        <a class="mango-garage-entry" href="car.html?v=202604282144#carSection">车库</a>
+        <a href="package-business.html?v=202604282144">商务</a>
+        <a href="package-wedding.html?v=202604282144">婚庆</a>
+        <a href="package-event.html?v=202604282144" class="is-active">摆展</a>
       </nav>
       <div class="header-logo-dropdown-wrap">
         <button type="button" class="header-logo-menu-btn" id="servicesHeaderLogoMenuBtn" aria-expanded="false" aria-haspopup="true" aria-controls="servicesHeaderLogoMenuPanel" aria-label="打开导航菜单">
           <img src="media-webp/photos/index/logo/logo2.webp" alt="" class="brand-logo-center" decoding="async">
         </button>
         <div class="header-logo-menu-panel" id="servicesHeaderLogoMenuPanel" role="menu" hidden>
-          <a role="menuitem" href="car-mobile.html?v=202604242005">车库</a>
-          <a role="menuitem" href="package-business.html?v=202604242005">商务</a>
-          <a role="menuitem" href="package-wedding.html?v=202604242005">婚庆</a>
-          <a role="menuitem" href="package-event.html?v=202604242005">摆展</a>
+          <a role="menuitem" class="mango-garage-entry" href="car.html?v=202604282144#carSection">车库</a>
+          <a role="menuitem" href="package-business.html?v=202604282144">商务</a>
+          <a role="menuitem" href="package-wedding.html?v=202604282144">婚庆</a>
+          <a role="menuitem" href="package-event.html?v=202604282144">摆展</a>
         </div>
       </div>
     </div>
@@ -132,8 +132,25 @@
     <a class="package-footer__phone" href="tel:13033333370">客服：13033333370</a>
   </footer>
 
-  <script src="./header-logo-menu.js?v=202604242005"></script>
-  <script src="./package-video.js?v=202604242005"></script>
-  <script src="./package-order.js?v=202604242005"></script>
+  <script src="./device-redirect.js?v=202604282144"></script>
+  <script>
+    (function () {
+      function applyGarageLinks() {
+        if (!window.MangoDeviceRedirect || typeof MangoDeviceRedirect.carEntryHref !== 'function') return;
+        var href = MangoDeviceRedirect.carEntryHref();
+        document.querySelectorAll('.mango-garage-entry').forEach(function (a) {
+          if (a && a.tagName === 'A') a.setAttribute('href', href);
+        });
+      }
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', applyGarageLinks);
+      } else {
+        applyGarageLinks();
+      }
+    })();
+  </script>
+  <script src="./header-logo-menu.js?v=202604282144"></script>
+  <script src="./package-video.js?v=202604282144"></script>
+  <script src="./package-order.js?v=202604282144"></script>
 </body>
 </html>

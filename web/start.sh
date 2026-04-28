@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# 芒果 web：会员 API + 静态页面（member_api.py）
+# 芒果 web：启动 member_api.py（接口 + 静态页，含 m2）
 # 用法：
 #   ./start.sh              显示菜单，输入数字操作
 #   ./start.sh 1            直接执行对应项（1–4、0）
-#   ALLOW_KILL_PORT=1 已合并到菜单「2」
+#   菜单「2」可在端口被占用时先结束占用进程再启动
 
 set -euo pipefail
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -27,11 +27,10 @@ install_deps() {
   python3 -m pip install -q -r requirements-member-api.txt
 }
 
-# 参数: fail | kill
+# 参数: <port> <mode: fail|kill>
 ensure_port_free() {
-  local mode="$1"
-  local PORT
-  PORT="$(get_port)"
+  local PORT="$1"
+  local mode="$2"
   if ! command -v lsof >/dev/null 2>&1; then
     return 0
   fi
@@ -59,13 +58,10 @@ ensure_port_free() {
 show_port_status() {
   local PORT
   PORT="$(get_port)"
-  echo "当前配置端口: ${PORT}"
+  echo "当前配置端口（app_config.json → api_port）: ${PORT}"
   if command -v lsof >/dev/null 2>&1; then
-    if lsof -i ":${PORT}" 2>/dev/null; then
-      :
-    else
-      echo "（该端口当前无进程监听）"
-    fi
+    echo ""
+    lsof -i ":${PORT}" 2>/dev/null || echo "（该端口当前无进程监听）"
   else
     echo "（本机无 lsof，无法列出占用）"
   fi
@@ -77,26 +73,26 @@ run_server() {
   local kill_first="$1"
   local open_browser="$2"
   install_deps
-  if [[ "${kill_first}" == "1" ]]; then
-    ensure_port_free kill
-  else
-    ensure_port_free fail
-  fi
-
   local PORT
   PORT="$(get_port)"
+
+  if [[ "${kill_first}" == "1" ]]; then
+    ensure_port_free "${PORT}" kill
+  else
+    ensure_port_free "${PORT}" fail
+  fi
+
   echo ""
-  echo "服务将监听: http://127.0.0.1:${PORT}"
-  echo "首页:       http://127.0.0.1:${PORT}/index.html"
-  echo "登录页:     http://127.0.0.1:${PORT}/login.html"
+  echo "服务:   http://127.0.0.1:${PORT}"
+  echo "首页:   http://127.0.0.1:${PORT}/m2/index.html"
   echo "按 Ctrl+C 停止"
   echo ""
 
   if [[ "${open_browser}" == "1" ]] && command -v open >/dev/null 2>&1; then
-    (sleep 1.2 && open "http://127.0.0.1:${PORT}/index.html") &
+    (sleep 1.2 && open "http://127.0.0.1:${PORT}/m2/index.html") &
   fi
 
-  exec python3 member_api.py
+  python3 member_api.py
 }
 
 print_menu() {

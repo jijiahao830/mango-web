@@ -3,6 +3,15 @@
  * 依赖 head：./members.js（可选 membersData）、window.MANGO_API_ORIGIN
  */
 
+function garageEntryHref() {
+  try {
+    if (window.MangoDeviceRedirect && typeof window.MangoDeviceRedirect.carEntryHref === 'function') {
+      return window.MangoDeviceRedirect.carEntryHref();
+    }
+  } catch (e) {}
+  return 'car.html#carSection';
+}
+
 /** 移动端：禁止整页跟手滚动（含欢迎界面；仅登录卡片内因键盘可能需内部滚动） */
 (function () {
   document.addEventListener(
@@ -263,7 +272,7 @@ function enterDeliveryGachaFromWelcome() {
       sessionStorage.removeItem('mango_delivery_officer');
       sessionStorage.removeItem('mango_delivery_officer_id');
     } catch (e) {}
-    window.location.href = 'car.html#carSection';
+    window.location.href = garageEntryHref();
   }, 420);
 }
 
@@ -627,6 +636,6 @@ if (openGachaBtnEl) {
   });
 
   enterBtn.addEventListener('click', function () {
-    window.location.href = 'car.html#carSection';
+    window.location.href = garageEntryHref();
   });
 })();

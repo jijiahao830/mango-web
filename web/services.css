@@ -91,7 +91,7 @@ body.page-services .fullscreen-carousel {
   object-position: center;
 }
 
-/* 图片遮罩 */
+/* 图片遮罩（略压暗左侧保证白字可读，整体比之前亮一档） */
 .carousel-slide::after {
   content: '';
   position: absolute;
@@ -101,11 +101,15 @@ body.page-services .fullscreen-carousel {
   height: 100%;
   background: linear-gradient(
     to right,
-    rgba(0, 0, 0, 0.7) 0%,
-    rgba(0, 0, 0, 0.4) 50%,
-    rgba(0, 0, 0, 0.2) 100%
+    rgba(0, 0, 0, 0.38) 0%,
+    rgba(0, 0, 0, 0.2) 50%,
+    rgba(0, 0, 0, 0.06) 100%
   );
   pointer-events: none;
+}
+
+body.page-services .slide-bg {
+  filter: brightness(1.06) contrast(1.02);
 }
 
 /* 文字内容 */
@@ -146,7 +150,7 @@ body.page-services .fullscreen-carousel {
   z-index: 10;
   display: flex;
   flex-direction: column;
-  gap: 50px;
+  gap: 64px;
 }
 
 .dot {
@@ -203,19 +207,14 @@ body.page-services .fullscreen-carousel {
     min-height: calc(100vh - 56px - 44px);
   }
 
-  /* 移动端：上半区略压暗，突出顶部文案 */
+  /* 移动端：不盖渐变，靠文案 text-shadow 保证可读 */
   .carousel-slide::after {
-    background: linear-gradient(
-      180deg,
-      rgba(0, 0, 0, 0.68) 0%,
-      rgba(0, 0, 0, 0.38) 42%,
-      rgba(0, 0, 0, 0.18) 100%
-    );
+    display: none;
   }
 
   .carousel-dots {
     left: max(16px, env(safe-area-inset-left));
-    gap: 14px;
+    gap: 20px;
   }
 
   .dot {
