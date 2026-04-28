@@ -73,6 +73,20 @@
     }
   }
 
+  /**
+   * 仅横向居中当前标签；勿用 scrollIntoView（smooth + block），否则 WebKit 常连带滚动外层 .m2-home，造成首屏/刷新时先下移再弹回。
+   */
+  function scrollChooserTabRowToActive(scrollRow, activeEl) {
+    if (!scrollRow || !activeEl) return;
+    try {
+      var rr = scrollRow.getBoundingClientRect();
+      var er = activeEl.getBoundingClientRect();
+      var centerRow = rr.left + rr.width / 2;
+      var centerEl = er.left + er.width / 2;
+      scrollRow.scrollLeft = Math.round(scrollRow.scrollLeft + (centerEl - centerRow));
+    } catch (e) {}
+  }
+
   function escHtml(s) {
     return String(s == null ? '' : s)
       .replace(/&/g, '&amp;')
@@ -204,10 +218,10 @@
       })
       .join('');
 
-    /* 把激活的分类按钮滚动到可见区域 */
+    /* 横向滚动条内居中当前分类；不改变 .m2-home 纵向滚动 */
     var activeBtn = categoryRoot.querySelector('.is-active');
     if (activeBtn && !shouldDeferChooserTabScroll()) {
-      activeBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+      scrollChooserTabRowToActive(categoryRoot, activeBtn);
     }
   }
 
@@ -241,10 +255,9 @@
       })
       .join('');
 
-    /* 把激活的品牌按钮滚动到可见区域 */
     var activeBrandBtn = brandRoot.querySelector('.is-active');
     if (activeBrandBtn && !shouldDeferChooserTabScroll()) {
-      activeBrandBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+      scrollChooserTabRowToActive(brandRoot, activeBrandBtn);
     }
 
     activeCarIndex = 0;
@@ -262,7 +275,6 @@
     nextBtn.classList.toggle('is-hidden', idx >= total - 1);
   }
 
-  var FADE_MS = 280;
   var SLIDE_MS = 360;
   var IMG_SLIDE_CLASSES = [
     'is-slide-out-left',
@@ -270,22 +282,18 @@
     'is-slide-in-from-right',
     'is-slide-in-from-left',
   ];
-  var titleSwapTimer = null;
   var bannerSlideTimer = null;
 
-  function fadeSwapTitle(car) {
-    if (titleSwapTimer) {
-      clearTimeout(titleSwapTimer);
-      titleSwapTimer = null;
-    }
-    titleEl.classList.add('is-fading');
-    titleSwapTimer = setTimeout(function () {
-      titleSwapTimer = null;
-      titleEl.textContent = car ? carTitleText(car) : '暂无车型';
-      requestAnimationFrame(function () {
-        titleEl.classList.remove('is-fading');
-      });
-    }, FADE_MS);
+  /**
+   * 车型名必须同步写入 DOM。原先用 setTimeout + opacity 淡出再改文案，快速切车时定时器与 rAF 竞态，
+   * WebKit 易出现上一名称与当前名称叠画。
+   */
+  function updateChooserTitle(car) {
+    titleEl.classList.remove('is-fading');
+    titleEl.textContent = car ? carTitleText(car) : '暂无车型';
+    try {
+      void titleEl.offsetHeight;
+    } catch (e) {}
   }
 
   function clearBannerSlideClasses() {
@@ -345,7 +353,7 @@
       updateBannerArrows(0, 0);
       cancelBannerSlide();
       setChooserBgByCar('');
-      fadeSwapTitle(null);
+      updateChooserTitle(null);
       window.m2CurrentCar = null;
       return;
     }
@@ -359,7 +367,7 @@
       cancelBannerSlide();
       setChooserBgByCar(car.car_name);
     }
-    fadeSwapTitle(car);
+    updateChooserTitle(car);
     var carName = String(car.car_name || '').trim();
     window.m2CurrentCar = {
       car_id: carName,
