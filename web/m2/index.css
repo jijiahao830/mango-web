@@ -223,7 +223,7 @@ body {
 .m2-chooser__tabs button {
   flex: 0 0 auto;
   margin: 0;
-  padding: 6px 6px;
+  padding: 6px 14px;
   border: 1px solid transparent;
   border-radius: 999px;
   background: transparent;
@@ -844,11 +844,6 @@ body {
   gap: 1px;
 }
 
-#m2FilterCats .m2-filter-tag {
-  padding-left: 8px;
-  padding-right: 8px;
-}
-
 /* 品牌区固定两行高度：即使只有一行标签，也预留两行空间 */
 #m2FilterBrands {
   min-height: 72px;
@@ -1076,7 +1071,7 @@ body {
   position: absolute;
   inset: 0;
   background-color: #05070d;
-  background-image: url('../media-webp/photos/index/m2/关于.webp?v=202604291710');
+  background-image: url('../media-webp/photos/index/m2/关于.webp?v=202604291712');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
