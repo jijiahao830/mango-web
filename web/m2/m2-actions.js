@@ -1,6 +1,6 @@
 (function () {
   var STORAGE_KEY = 'mangoCarChecklist';
-  var m2FallbackAssetV = '202604291724';
+  var m2FallbackAssetV = '202604291732';
   function m2AssetV() {
     try {
       return (typeof window !== 'undefined' && window.__MANGO_ASSET_VERSION__) || m2FallbackAssetV;
@@ -668,6 +668,7 @@
     var vehicles = [];
     var packages = [];
     var valueAdd = [];
+    var vehicleSubtotal = 0;
     ids.forEach(function (id) {
       var item = map[id] || {};
       var pl = item.pkg_lines;
@@ -686,9 +687,13 @@
         var vn = String(item.model_name || item.car_name || id).trim();
         var vd = String(item.days || '单日 (24小时)').trim();
         var vt = Math.round(calcItemTotal(item));
+        vehicleSubtotal += vt;
         pushTrim(vehicles, vn + '（' + vd + '） ¥' + vt.toLocaleString('zh-CN'));
       }
     });
+    if (vehicles.length) {
+      pushTrim(vehicles, '合计 ¥' + Math.round(vehicleSubtotal).toLocaleString('zh-CN'));
+    }
     var flatLines = vehicles.concat(packages, valueAdd);
     fetchPost('/api/wecom/checklist-send', {
       user: String(sessionStorage.getItem('mango_driver_name') || '未登录用户'),
