@@ -503,6 +503,9 @@ html.m2-splash-suppressed .splash-screen {
   position: relative;
   width: min(200px, 48vw);
   line-height: 0;
+  /* 移动端 Safari：`brightness(0)`+多级 drop-shadow 易画出位图矩形边 */
+  isolation: isolate;
+  overflow: visible;
 }
 
 .splash-screen--keynote-pro .splash-logo-img {
@@ -511,13 +514,16 @@ html.m2-splash-suppressed .splash-screen {
   display: block;
   width: 100%;
   height: auto;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  transform: translateZ(0);
   filter: brightness(0)
-    drop-shadow(0 0 0.5px color-mix(in srgb, var(--brand-light) 95%, white))
-    drop-shadow(0 0 2px color-mix(in srgb, var(--brand) 75%, transparent))
-    drop-shadow(0 0 5px color-mix(in srgb, var(--brand) 55%, transparent))
-    drop-shadow(-1px -2px 7px color-mix(in srgb, var(--brand) 40%, transparent))
-    drop-shadow(2px 2px 12px color-mix(in srgb, var(--gold-end) 35%, var(--brand) 65%))
-    drop-shadow(0 0 28px color-mix(in srgb, var(--brand) 28%, transparent));
+    drop-shadow(0 0 1px color-mix(in srgb, var(--brand-light) 88%, white))
+    drop-shadow(0 0 4px color-mix(in srgb, var(--brand) 72%, transparent))
+    drop-shadow(0 0 10px color-mix(in srgb, var(--brand) 52%, transparent))
+    drop-shadow(-1px -2px 8px color-mix(in srgb, var(--brand) 42%, transparent))
+    drop-shadow(2px 2px 14px color-mix(in srgb, var(--gold-end) 35%, var(--brand) 65%))
+    drop-shadow(0 0 28px color-mix(in srgb, var(--brand) 26%, transparent));
 }
 
 .splash-screen--keynote-pro .splash-logo-rim-sheen {
@@ -534,6 +540,8 @@ html.m2-splash-suppressed .splash-screen {
   mask-repeat: no-repeat;
   -webkit-mask-position: center;
   mask-position: center;
+  -webkit-mask-mode: alpha;
+  mask-mode: alpha;
   mix-blend-mode: screen;
   opacity: 0;
   transition: opacity 0.24s ease;
@@ -625,14 +633,29 @@ html.m2-splash-suppressed .splash-screen {
 
 .splash-screen--keynote-pro .splash-logo-img--mirror {
   opacity: 0.44;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  transform: translateZ(0);
   filter: brightness(0)
-    drop-shadow(0 0 0.5px color-mix(in srgb, var(--brand-light) 80%, transparent))
-    drop-shadow(0 0 3px color-mix(in srgb, var(--brand) 45%, transparent))
-    drop-shadow(0 0 10px color-mix(in srgb, var(--brand) 25%, transparent));
+    drop-shadow(0 0 1px color-mix(in srgb, var(--brand-light) 72%, transparent))
+    drop-shadow(0 0 4px color-mix(in srgb, var(--brand) 42%, transparent))
+    drop-shadow(0 0 12px color-mix(in srgb, var(--brand) 24%, transparent));
 }
 
 .splash-screen--keynote-pro .splash-reflection {
   width: min(200px, 48vw);
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.55) 0%,
+    rgba(0, 0, 0, 0.12) 40%,
+    transparent 93%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.55) 0%,
+    rgba(0, 0, 0, 0.12) 40%,
+    transparent 93%
+  );
 }
 
 @keyframes keynoteLogoStage {
