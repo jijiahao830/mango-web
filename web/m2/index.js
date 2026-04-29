@@ -146,6 +146,37 @@
     bgImageEl.dataset.fallbackIndex = '0';
     bgImageEl.style.visibility = 'hidden';
     bgImageEl.src = list[0];
+    tryRevealChooserBannerAfterSrc();
+  }
+
+  /** 自缓存 / bfcache 恢复时 WebKit 常不再触发 load，须同步判断 complete 或 decode() */
+  function tryRevealChooserBannerAfterSrc() {
+    try {
+      if (!bgImageEl.src || bgImageEl.src.endsWith('/')) return;
+      if (bgImageEl.complete && bgImageEl.naturalWidth > 0) {
+        bgImageEl.style.visibility = 'visible';
+        return;
+      }
+    } catch (e) {}
+    try {
+      if (typeof bgImageEl.decode === 'function') {
+        bgImageEl.decode().then(
+          function () {
+            if (bgImageEl.src && !bgImageEl.src.endsWith('/')) {
+              bgImageEl.style.visibility = 'visible';
+            }
+          },
+          function () {}
+        );
+      }
+    } catch (e2) {}
+    requestAnimationFrame(function () {
+      try {
+        if (bgImageEl.complete && bgImageEl.naturalWidth > 0 && bgImageEl.src && !bgImageEl.src.endsWith('/')) {
+          bgImageEl.style.visibility = 'visible';
+        }
+      } catch (e3) {}
+    });
   }
 
   bgImageEl.addEventListener('load', function () {
@@ -161,7 +192,9 @@
     var next = idx + 1;
     if (next >= list.length) return;
     bgImageEl.dataset.fallbackIndex = String(next);
+    bgImageEl.style.visibility = 'hidden';
     bgImageEl.src = list[next];
+    tryRevealChooserBannerAfterSrc();
   });
 
   function filteredCars() {
