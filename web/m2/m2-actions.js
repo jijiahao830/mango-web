@@ -1,6 +1,6 @@
 (function () {
   var STORAGE_KEY = 'mangoCarChecklist';
-  var m2FallbackAssetV = '202604291719';
+  var m2FallbackAssetV = '202604291724';
   function m2AssetV() {
     try {
       return (typeof window !== 'undefined' && window.__MANGO_ASSET_VERSION__) || m2FallbackAssetV;
@@ -673,9 +673,8 @@
       var pl = item.pkg_lines;
       if (id.indexOf('service:') === 0) {
         var sn = String(item.model_name || item.car_name || id).trim();
-        var sd = String(item.days || '单日 (24小时)').trim();
         var st = Math.round(calcItemTotal(item));
-        pushTrim(valueAdd, sn + '（' + sd + '） ¥' + st.toLocaleString('zh-CN'));
+        pushTrim(valueAdd, sn + ' ¥' + st.toLocaleString('zh-CN'));
       } else if (pl && pl.length) {
         for (var j = 0; j < pl.length; j++) pushTrim(packages, pl[j]);
       } else if (id.indexOf('pkg:') === 0) {
