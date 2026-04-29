@@ -33,7 +33,7 @@ SCENARIO_CSS = """/* ═══════════════════�
    ════════════════════════════════════════ */
 .m2-car__scenario-section {
   min-height: 100vh;
-  background: url('../../../media-webp/photos/index/m2/通用背景图.webp') center / cover no-repeat;
+  background: url('../../../media-webp/photos/index/m2/背景图1.webp') center / cover no-repeat;
   display: flex;
   align-items: center;
   justify-content: center;

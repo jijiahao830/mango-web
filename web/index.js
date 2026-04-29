@@ -13,18 +13,31 @@ document.addEventListener('DOMContentLoaded', () => {
     );
   }
 
-  function shouldForceStaticHero() {
-    // 仅在内置浏览器 / WebView 中强制静态兜底，普通安卓浏览器继续使用视频背景
-    return isInAppOrWebView();
+  /** 部分国产浏览器 WebView 对 H5 背景 video 兼容性差，易弹「播放失败请刷新」类提示 → 直接用静态图 */
+  function isProblematicHeroVideoUA() {
+    const ua = String((navigator && navigator.userAgent) || '');
+    return /Quark|UCBrowser|UCWEB/i.test(ua);
   }
 
+  function shouldForceStaticHero() {
+    return isInAppOrWebView() || isProblematicHeroVideoUA();
+  }
+
+  /** 已切静态图或放弃 video：避免继续 play 再次触发内核错误提示 */
+  let heroVideoUnavailable = false;
+  let mobileMp4SwapTried = false;
+
   function applyStaticHeroFallback() {
+    if (heroVideoUnavailable) return;
+    heroVideoUnavailable = true;
     const fallbackImage = 'media-webp/photos/index/time/自驾/自驾1.webp';
     try {
       video.pause();
     } catch (e) {}
     video.removeAttribute('src');
-    video.load();
+    try {
+      video.load();
+    } catch (e2) {}
     video.style.display = 'none';
     if (videoWrap) {
       videoWrap.style.backgroundImage = "url('" + fallbackImage + "')";
@@ -44,6 +57,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const widthFallbackMq = window.matchMedia('(max-width: 1024px)');
   let isMobilePad = false;
 
+  function uriMatchesCurrentVideo(expectedPath) {
+    if (!expectedPath) return false;
+    const cur = String(video.currentSrc || video.getAttribute('src') || '');
+    return cur.indexOf(expectedPath) !== -1;
+  }
+
   function detectMobilePad() {
     try {
       if (window.MangoDeviceRedirect && typeof window.MangoDeviceRedirect.isMobileOrTablet === 'function') {
@@ -61,9 +80,10 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function setupSourceAndAudioPolicy() {
+    if (heroVideoUnavailable) return;
     isMobilePad = detectMobilePad();
     const nextSrc = isMobilePad ? mobileSrc : desktopSrc;
-    if (nextSrc && video.currentSrc.indexOf(nextSrc) === -1) {
+    if (nextSrc && !uriMatchesCurrentVideo(nextSrc)) {
       video.src = nextSrc;
       video.load();
     }
@@ -112,6 +132,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   function tryPlayWithPolicy() {
+    if (heroVideoUnavailable) return;
     video.play().catch(() => {
       if (!isMobilePad) {
         // 桌面端若被自动播放策略拦截，先静音保底播放；首个用户手势后恢复声音。
@@ -131,11 +152,35 @@ document.addEventListener('DOMContentLoaded', () => {
 
   tryPlayWithPolicy();
 
+  video.addEventListener('error', () => {
+    if (heroVideoUnavailable) return;
+    // 手机端专用 no-audio 副本若解码失败，再试主片 carvideo.mp4（仍静音播放）
+    if (!mobileMp4SwapTried && isMobilePad && desktopSrc && mobileSrc && desktopSrc !== mobileSrc) {
+      mobileMp4SwapTried = true;
+      try {
+        video.pause();
+      } catch (e) {}
+      video.removeAttribute('src');
+      video.src = desktopSrc;
+      video.muted = true;
+      video.defaultMuted = true;
+      video.volume = 0;
+      video.setAttribute('muted', '');
+      try {
+        video.load();
+      } catch (e2) {}
+      tryPlayWithPolicy();
+      return;
+    }
+    applyStaticHeroFallback();
+  });
+
   /**
    * 安卓部分浏览器（含部分内置 WebView）对 video 的 object-fit 支持异常，
    * 会把视频缩成中间小框。这里按真实视频宽高做一层 cover 尺寸兜底。
    */
   function applyVideoCoverFallback() {
+    if (heroVideoUnavailable) return;
     if (!videoWrap) return;
     const wrapW = Math.max(1, videoWrap.clientWidth || window.innerWidth || 1);
     const wrapH = Math.max(1, videoWrap.clientHeight || window.innerHeight || 1);
@@ -196,6 +241,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let transport = null;
 
   function setTransport(next) {
+    if (heroVideoUnavailable) return;
     if (transport === next) return;
     transport = next;
     if (next === 'playing') {
@@ -237,8 +283,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) {
-      video.pause();
-      transport = 'paused';
+      if (!heroVideoUnavailable) {
+        video.pause();
+        transport = 'paused';
+      }
     } else {
       sync();
     }
