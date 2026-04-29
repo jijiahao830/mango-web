@@ -199,7 +199,7 @@ body {
   flex-wrap: nowrap;
   align-items: center;
   justify-content: space-around;
-  gap: 6px;
+  gap: 4px;
   width: 100%;
   white-space: nowrap;
   overflow-x: auto;
@@ -412,6 +412,19 @@ body {
   display: block;
 }
 
+/* 移动端：底部四字功能与品牌行字号一致，图标略缩小 */
+@media (max-width: 768px) {
+  .m2-chooser__bottom-btn {
+    font-size: clamp(12px, 3.2vw, 14px);
+    gap: 4px;
+  }
+
+  .m2-chooser__bottom-icon {
+    width: 22px;
+    height: 22px;
+  }
+}
+
 .m2-home__overlay {
   position: absolute;
   inset: 0;
@@ -490,7 +503,7 @@ body {
   }
 
   .m2-chooser__tabs {
-    gap: 10px;
+    gap: 5px;
   }
 
   .m2-chooser__title {
@@ -804,6 +817,11 @@ body {
   flex-direction: row;
   flex-wrap: wrap;
   gap: 8px;
+}
+
+/* 筛选面板「分类」与上方选车区分栏一致：间距略收紧 */
+#m2FilterCats.m2-filter-tags {
+  gap: 6px;
 }
 
 /* 品牌区固定两行高度：即使只有一行标签，也预留两行空间 */

@@ -966,7 +966,6 @@
 
   var navigation = performance.getEntriesByType && performance.getEntriesByType('navigation')[0];
   var isReload = navigation && navigation.type === 'reload';
-  var isBackForward = navigation && navigation.type === 'back_forward';
 
   var hasShownSplash = sessionStorage.getItem('mango_m2_splash_shown');
 
@@ -1053,12 +1052,17 @@
   /* 详情返回标记（hash / head / session）须跳过开屏；部分浏览器链回首页会误报 type=reload */
   var skipFromDetailNav =
     skipFromDetailQuery || skipSplashEarly || skipSplashOnce === '1';
+  /* 同会话已在本标签播过开屏：部分移动端从详情返回时为 navigate（非 back_forward）且 referrer 常为空，
+   * 不能与桌面一致地走「后退 + hasShown」；在非刷新且已有标记时跳过。 */
+  var isReturningWithinSession =
+    hasShownSplash === 'true' &&
+    !isReload &&
+    navigation &&
+    (navigation.type === 'back_forward' || navigation.type === 'navigate');
   var shouldSkipSplash =
     skipFromDetailNav ||
     (!isReload &&
-      (isFromCarDetail ||
-        isFromServicesOrAbout ||
-        (isBackForward && hasShownSplash === 'true')));
+      (isFromCarDetail || isFromServicesOrAbout || isReturningWithinSession));
 
   if (shouldSkipSplash) {
     try {
