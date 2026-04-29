@@ -15,6 +15,8 @@ body {
   overflow: hidden;
   /* 减轻移动端「连点触发双击缩放」；双指缩放仍可用 */
   touch-action: manipulation;
+  /* WebKit / 部分安卓 WebView：点击默认蓝灰高光；控件另有 :active / 选中态样式 */
+  -webkit-tap-highlight-color: transparent;
 }
 
 body {
@@ -143,6 +145,9 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
   transition: color 0.2s ease, opacity 0.15s ease, transform 0.15s ease;
 }
 
@@ -227,6 +232,9 @@ body {
   color: rgba(255, 255, 255, 0.86);
   white-space: nowrap;
   cursor: pointer;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
   transition: background-color 0.25s ease, border-color 0.25s ease,
     box-shadow 0.25s ease;
 }
@@ -292,6 +300,9 @@ body {
   color: #fff;
   white-space: nowrap;
   cursor: pointer;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
 }
 
 .m2-chooser__subtabs button.is-active {
@@ -333,6 +344,9 @@ body {
 }
 
 .m2-chooser__detail-btn {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -403,6 +417,9 @@ body {
   font-size: 13px;
   padding: 2px 0;
   cursor: pointer;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
 }
 
 .m2-chooser__bottom-icon {
@@ -702,6 +719,9 @@ body {
   font-size: 15px;
   font-weight: 500;
   cursor: pointer;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
   backdrop-filter: blur(32px) saturate(180%);
   -webkit-backdrop-filter: blur(32px) saturate(180%);
   box-shadow:
@@ -845,6 +865,9 @@ body {
   color: #fff;
   font-size: 13px;
   cursor: pointer;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
   transition: background-color 0.25s ease, border-color 0.25s ease,
     box-shadow 0.25s ease, color 0.25s ease;
 }
@@ -887,6 +910,9 @@ body {
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   cursor: pointer;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
 }
 
 .m2-filter-confirm {
@@ -901,6 +927,9 @@ body {
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   cursor: pointer;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
 }
 
 /* ===================== 服务区 ===================== */
@@ -1006,6 +1035,9 @@ body {
   font-size: 15px;
   font-weight: 500;
   cursor: pointer;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
   backdrop-filter: blur(32px) saturate(180%);
   -webkit-backdrop-filter: blur(32px) saturate(180%);
   box-shadow:
@@ -1087,6 +1119,9 @@ body {
   font-size: 4vw;
   font-weight: 500;
   cursor: pointer;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
   backdrop-filter: blur(32px) saturate(180%);
   -webkit-backdrop-filter: blur(32px) saturate(180%);
   box-shadow:

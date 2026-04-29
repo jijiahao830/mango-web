@@ -822,5 +822,6 @@ body {
   color: #fff;
   text-decoration: none;
   transition: background 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
 }
 .m2-car__back:active { background: rgba(255, 255, 255, 0.32); }
