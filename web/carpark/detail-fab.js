@@ -573,6 +573,7 @@
         add('http://127.0.0.1:8787');
         add('http://localhost:8787');
       }
+      add('https://www.mangov8.com');
       return list.length ? list : ['https://www.mangov8.com'];
     }
 

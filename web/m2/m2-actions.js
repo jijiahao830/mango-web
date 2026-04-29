@@ -1,6 +1,6 @@
 (function () {
   var STORAGE_KEY = 'mangoCarChecklist';
-  var m2FallbackAssetV = '202604282201';
+  var m2FallbackAssetV = '202604282202';
   function m2AssetV() {
     try {
       return (typeof window !== 'undefined' && window.__MANGO_ASSET_VERSION__) || m2FallbackAssetV;
@@ -70,6 +70,7 @@
       add('http://127.0.0.1:8787');
       add('http://localhost:8787');
     }
+    add('https://www.mangov8.com');
     return list.length ? list : ['https://www.mangov8.com'];
   }
 

@@ -674,6 +674,8 @@ document.addEventListener('DOMContentLoaded', function() {
       add('http://127.0.0.1:8787');
       add('http://localhost:8787');
     }
+    /* 自定义域名仅有静态页时同上：最后回退官方目录（cars-catalog 已为 CORS *） */
+    add('https://www.mangov8.com');
     return list.length ? list : ['https://www.mangov8.com'];
   }
 
@@ -1348,8 +1350,16 @@ document.addEventListener('DOMContentLoaded', function() {
         console.warn('[cars-catalog]', e);
         var errEl = document.getElementById('carparkCatalogError');
         if (errEl) {
-          errEl.textContent =
-            '无法加载车辆列表：请启动 member_api 并配置 database.mysql（含 cars 表）；或设置 window.MANGO_API_ORIGIN；或在地址栏加 ?m2api=http://127.0.0.1:8765（与接口不同端口预览时）。';
+          var hint =
+            '无法加载车辆列表：请确认已运行 member_api、MySQL 含 cars 表，且网关将 /api/* 代理到该服务；若接口在另一 HTTPS 域名，请在页面中设置 window.MANGO_API_ORIGIN。';
+          try {
+            var h = String(location.hostname || '').toLowerCase();
+            if (h === 'localhost' || h === '127.0.0.1' || h === '[::1]') {
+              hint =
+                '无法加载车辆列表：请启动 member_api 并配置 database.mysql（含 cars 表）；或设置 window.MANGO_API_ORIGIN；或在地址栏加 ?m2api=http://127.0.0.1:8765（与接口不同端口预览时）。';
+            }
+          } catch (eH) {}
+          errEl.textContent = hint;
           errEl.style.display = '';
         }
         initPrices();
