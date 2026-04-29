@@ -1,6 +1,6 @@
 (function () {
   var STORAGE_KEY = 'mangoCarChecklist';
-  var m2FallbackAssetV = '1777457375382';
+  var m2FallbackAssetV = '1777470447080';
   function m2AssetV() {
     try {
       return (typeof window !== 'undefined' && window.__MANGO_ASSET_VERSION__) || m2FallbackAssetV;
@@ -29,7 +29,15 @@
     }
   }
   function writeChecklistMap(map) {
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(map || {})); } catch (e) {}
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(map || {}));
+      return true;
+    } catch (e) {
+      try {
+        if (typeof console !== 'undefined' && console.warn) console.warn('[mango] checklist localStorage:', e);
+      } catch (e2) {}
+      return false;
+    }
   }
 
   /* ── API 根地址：与 detail-fab / login 一致；静态页与 member_api 不同端口时必须能落到 8765 ── */
@@ -467,14 +475,16 @@
     }
   }
 
-  function addServiceToChecklist(name) {
+  /** opts.quietDup：为 true 时重复添加仅返回 dup，不弹全屏 modal（服务页「立享服务」改用 Toast）。 */
+  function addServiceToChecklist(name, opts) {
+    opts = opts || {};
     var n = String(name || '').trim();
-    if (!n) return;
+    if (!n) return 'noop';
     var id = 'service:' + n;
     var map = readChecklistMap();
     if (map[id]) {
-      showMessageModal('该服务已添加到用车清单');
-      return;
+      if (!opts.quietDup) showMessageModal('该服务已添加到用车清单');
+      return 'dup';
     }
     map[id] = {
       car_id: id,
@@ -483,8 +493,13 @@
       rent_price: 0,
       days: '单日 (24小时)',
     };
-    writeChecklistMap(map);
+    if (!writeChecklistMap(map)) {
+      delete map[id];
+      showMessageModal('写入清单失败，请关闭无痕/私密模式或减少占用后重试');
+      return 'fail';
+    }
     renderPanel();
+    return 'added';
   }
 
   /* ── Render checklist panel ── */
@@ -497,10 +512,8 @@
     var totalEl = document.getElementById('m2aPanelTotal');
     if (!listEl) return;
     var origTotal = 0, total = 0;
-    var carCount = 0;
     listEl.innerHTML = ids.map(function (id) {
       var item = map[id] || {};
-      if (id.indexOf('service:') !== 0 && id.indexOf('pkg:') !== 0) carCount++;
       var name = esc(String(item.model_name || item.car_name || id));
       var isFreeService = (parseInt(String(item.rent_price), 10) || 0) <= 0;
       var daysText = isFreeService ? ' - 免费' : (item.days ? ' - ' + esc(item.days) : '');
@@ -511,7 +524,7 @@
         '<button type="button" class="m2a-panel__item-remove" data-remove-id="' + esc(id) + '">移除</button>' +
         '</li>';
     }).join('');
-    if (emptyEl) emptyEl.style.display = carCount ? 'none' : '';
+    if (emptyEl) emptyEl.style.display = ids.length ? 'none' : '';
     if (originalEl) originalEl.textContent = '原价：¥' + Math.round(origTotal).toLocaleString('zh-CN');
     if (totalEl) totalEl.textContent = '总价：¥' + Math.round(total).toLocaleString('zh-CN');
     syncValueAddButtons(map);
@@ -787,9 +800,35 @@
   }
 
   /* ── Bind events ── */
+  /** 服务页「立享服务」底部 Toast（与侧边栏「加入清单」共用同一写入逻辑） */
+  function bindServiceEnjoyToast() {
+    var btn = document.getElementById('m2ServiceAddBtn');
+    var toast = document.getElementById('m2ServiceToast');
+    if (!btn || !toast) return;
+    var toastTimer = null;
+    function showToast(text) {
+      toast.textContent = String(text || '');
+      toast.classList.add('is-show');
+      if (toastTimer) clearTimeout(toastTimer);
+      toastTimer = setTimeout(function () {
+        toast.classList.remove('is-show');
+      }, 1300);
+    }
+    btn.addEventListener('click', function () {
+      if (!document.body.classList.contains('page-services')) return;
+      var activeTitle = document.querySelector('.carousel-slide.active .slide-title');
+      var svcName = activeTitle ? String(activeTitle.textContent || '').replace(/\u200b/g, '').trim() : '';
+      if (!svcName) return;
+      var r = addServiceToChecklist(svcName, { quietDup: true });
+      if (r === 'added') showToast('已添加，可在用车清单中查看');
+      else if (r === 'dup') showToast('该服务已添加到用车清单');
+    });
+  }
+
   function bindEvents() {
     if (window.__m2aBindEventsDone) return;
     window.__m2aBindEventsDone = true;
+    bindServiceEnjoyToast();
     /* 加入清单 */
     var addBtn = document.getElementById('m2BtnAddChecklist');
     if (addBtn) addBtn.addEventListener('click', handleAddChecklist);
@@ -974,4 +1013,11 @@
   } else {
     run();
   }
+
+  /** 后退/前台恢复（含部分安卓 WebView 的往返缓存）时再读一次清单，避免与 localStorage 不同步 */
+  window.addEventListener('pageshow', function () {
+    try {
+      if (document.getElementById('m2aPanelList')) renderPanel();
+    } catch (ePs) {}
+  });
 })();
