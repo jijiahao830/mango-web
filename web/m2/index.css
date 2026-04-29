@@ -204,7 +204,7 @@ body {
   flex-wrap: nowrap;
   align-items: center;
   justify-content: space-around;
-  gap: 4px;
+  gap: var(--m2-chooser-gap);
   width: 100%;
   white-space: nowrap;
   overflow-x: auto;
@@ -271,8 +271,7 @@ body {
   flex-wrap: nowrap;
   align-items: center;
   justify-content: flex-start;
-  gap: 18px;
-  max-width: 100%;
+  gap: var(--m2-chooser-gap);
   margin-top: 18px;
   margin-bottom: var(--m2-chooser-gap);
   padding-bottom: 14px;
@@ -517,10 +516,6 @@ body {
   .m2-chooser {
     padding-left: 12px;
     padding-right: 12px;
-  }
-
-  .m2-chooser__tabs {
-    gap: 5px;
   }
 
   .m2-chooser__title {
@@ -1071,7 +1066,7 @@ body {
   position: absolute;
   inset: 0;
   background-color: #05070d;
-  background-image: url('../media-webp/photos/index/m2/关于.webp?v=202604291712');
+  background-image: url('../media-webp/photos/index/m2/关于.webp?v=202604291715');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
