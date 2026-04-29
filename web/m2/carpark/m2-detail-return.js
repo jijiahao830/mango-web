@@ -4,7 +4,6 @@
   var raw = String(q.get('m2from') || 'm2Chooser').trim();
   if (!allowed[raw]) raw = 'm2Chooser';
   q.delete('m2from');
-  q.delete('v');
   var qs = q.toString();
   /* file:// 下 ?query 常被浏览器丢掉，用 hash 传参：#m2Chooser&m2ns=1（与 index.js 开屏、滚位一致） */
   /* 不用 hash 里的 &（本地 file / 部分 WebView 会吞片段）；--m2ns 后缀与 index.html head 脚本、index.js 一致 */

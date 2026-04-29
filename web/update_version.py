@@ -3,7 +3,7 @@
 
 """
 回退为“版本号写在文件里”的方案：
-1) 批量更新项目内 *.html/*.js/*.css 中的 ?v=YYYYMMDDHHMM
+1) 批量更新项目内 *.html/*.js/*.css 中的 ?v=<Unix 毫秒时间戳>
 2) m2/ 下 *.html：插入或更新 window.__MANGO_ASSET_VERSION__，并为未带 v= 的本地 .css/.js/.html 链接补版本号
 3) 更新 m2-actions.js 内 m2FallbackAssetV 兜底版本（与全站时间戳一致）
 4) 移除页面中的 /asset-version.js 与 /asset-version-apply.js 引用
@@ -16,13 +16,16 @@ from __future__ import annotations
 import datetime as dt
 import re
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 
 ROOT = Path(__file__).resolve().parent
 M2_ROOT = ROOT / "m2"
-VERSION_RE = re.compile(r"([?&]v=)(?P<v>\d{12})")
+# 匹配旧 12 位日期串与 10–13 位秒戳 / 13 位毫秒时间戳等同源版本占位
+VERSION_TOKEN = r"\d{10,15}"
+VERSION_RE = re.compile(rf"([?&]v=)(?P<v>{VERSION_TOKEN})")
 BROKEN_VERSION_RE = re.compile(
-    r"(\.(?:css|js|html))(?:P\d{10,12}|[?&]v=\d{12})",
+    rf"(\.(?:css|js|html))(?:P\d{{10,12}}|[?&]v={VERSION_TOKEN})",
     re.IGNORECASE,
 )
 ASSET_VERSION_TAG_RE = re.compile(
@@ -30,10 +33,10 @@ ASSET_VERSION_TAG_RE = re.compile(
     re.IGNORECASE,
 )
 INLINE_ASSET_VER_RE = re.compile(
-    r"(window\.__MANGO_ASSET_VERSION__\s*=\s*)(['\"])(\d{12})\2"
+    rf"(window\.__MANGO_ASSET_VERSION__\s*=\s*)(['\"])({VERSION_TOKEN})\2"
 )
 M2_FALLBACK_ASSIGN_RE = re.compile(
-    r"(\bm2FallbackAssetV\s*=\s*)(['\"])(\d{12})\2"
+    rf"(\bm2FallbackAssetV\s*=\s*)(['\"])({VERSION_TOKEN})\2"
 )
 
 ATTR_URL_RE = re.compile(
@@ -92,7 +95,7 @@ def m2_inject_v_in_attr(url: str, ver: str) -> str:
     low_path = u.split("?")[0].split("#")[0].lower()
     if not (low_path.endswith(".css") or low_path.endswith(".js") or low_path.endswith(".html")):
         return url
-    if re.search(r"[?&]v=\d{12}", u):
+    if re.search(rf"[?&]v={VERSION_TOKEN}", u):
         return url
     frag = ""
     main = u
@@ -114,9 +117,14 @@ def patch_m2_html_attrs(text: str, ver: str) -> str:
     return ATTR_URL_RE.sub(repl, text)
 
 
+def current_version_ms_shanghai() -> str:
+    z = ZoneInfo("Asia/Shanghai")
+    return str(int(dt.datetime.now(z).timestamp() * 1000))
+
+
 def main() -> None:
     old_version = "无"
-    new_version = dt.datetime.now().strftime("%Y%m%d%H%M")
+    new_version = current_version_ms_shanghai()
     target_files = list(iter_target_files())
 
     for fp in target_files:
