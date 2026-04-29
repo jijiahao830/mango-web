@@ -1066,10 +1066,12 @@ body {
   flex-shrink: 0;
 }
 
-/* 背景图：铺满整屏 */
+/* 背景图：铺开整屏；资源路径 web/media-webp/photos/index/m2/关于.webp */
 .m2-about__bg {
   position: absolute;
   inset: 0;
+  background-color: #05070d;
+  background-image: url('../media-webp/photos/index/m2/关于.webp?v=202604291638');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
