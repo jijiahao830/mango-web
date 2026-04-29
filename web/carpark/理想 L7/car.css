@@ -1003,6 +1003,12 @@ body {
   color: var(--brand);
 }
 
+
+.footer-links span {
+  color: var(--muted);
+  font-size: 14px;
+}
+
 .footer-copy {
   color: var(--muted);
   font-size: 14px;

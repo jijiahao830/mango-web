@@ -53,15 +53,12 @@ body.page-services .fullscreen-carousel {
 }
 
 .site-record-footer__icp:hover,
-.site-record-footer__icp:focus-visible,
-.site-record-footer__phone:hover,
-.site-record-footer__phone:focus-visible {
+.site-record-footer__icp:focus-visible {
   color: #ff8c69;
   outline: none;
 }
 
-.site-record-footer__icp:focus-visible,
-.site-record-footer__phone:focus-visible {
+.site-record-footer__icp:focus-visible {
   text-decoration: underline;
 }
 

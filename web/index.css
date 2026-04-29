@@ -76,14 +76,11 @@ html {
 }
 
 .index-scroll-trigger__icp:hover,
-.index-scroll-trigger__icp:focus-visible,
-.index-scroll-trigger__phone:hover,
-.index-scroll-trigger__phone:focus-visible {
+.index-scroll-trigger__icp:focus-visible {
   color: var(--brand-light);
 }
 
-.index-scroll-trigger__icp:focus-visible,
-.index-scroll-trigger__phone:focus-visible {
+.index-scroll-trigger__icp:focus-visible {
   outline: none;
   text-decoration: underline;
 }

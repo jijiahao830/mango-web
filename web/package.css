@@ -53,15 +53,12 @@ body.page-package {
 }
 
 .package-footer__icp:hover,
-.package-footer__icp:focus-visible,
-.package-footer__phone:hover,
-.package-footer__phone:focus-visible {
+.package-footer__icp:focus-visible {
   color: #ff8c69;
   outline: none;
 }
 
-.package-footer__icp:focus-visible,
-.package-footer__phone:focus-visible {
+.package-footer__icp:focus-visible {
   text-decoration: underline;
 }
 
