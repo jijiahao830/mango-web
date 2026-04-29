@@ -106,13 +106,14 @@ body.m2-package {
 .m2p-plan__viewport {
   width: 100%;
   min-width: 0;
-  height: 60vh;
+  /* 略高于单卡最小高度，避免 overflow:hidden 裁掉价格行；略减轻上移，少裁底边 */
+  height: 74vh;
+  min-height: 420px;
   overflow: hidden;
   display: flex;
   align-items: center;
-  /* 整体上移，避免在卡片上用 transform 导致视口裁切、看起来变矮 */
-  transform: translateY(-12vh);
-  margin-bottom: -10vh;
+  transform: translateY(-7vh);
+  margin-bottom: -5vh;
 }
 
 .m2p-plan__track {
@@ -138,7 +139,9 @@ body.m2-package {
 .m2p-plan__card {
   flex: 0 0 var(--m2p-plan-card-w);
   min-width: 0;
-  min-height: 58vh;
+  /* 与视口匹配，保证标题/说明/价格整块可见 */
+  min-height: 62vh;
+  max-height: none;
   overflow: hidden;
   background: rgba(255, 255, 255, 0.06);
   color: #fff;
@@ -148,7 +151,7 @@ body.m2-package {
 }
 
 .m2p-plan__card-head {
-  flex: 0 0 62%;
+  flex: 0 0 52%;
   background: #111;
   display: grid;
   grid-template-columns: 1fr;
@@ -194,10 +197,12 @@ body.m2-package {
 
 .m2p-plan__card-body {
   flex: 1;
-  padding: 16px 16px 18px;
+  min-height: 0;
+  padding: 16px 16px 22px;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  justify-content: flex-start;
+  gap: 0;
   background: rgba(255, 255, 255, 0.06);
   color: #fff;
   backdrop-filter: blur(10px) saturate(112%);
@@ -222,15 +227,19 @@ body.m2-package {
 }
 
 .m2p-plan__price {
-  margin-top: 10px;
+  margin-top: auto;
+  padding-top: 10px;
   font-size: 46px;
   letter-spacing: 0.02em;
   color: #fff;
+  flex-shrink: 0;
+  line-height: 1.15;
 }
 
 .m2p-plan__dots {
   display: flex;
   gap: 24px;
+  margin-top: 4px;
 }
 
 .m2p-plan__dot {
