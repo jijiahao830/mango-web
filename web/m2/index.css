@@ -821,13 +821,18 @@ body {
 
 /* 筛选面板「分类」与上方选车区分栏一致：间距略收紧 */
 #m2FilterCats.m2-filter-tags {
-  gap: 6px;
+  gap: 1px;
 }
 
 /* 品牌区固定两行高度：即使只有一行标签，也预留两行空间 */
 #m2FilterBrands {
   min-height: 72px;
   align-content: flex-start;
+}
+
+#m2FilterBrands .m2-filter-tag {
+  padding-left: 7px;
+  padding-right: 7px;
 }
 
 .m2-filter-tag {
