@@ -1,6 +1,6 @@
 (function () {
   var STORAGE_KEY = 'mangoCarChecklist';
-  var m2FallbackAssetV = '202604291620';
+  var m2FallbackAssetV = '202604291626';
   function m2AssetV() {
     try {
       return (typeof window !== 'undefined' && window.__MANGO_ASSET_VERSION__) || m2FallbackAssetV;
@@ -197,7 +197,7 @@
       '.m2a-modal__backdrop{position:absolute;inset:0;background:rgba(0,0,0,.14);backdrop-filter:blur(10px) saturate(108%);-webkit-backdrop-filter:blur(10px) saturate(108%)}',
       '.m2a-modal__card{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:min(96vw,460px);border-radius:16px;padding:16px 14px 14px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.16);backdrop-filter:blur(10px) saturate(112%);-webkit-backdrop-filter:blur(10px) saturate(112%);box-shadow:none;color:#fff}',
       '.m2a-modal__title{margin:0 0 12px;font-size:14px;font-weight:500;letter-spacing:.02em;line-height:1.45;text-align:center;color:#fff}',
-      '.m2a-modal__input{width:100%;height:40px;border-radius:999px;border:1px solid rgba(255,255,255,.22);background:rgba(255,255,255,.08);color:#fff;font-size:14px;font-weight:500;letter-spacing:.02em;padding:0 14px;outline:none;box-sizing:border-box;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}',
+      '.m2a-modal__input{width:100%;height:40px;border-radius:999px;border:1px solid rgba(255,255,255,.22);background:rgba(255,255,255,.08);color:#fff;font-size:16px;font-weight:500;letter-spacing:.02em;padding:0 14px;outline:none;box-sizing:border-box;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}',
       '.m2a-modal__input::placeholder{color:rgba(255,255,255,.42)}',
       '.m2a-modal__error{margin:8px 0 0;color:#ff8f8f;font-size:13px;font-weight:500;letter-spacing:.02em}',
       '.m2a-modal__error[hidden]{display:none}',
@@ -248,7 +248,7 @@
       '.m2a-consult__msg--assistant{align-self:flex-start;background:rgba(255,255,255,.1);color:rgba(255,255,255,.92)}',
       '.m2a-consult__msg--user{align-self:flex-end;background:rgba(255,255,255,.14);color:#fff}',
       '.m2a-consult__input-wrap{margin-top:10px;display:flex;gap:8px;flex-shrink:0}',
-      '.m2a-consult__input{flex:1;height:38px;border-radius:9px;border:1px solid rgba(255,255,255,.22);background:rgba(255,255,255,.08);color:#fff;font-size:14px;padding:0 10px;outline:none}',
+      '.m2a-consult__input{flex:1;height:38px;border-radius:9px;border:1px solid rgba(255,255,255,.22);background:rgba(255,255,255,.08);color:#fff;font-size:16px;padding:0 10px;outline:none}',
       '.m2a-consult__send{height:38px;border-radius:999px;border:1px solid rgba(255,255,255,.22);background:rgba(255,255,255,.12);color:#fff;font-size:13px;padding:0 14px;cursor:pointer;flex-shrink:0;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}',
     ].join('');
     document.head.appendChild(s);
