@@ -11,12 +11,7 @@
     var allow = { m2Chooser: true, m2Packages: true, m2Service: true, m2About: true };
     var hash = allow[fromSection] ? fromSection : 'm2Chooser';
     var qs = qOut.toString();
-    var av = (typeof window !== 'undefined' && window.__MANGO_ASSET_VERSION__) || '';
-    var qParts = [];
-    if (av) qParts.push('v=' + av);
-    if (qs) qParts.push(qs);
-    var qJoined = qParts.join('&');
-    var qstr = qJoined ? ('?' + qJoined) : '';
+    var qstr = qs ? ('?' + qs) : '';
     backLink.href = '../../index.html' + qstr + '#' + hash + '--m2ns';
   }
 

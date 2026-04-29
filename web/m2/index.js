@@ -1,9 +1,40 @@
+/* 地址栏隐藏静态资源缓存参数 ?v=（仅 query 名 v；replaceState 与外链进入时统一剥离） */
+function m2SearchSansVQuery() {
+  try {
+    var sp = new URLSearchParams(String(location.search || '').replace(/^\?/, ''));
+    sp.delete('v');
+    var t = sp.toString();
+    return t ? '?' + t : '';
+  } catch (e) {
+    return location.search || '';
+  }
+}
+
+(function m2StripVersionFromAddressBarOnce() {
+  try {
+    var sp0 = new URLSearchParams(String(location.search || '').replace(/^\?/, ''));
+    if (!sp0.has('v')) return;
+    sp0.delete('v');
+    var t0 = sp0.toString();
+    history.replaceState(null, '', location.pathname + (t0 ? '?' + t0 : '') + (location.hash || ''));
+  } catch (e) {}
+})();
+
 /* file:// 预览时地址栏常丢 query，从详情页写入的 session 拼回（仅当是「回选车区」场景） */
 (function () {
   try {
     if (String(location.protocol || '').replace(':', '') !== 'file') return;
     var qs = sessionStorage.getItem('m2HomeReturnQs');
     if (!qs) return;
+    try {
+      var spR = new URLSearchParams(String(qs).replace(/^\?/, ''));
+      spR.delete('v');
+      qs = spR.toString();
+    } catch (eR) {}
+    if (!qs) {
+      sessionStorage.removeItem('m2HomeReturnQs');
+      return;
+    }
     var rawHash = String(location.hash || '').replace(/^#/, '');
     try {
       rawHash = decodeURIComponent(rawHash).trim();
@@ -793,7 +824,7 @@
         }
         if (!/^m2chooser$/i.test(hr)) {
           try {
-            history.replaceState(null, '', location.pathname + location.search + '#m2Chooser');
+            history.replaceState(null, '', location.pathname + m2SearchSansVQuery() + '#m2Chooser');
           } catch (e) {}
         }
         clearM2HomeScrollTargetStorage();
@@ -813,7 +844,7 @@
             sessionStorage.removeItem('m2HomeScrollTarget');
           } catch (e2) {}
           try {
-            history.replaceState(null, '', location.pathname + location.search + '#' + stNav);
+            history.replaceState(null, '', location.pathname + m2SearchSansVQuery() + '#' + stNav);
           } catch (e3) {}
           scrollM2HomeToSectionById(stNav);
           return;
@@ -847,7 +878,7 @@
       var sid = consumeStorageScrollTarget();
       if (sid) {
         try {
-          history.replaceState(null, '', location.pathname + location.search + '#' + sid);
+          history.replaceState(null, '', location.pathname + m2SearchSansVQuery() + '#' + sid);
         } catch (e) {}
         scrollM2HomeToSectionById(sid);
       }
@@ -899,7 +930,7 @@
       var want = '#' + bestId;
       if (String(location.hash || '') === want) return;
       try {
-        history.replaceState(null, '', location.pathname + location.search + want);
+        history.replaceState(null, '', location.pathname + m2SearchSansVQuery() + want);
         window.__m2LastHomeSection = bestId;
       } catch (e) {}
     }
@@ -974,7 +1005,7 @@
         if (!want) return;
         var nextHash = '#' + want;
         if (String(location.hash || '') === nextHash) return;
-        history.replaceState(null, '', location.pathname + location.search + nextHash);
+        history.replaceState(null, '', location.pathname + m2SearchSansVQuery() + nextHash);
         window.__m2LastHomeSection = want;
       } catch (err) {}
     },
@@ -1027,6 +1058,7 @@
     if (m2ns === '1' || m2ns === 'true' || m2ns === 'yes') {
       skipFromDetailQuery = true;
       spSplash.delete('m2ns');
+      spSplash.delete('v');
       var tail = spSplash.toString();
       var nextSearch = tail ? '?' + tail : '';
       history.replaceState(
@@ -1044,7 +1076,7 @@
         history.replaceState(
           null,
           '',
-          location.pathname + (location.search || '') + '#' + cl0
+          location.pathname + m2SearchSansVQuery() + '#' + cl0
         );
       }
     }
@@ -1075,7 +1107,7 @@
           history.replaceState(
             null,
             '',
-            location.pathname + (location.search || '') + '#' + newH
+            location.pathname + m2SearchSansVQuery() + '#' + newH
           );
         }
       }
@@ -1105,7 +1137,7 @@
           null,
           '',
           location.pathname +
-            (location.search || '') +
+            m2SearchSansVQuery() +
             '#' +
             fhc.replace(/--m2ns$/i, '').trim()
         );

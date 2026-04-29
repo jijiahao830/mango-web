@@ -1,6 +1,6 @@
 (function () {
   var STORAGE_KEY = 'mangoCarChecklist';
-  var m2FallbackAssetV = '202604291753';
+  var m2FallbackAssetV = '202604291759';
   function m2AssetV() {
     try {
       return (typeof window !== 'undefined' && window.__MANGO_ASSET_VERSION__) || m2FallbackAssetV;
@@ -347,9 +347,7 @@
       '<div class="m2a-valueadd" id="m2aValueAdd">' +
       '<div class="m2a-valueadd__head">' +
       '<h4 class="m2a-valueadd__title">增值服务</h4>' +
-      '<a class="m2a-valueadd__more" id="m2aValueAddMore" href="./services.html?v=' +
-      m2AssetV() +
-      '">了解更多</a>' +
+      '<a class="m2a-valueadd__more" id="m2aValueAddMore" href="./services.html">了解更多</a>' +
       '</div>' +
       '<ul class="m2a-valueadd__list" id="m2aValueAddList"></ul>' +
       '</div>' +
