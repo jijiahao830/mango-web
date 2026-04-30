@@ -372,15 +372,6 @@ function buildCarHtml(ctx) {
     '            <span>滇公网安备53010002000314号</span>\n' +
     '          </a>\n' +
     '        </div>\n' +
-    '        <div class="m2-legal-foot__contact">\n' +
-    '          <span class="m2-legal-foot__contact-label">客服热线</span>\n' +
-    '          <span class="m2-legal-foot__contact-nums">\n' +
-    '            <a class="m2-legal-foot__tel" href="tel:13033333370">13033333370</a>\n' +
-    '            <span class="m2-legal-foot__sep-dot" aria-hidden="true">·</span>\n' +
-    '            <a class="m2-legal-foot__tel" href="tel:13033333610">13033333610</a>\n' +
-    '          </span>\n' +
-    '        </div>\n' +
-    '        <p class="m2-legal-foot__hours">服务时间：24小时营业，全年无休</p>\n' +
     '        <p class="m2-legal-foot__copyright">© 2026 昆明芒果汽车服务有限公司 版权所有</p>\n' +
     '      </div>\n' +
     '    </footer>\n' +

@@ -444,10 +444,9 @@ body {
    ⑥ 同价位其他车
    ════════════════════════════════════════ */
 .m2-car__same-price {
-  min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: #7f7f7f;
+  background: #000;
 }
 
 .m2-same-price__vehicle-zone {

@@ -1,4 +1,4 @@
-/* 网站底部备案 / 公安 / 客服 / 版权声明（整站共用） */
+/* 网站底部备案 / 公安 / 版权声明（整站共用） */
 
 .m2-legal-foot {
   --m2-legal-foot-fs: clamp(10px, 2.85vw, 15px);
@@ -89,52 +89,6 @@
   width: 18px;
   height: auto;
   display: block;
-}
-
-.m2-legal-foot__contact {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: center;
-  gap: 0.35rem 0.55rem;
-  margin: 0;
-  color: #fff;
-  font-size: inherit;
-}
-
-.m2-legal-foot__contact-label {
-  opacity: 1;
-  font-size: inherit;
-}
-
-.m2-legal-foot__contact-nums {
-  font-variant-numeric: tabular-nums;
-}
-
-.m2-legal-foot__tel {
-  color: inherit;
-  text-decoration: none;
-}
-
-.m2-legal-foot__tel:hover,
-.m2-legal-foot__tel:focus-visible {
-  color: #fff;
-  text-decoration: underline;
-  outline: none;
-}
-
-.m2-legal-foot__sep-dot {
-  margin: 0 0.2em;
-  opacity: 1;
-  color: #fff;
-}
-
-.m2-legal-foot__hours {
-  margin: 0;
-  font-size: inherit;
-  line-height: inherit;
-  color: #fff;
-  opacity: 1;
 }
 
 .m2-legal-foot__copyright {
