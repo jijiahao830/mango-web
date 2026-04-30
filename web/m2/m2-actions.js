@@ -1,6 +1,6 @@
 (function () {
   var STORAGE_KEY = 'mangoCarChecklist';
-  var m2FallbackAssetV = '1777470447080';
+  var m2FallbackAssetV = '1777536200086';
   function m2AssetV() {
     try {
       return (typeof window !== 'undefined' && window.__MANGO_ASSET_VERSION__) || m2FallbackAssetV;
@@ -19,9 +19,33 @@
   ];
 
   /* ── Storage ── */
+  /* localStorage 与 sessionStorage 同步写入：部分国产浏览器（如 UC）会拦截 localStorage，双写提高成功率 */
+  function readChecklistRaw() {
+    try {
+      var a = localStorage.getItem(STORAGE_KEY);
+      if (a != null) return a;
+    } catch (e) {}
+    try {
+      return sessionStorage.getItem(STORAGE_KEY);
+    } catch (e2) {}
+    return null;
+  }
+  function writeChecklistRaw(json) {
+    var ok = false;
+    try {
+      localStorage.setItem(STORAGE_KEY, json);
+      ok = true;
+    } catch (eLs) {}
+    try {
+      sessionStorage.setItem(STORAGE_KEY, json);
+      ok = true;
+    } catch (eSs) {}
+    return ok;
+  }
   function readChecklistMap() {
     try {
-      var raw = localStorage.getItem(STORAGE_KEY) || '{}';
+      var raw = readChecklistRaw();
+      if (raw == null || raw === '') raw = '{}';
       var obj = JSON.parse(raw);
       return obj && typeof obj === 'object' ? obj : {};
     } catch (e) {
@@ -30,12 +54,15 @@
   }
   function writeChecklistMap(map) {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(map || {}));
+      var s = JSON.stringify(map || {});
+      if (!writeChecklistRaw(s)) {
+        try {
+          if (typeof console !== 'undefined' && console.warn) console.warn('[mango] checklist storage write failed');
+        } catch (e2) {}
+        return false;
+      }
       return true;
     } catch (e) {
-      try {
-        if (typeof console !== 'undefined' && console.warn) console.warn('[mango] checklist localStorage:', e);
-      } catch (e2) {}
       return false;
     }
   }
@@ -139,6 +166,32 @@
       .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
   }
 
+  /** 部分 WebView（含旧版 UC）无 Element.closest，事件委托会整块失效 */
+  function m2Matches(el, selector) {
+    if (!el || el.nodeType !== 1 || !selector) return false;
+    var m = el.matches || el.webkitMatchesSelector || el.msMatchesSelector;
+    if (!m) return false;
+    try {
+      return !!m.call(el, selector);
+    } catch (err) {
+      return false;
+    }
+  }
+  function m2Closest(node, selector) {
+    if (!node || !selector) return null;
+    var el = node.nodeType === 1 ? node : node.parentElement;
+    if (!el) return null;
+    try {
+      if (typeof el.closest === 'function') return el.closest(selector);
+    } catch (eC) {}
+    var cur = el;
+    while (cur && cur.nodeType === 1) {
+      if (m2Matches(cur, selector)) return cur;
+      cur = cur.parentElement;
+    }
+    return null;
+  }
+
   function m2aScriptM2DirUrl() {
     var scripts = document.getElementsByTagName('script');
     for (var i = scripts.length - 1; i >= 0; i--) {
@@ -240,6 +293,11 @@
       '.m2a-valueadd__name{font-size:10px;font-weight:500;color:#fff;letter-spacing:.02em;line-height:1.25;text-align:center;word-break:keep-all}',
       '.m2a-valueadd__add{align-self:stretch;width:100%;box-sizing:border-box;border:1px solid rgba(255,255,255,.22);border-radius:999px;padding:4px 2px;background:rgba(255,255,255,.08);color:#fff;font-size:10px;font-weight:500;cursor:pointer;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}',
       '.m2a-valueadd__add:disabled{opacity:.55;cursor:default}',
+      '/* UC/旧 WebView：加快点击、弱化与横向溢出列表的触控冲突 */',
+      '.m2a-days-confirm,.m2a-panel__item-remove,.m2a-modal__btn,.m2a-panel__clear,.m2a-panel__send{touch-action:manipulation;-webkit-tap-highlight-color:transparent}',
+      '.m2a-valueadd__add{touch-action:manipulation;-webkit-tap-highlight-color:transparent;-webkit-user-select:none}',
+      '.m2a-valueadd__list{-webkit-overflow-scrolling:touch;overflow-x:auto;overscroll-behavior-x:contain}',
+      '.m2a-panel__body{touch-action:pan-y}',
       '.m2a-panel__actions{display:flex;gap:10px}',
       '.m2a-panel__clear{flex:1;border:1px solid rgba(255,255,255,.22);border-radius:999px;padding:0 12px;height:40px;box-sizing:border-box;background:rgba(255,255,255,.08);color:#fff;font-size:13px;font-weight:500;letter-spacing:.02em;cursor:pointer;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);display:flex;align-items:center;justify-content:center}',
       '.m2a-panel__send{flex:1;border:1px solid rgba(255,255,255,.22);border-radius:999px;padding:0 12px;height:40px;box-sizing:border-box;background:rgba(255,255,255,.08);color:#fff;font-size:13px;font-weight:500;letter-spacing:.02em;cursor:pointer;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);display:flex;align-items:center;justify-content:center}',
@@ -631,7 +689,10 @@
       pkgEntry.pkg_lines = pkg.pkg_lines.slice();
     }
     mapP[pkg.car_id] = pkgEntry;
-    writeChecklistMap(mapP);
+    if (!writeChecklistMap(mapP)) {
+      showMessageModal('保存清单失败，请在 UC 中关闭「无痕/省流加速」或改用系统浏览器');
+      return;
+    }
     renderPanel();
     closeM2PackagePickModal();
   }
@@ -657,7 +718,10 @@
     var map = readChecklistMap();
     if (map[car.car_id]) {
       delete map[car.car_id];
-      writeChecklistMap(map);
+      if (!writeChecklistMap(map)) {
+        showMessageModal('保存清单失败，请在浏览器中允许网页存储数据');
+        return;
+      }
       renderPanel();
       return;
     }
@@ -846,24 +910,46 @@
       else closeChecklistPanel();
     });
 
-    /* days modal: confirm */
+    /* days modal: confirm — click + touchend（部分 UC 只稳定触发触控端） */
     var daysModal = document.getElementById('m2aDaysModal');
     if (daysModal) {
+      function tryConfirmDaysPick(e) {
+        if (!e || e.target === daysModal) return false;
+        var btn = m2Closest(e.target, '.m2a-days-confirm');
+        if (!btn || !pendingCarItem) return false;
+        pendingCarItem.days = btn.getAttribute('data-days') || '单日 (24小时)';
+        var map = readChecklistMap();
+        map[pendingCarItem.car_id] = pendingCarItem;
+        if (!writeChecklistMap(map)) {
+          showMessageModal('保存清单失败，请在 UC 设置中允许本站使用本地存储，或关闭无痕模式');
+          return true;
+        }
+        renderPanel();
+        closeDaysModal();
+        return true;
+      }
       daysModal.addEventListener('click', function (e) {
         if (e.target === daysModal) {
           closeDaysModal();
           return;
         }
-        var btn = e.target.closest && e.target.closest('.m2a-days-confirm');
-        if (btn && pendingCarItem) {
-          pendingCarItem.days = btn.getAttribute('data-days') || '单日 (24小时)';
-          var map = readChecklistMap();
-          map[pendingCarItem.car_id] = pendingCarItem;
-          writeChecklistMap(map);
-          renderPanel();
-          closeDaysModal();
-        }
+        tryConfirmDaysPick(e);
       });
+      daysModal.addEventListener(
+        'touchend',
+        function (e) {
+          if (e.target === daysModal) {
+            closeDaysModal();
+            return;
+          }
+          if (tryConfirmDaysPick(e)) {
+            try {
+              e.preventDefault();
+            } catch (ePd) {}
+          }
+        },
+        { passive: false }
+      );
     }
     var daysCloseBtn = document.getElementById('m2aDaysCloseBtn');
     if (daysCloseBtn) daysCloseBtn.addEventListener('click', closeDaysModal);
@@ -877,7 +963,7 @@
     var pkgPickOpts = document.getElementById('m2aPackagePickOptions');
     if (pkgPickOpts) {
       pkgPickOpts.addEventListener('click', function (e) {
-        var btn = e.target.closest && e.target.closest('[data-m2a-pkg-idx]');
+        var btn = m2Closest(e.target, '[data-m2a-pkg-idx]');
         if (!btn) return;
         var idx = parseInt(String(btn.getAttribute('data-m2a-pkg-idx') || ''), 10);
         if (!isFinite(idx)) return;
@@ -887,24 +973,43 @@
     var pkgPickClose = document.getElementById('m2aPackagePickClose');
     if (pkgPickClose) pkgPickClose.addEventListener('click', closeM2PackagePickModal);
 
-    /* checklist panel: remove */
+    /* checklist panel: 增值服务「加入」与移除 — 增加 touchend（部分 UC WebView 合成 click 不可靠） */
     var panel = document.getElementById('m2aChecklistPanel');
     if (panel) {
-      panel.addEventListener('click', function (e) {
-        var addSvc = e.target.closest && e.target.closest('[data-m2a-add-service]');
+      function tryChecklistPanelAction(e) {
+        var addSvc = m2Closest(e.target, '[data-m2a-add-service]');
         if (addSvc && !addSvc.disabled) {
           var svcName = String(addSvc.getAttribute('data-m2a-add-service') || '').trim();
           if (svcName) addServiceToChecklist(svcName);
-          return;
+          return true;
         }
-        var removeBtn = e.target.closest && e.target.closest('[data-remove-id]');
+        var removeBtn = m2Closest(e.target, '[data-remove-id]');
         if (removeBtn) {
           var id = String(removeBtn.getAttribute('data-remove-id') || '').trim();
           var map = readChecklistMap();
-          if (id && map[id]) { delete map[id]; writeChecklistMap(map); renderPanel(); }
-          return;
+          if (id && map[id]) {
+            delete map[id];
+            if (!writeChecklistMap(map)) showMessageModal('保存清单失败');
+            else renderPanel();
+          }
+          return true;
         }
+        return false;
+      }
+      panel.addEventListener('click', function (e) {
+        tryChecklistPanelAction(e);
       });
+      panel.addEventListener(
+        'touchend',
+        function (e) {
+          if (tryChecklistPanelAction(e)) {
+            try {
+              e.preventDefault();
+            } catch (ePn) {}
+          }
+        },
+        { passive: false }
+      );
     }
     var panelCloseBtn = document.getElementById('m2aPanelCloseBtn');
     if (panelCloseBtn) panelCloseBtn.addEventListener('click', closeChecklistPanel);
