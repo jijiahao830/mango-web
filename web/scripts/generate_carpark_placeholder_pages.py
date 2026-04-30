@@ -1092,7 +1092,7 @@ def build_html(folder_name: str, row: dict | None = None) -> str:
           <a href="#">隐私政策</a>
           <a href="#">联系我们</a>
         </div>
-        <div class="footer-copy">© 2026 芒果超跑租车公司 · 极速出行，从这里开始</div>
+        <div class="footer-copy">© 2026 昆明芒果汽车服务有限公司 版权所有</div>
       </div>
     </div>
   </footer>

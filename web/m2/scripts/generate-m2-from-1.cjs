@@ -212,6 +212,7 @@ function buildCarHtml(ctx) {
     esc(title) +
     '</title>\n' +
     '  <link rel="stylesheet" href="./car.css">\n' +
+    '  <link rel="stylesheet" href="../../m2-legal-foot.css">\n' +
     '</head>\n' +
     '<body data-car-display-name="' +
     esc(displayName) +
@@ -362,8 +363,26 @@ function buildCarHtml(ctx) {
     '      </div>\n' +
     '    </div>\n' +
     '    <footer class="m2-same-price__record-zone">\n' +
-    '      <p>备案号：滇ICP备2025055273号-3</p>\n' +
-    '      <p>客服联系方式：13033333370</p>\n' +
+    '      <div class="m2-legal-foot" role="contentinfo" aria-label="网站备案与联系方式">\n' +
+    '        <div class="m2-legal-foot__beian">\n' +
+    '          <a class="m2-legal-foot__link" href="https://beian.miit.gov.cn/" target="_blank" rel="noopener noreferrer">滇ICP备2025055273号-3</a>\n' +
+    '          <span class="m2-legal-foot__sep" aria-hidden="true">|</span>\n' +
+    '          <a class="m2-legal-foot__link m2-legal-foot__mps" href="https://beian.mps.gov.cn/#/query/webSearch?code=53010002000314" rel="noreferrer" target="_blank">\n' +
+    '            <img class="m2-legal-foot__mps-icon" src="../../../media-webp/photos/index/m2/备案图标.webp" alt="" width="18" height="20" decoding="async" loading="lazy">\n' +
+    '            <span>滇公网安备53010002000314号</span>\n' +
+    '          </a>\n' +
+    '        </div>\n' +
+    '        <div class="m2-legal-foot__contact">\n' +
+    '          <span class="m2-legal-foot__contact-label">客服热线</span>\n' +
+    '          <span class="m2-legal-foot__contact-nums">\n' +
+    '            <a class="m2-legal-foot__tel" href="tel:13033333370">13033333370</a>\n' +
+    '            <span class="m2-legal-foot__sep-dot" aria-hidden="true">·</span>\n' +
+    '            <a class="m2-legal-foot__tel" href="tel:13033333610">13033333610</a>\n' +
+    '          </span>\n' +
+    '        </div>\n' +
+    '        <p class="m2-legal-foot__hours">服务时间：24小时营业，全年无休</p>\n' +
+    '        <p class="m2-legal-foot__copyright">© 2026 昆明芒果汽车服务有限公司 版权所有</p>\n' +
+    '      </div>\n' +
     '    </footer>\n' +
     '  </section>\n' +
     '\n' +

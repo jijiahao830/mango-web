@@ -1,6 +1,6 @@
 (function () {
   var STORAGE_KEY = 'mangoCarChecklist';
-  var m2FallbackAssetV = '1777536200086';
+  var m2FallbackAssetV = '1777545323642';
   function m2AssetV() {
     try {
       return (typeof window !== 'undefined' && window.__MANGO_ASSET_VERSION__) || m2FallbackAssetV;
@@ -18,8 +18,7 @@
     { name: '顾问陪同', icon: '顾问陪同.webp' },
   ];
 
-  /* ── Storage ── */
-  /* localStorage 与 sessionStorage 同步写入：部分国产浏览器（如 UC）会拦截 localStorage，双写提高成功率 */
+  /* ── Storage：磁盘尽力同步；__MANGO_CHECKLIST_MEM__ 为当前标签页真相源（UC 常假成功或不可用 localStorage） ── */
   function readChecklistRaw() {
     try {
       var a = localStorage.getItem(STORAGE_KEY);
@@ -42,25 +41,32 @@
     } catch (eSs) {}
     return ok;
   }
+  function cloneChecklistMap(map) {
+    try {
+      return JSON.parse(JSON.stringify(map && typeof map === 'object' ? map : {}));
+    } catch (eCl) {
+      return {};
+    }
+  }
   function readChecklistMap() {
     try {
-      var raw = readChecklistRaw();
-      if (raw == null || raw === '') raw = '{}';
-      var obj = JSON.parse(raw);
-      return obj && typeof obj === 'object' ? obj : {};
+      if (window.__MANGO_CHECKLIST_MEM__ == null) {
+        var raw = readChecklistRaw();
+        if (raw == null || raw === '') raw = '{}';
+        var obj = JSON.parse(raw);
+        window.__MANGO_CHECKLIST_MEM__ = obj && typeof obj === 'object' ? obj : {};
+      }
+      return window.__MANGO_CHECKLIST_MEM__;
     } catch (e) {
-      return {};
+      if (window.__MANGO_CHECKLIST_MEM__ == null) window.__MANGO_CHECKLIST_MEM__ = {};
+      return window.__MANGO_CHECKLIST_MEM__;
     }
   }
   function writeChecklistMap(map) {
     try {
-      var s = JSON.stringify(map || {});
-      if (!writeChecklistRaw(s)) {
-        try {
-          if (typeof console !== 'undefined' && console.warn) console.warn('[mango] checklist storage write failed');
-        } catch (e2) {}
-        return false;
-      }
+      var o = cloneChecklistMap(map);
+      window.__MANGO_CHECKLIST_MEM__ = o;
+      writeChecklistRaw(JSON.stringify(o));
       return true;
     } catch (e) {
       return false;
@@ -190,6 +196,38 @@
       cur = cur.parentElement;
     }
     return null;
+  }
+
+  /** 国产内核：直接在按钮上绑定，避免委托/target 错乱；touchend 非 passive + 防抖 */
+  function m2ArmTap(btn, handler) {
+    if (!btn || typeof handler !== 'function') return;
+    var locking = false;
+    function invoke() {
+      if (locking) return;
+      locking = true;
+      try {
+        handler(btn);
+      } catch (eh) {}
+      setTimeout(function () {
+        locking = false;
+      }, 450);
+    }
+    btn.onclick = function (ev) {
+      try {
+        if (ev && ev.preventDefault) ev.preventDefault();
+      } catch (e1) {}
+      invoke();
+    };
+    btn.addEventListener(
+      'touchend',
+      function (ev) {
+        try {
+          if (ev.preventDefault) ev.preventDefault();
+        } catch (e2) {}
+        invoke();
+      },
+      { passive: false }
+    );
   }
 
   function m2aScriptM2DirUrl() {
@@ -517,6 +555,16 @@
         '<button type="button" class="m2a-valueadd__add" data-m2a-add-service="' + esc(row.name) + '">加入</button>' +
         '</li>';
     }).join('');
+    var addBtns = wrap.querySelectorAll('[data-m2a-add-service]');
+    for (var i = 0; i < addBtns.length; i++) {
+      (function (b) {
+        m2ArmTap(b, function () {
+          if (b.disabled) return;
+          var svcName = String(b.getAttribute('data-m2a-add-service') || '').trim();
+          if (svcName) addServiceToChecklist(svcName);
+        });
+      })(addBtns[i]);
+    }
   }
 
   function syncValueAddButtons(map) {
@@ -586,6 +634,19 @@
     if (originalEl) originalEl.textContent = '原价：¥' + Math.round(origTotal).toLocaleString('zh-CN');
     if (totalEl) totalEl.textContent = '总价：¥' + Math.round(total).toLocaleString('zh-CN');
     syncValueAddButtons(map);
+    var removes = listEl.querySelectorAll('.m2a-panel__item-remove');
+    for (var ri = 0; ri < removes.length; ri++) {
+      (function (rb) {
+        m2ArmTap(rb, function () {
+          var rid = String(rb.getAttribute('data-remove-id') || '').trim();
+          var mmap = readChecklistMap();
+          if (!rid || !mmap[rid]) return;
+          delete mmap[rid];
+          writeChecklistMap(mmap);
+          renderPanel();
+        });
+      })(removes[ri]);
+    }
   }
 
   /* ── Days select modal ── */
@@ -610,9 +671,31 @@
         return '<div class="m2a-days-row">' +
           '<span class="m2a-days-label">' + esc(r[0]) + '</span>' +
           '<span class="m2a-days-price"><span class="m2a-days-price-num">¥' + r[1] + '</span><span class="m2a-days-price-unit">/天</span></span>' +
-          '<button class="m2a-days-confirm" data-days="' + esc(r[0]) + '">确认</button>' +
+          '<button type="button" class="m2a-days-confirm" data-days="' + esc(r[0]) + '">确认</button>' +
           '</div>';
       }).join('');
+      var rowBtns = optEl.querySelectorAll('.m2a-days-confirm');
+      for (var bi = 0; bi < rowBtns.length; bi++) {
+        (function (rowBtn) {
+          m2ArmTap(rowBtn, function () {
+            var src = pendingCarItem;
+            if (!src || !src.car_id) return;
+            var daysText = String(rowBtn.getAttribute('data-days') || '').trim() || '单日 (24小时)';
+            var entry = {
+              car_id: src.car_id,
+              car_name: src.car_name,
+              model_name: src.model_name,
+              rent_price: src.rent_price,
+              days: daysText,
+            };
+            var map = readChecklistMap();
+            map[entry.car_id] = entry;
+            writeChecklistMap(map);
+            renderPanel();
+            closeDaysModal();
+          });
+        })(rowBtns[bi]);
+      }
     }
     var modal = document.getElementById('m2aDaysModal');
     if (modal) modal.removeAttribute('hidden');
@@ -659,6 +742,16 @@
         '</div>';
     }).join('');
     modal.removeAttribute('hidden');
+    var pkgBtns = opts.querySelectorAll('[data-m2a-pkg-idx]');
+    for (var pi = 0; pi < pkgBtns.length; pi++) {
+      (function (pb) {
+        m2ArmTap(pb, function () {
+          var idx2 = parseInt(String(pb.getAttribute('data-m2a-pkg-idx') || ''), 10);
+          if (!isFinite(idx2)) return;
+          confirmM2PackagePick(idx2);
+        });
+      })(pkgBtns[pi]);
+    }
   }
 
   function confirmM2PackagePick(idx) {
@@ -878,7 +971,7 @@
         toast.classList.remove('is-show');
       }, 1300);
     }
-    btn.addEventListener('click', function () {
+    m2ArmTap(btn, function () {
       if (!document.body.classList.contains('page-services')) return;
       var activeTitle = document.querySelector('.carousel-slide.active .slide-title');
       var svcName = activeTitle ? String(activeTitle.textContent || '').replace(/\u200b/g, '').trim() : '';
@@ -893,66 +986,41 @@
     if (window.__m2aBindEventsDone) return;
     window.__m2aBindEventsDone = true;
     bindServiceEnjoyToast();
-    /* 加入清单 */
+    /* 加入清单（UC 上对 rail 也需可靠触控） */
     var addBtn = document.getElementById('m2BtnAddChecklist');
-    if (addBtn) addBtn.addEventListener('click', handleAddChecklist);
+    if (addBtn)
+      m2ArmTap(addBtn, function () {
+        handleAddChecklist();
+      });
 
     /* 咨询客服 */
     var consultBtn = document.getElementById('m2BtnConsult');
-    if (consultBtn) consultBtn.addEventListener('click', openConsultModal);
+    if (consultBtn)
+      m2ArmTap(consultBtn, function () {
+        openConsultModal();
+      });
 
     /* 用车清单 */
     var checklistBtn = document.getElementById('m2BtnChecklist');
-    if (checklistBtn) checklistBtn.addEventListener('click', function () {
-      var panel = document.getElementById('m2aChecklistPanel');
-      if (!panel) return;
-      if (panel.hasAttribute('hidden')) openChecklistPanel();
-      else closeChecklistPanel();
-    });
+    if (checklistBtn)
+      m2ArmTap(checklistBtn, function () {
+        var panel = document.getElementById('m2aChecklistPanel');
+        if (!panel) return;
+        if (panel.hasAttribute('hidden')) openChecklistPanel();
+        else closeChecklistPanel();
+      });
 
-    /* days modal: confirm — click + touchend（部分 UC 只稳定触发触控端） */
+    /* days modal：仅用遮罩层点击关闭（确认走各「确认」按钮上的直接绑定） */
     var daysModal = document.getElementById('m2aDaysModal');
     if (daysModal) {
-      function tryConfirmDaysPick(e) {
-        if (!e || e.target === daysModal) return false;
-        var btn = m2Closest(e.target, '.m2a-days-confirm');
-        if (!btn || !pendingCarItem) return false;
-        pendingCarItem.days = btn.getAttribute('data-days') || '单日 (24小时)';
-        var map = readChecklistMap();
-        map[pendingCarItem.car_id] = pendingCarItem;
-        if (!writeChecklistMap(map)) {
-          showMessageModal('保存清单失败，请在 UC 设置中允许本站使用本地存储，或关闭无痕模式');
-          return true;
-        }
-        renderPanel();
-        closeDaysModal();
-        return true;
-      }
       daysModal.addEventListener('click', function (e) {
-        if (e.target === daysModal) {
-          closeDaysModal();
-          return;
-        }
-        tryConfirmDaysPick(e);
+        if (e.target === daysModal) closeDaysModal();
       });
-      daysModal.addEventListener(
-        'touchend',
-        function (e) {
-          if (e.target === daysModal) {
-            closeDaysModal();
-            return;
-          }
-          if (tryConfirmDaysPick(e)) {
-            try {
-              e.preventDefault();
-            } catch (ePd) {}
-          }
-        },
-        { passive: false }
-      );
     }
     var daysCloseBtn = document.getElementById('m2aDaysCloseBtn');
-    if (daysCloseBtn) daysCloseBtn.addEventListener('click', closeDaysModal);
+    if (daysCloseBtn) m2ArmTap(daysCloseBtn, function () {
+      closeDaysModal();
+    });
 
     var pkgPickModal = document.getElementById('m2aPackagePickModal');
     if (pkgPickModal) {
@@ -960,59 +1028,13 @@
         if (e.target === pkgPickModal) closeM2PackagePickModal();
       });
     }
-    var pkgPickOpts = document.getElementById('m2aPackagePickOptions');
-    if (pkgPickOpts) {
-      pkgPickOpts.addEventListener('click', function (e) {
-        var btn = m2Closest(e.target, '[data-m2a-pkg-idx]');
-        if (!btn) return;
-        var idx = parseInt(String(btn.getAttribute('data-m2a-pkg-idx') || ''), 10);
-        if (!isFinite(idx)) return;
-        confirmM2PackagePick(idx);
-      });
-    }
     var pkgPickClose = document.getElementById('m2aPackagePickClose');
     if (pkgPickClose) pkgPickClose.addEventListener('click', closeM2PackagePickModal);
 
-    /* checklist panel: 增值服务「加入」与移除 — 增加 touchend（部分 UC WebView 合成 click 不可靠） */
-    var panel = document.getElementById('m2aChecklistPanel');
-    if (panel) {
-      function tryChecklistPanelAction(e) {
-        var addSvc = m2Closest(e.target, '[data-m2a-add-service]');
-        if (addSvc && !addSvc.disabled) {
-          var svcName = String(addSvc.getAttribute('data-m2a-add-service') || '').trim();
-          if (svcName) addServiceToChecklist(svcName);
-          return true;
-        }
-        var removeBtn = m2Closest(e.target, '[data-remove-id]');
-        if (removeBtn) {
-          var id = String(removeBtn.getAttribute('data-remove-id') || '').trim();
-          var map = readChecklistMap();
-          if (id && map[id]) {
-            delete map[id];
-            if (!writeChecklistMap(map)) showMessageModal('保存清单失败');
-            else renderPanel();
-          }
-          return true;
-        }
-        return false;
-      }
-      panel.addEventListener('click', function (e) {
-        tryChecklistPanelAction(e);
-      });
-      panel.addEventListener(
-        'touchend',
-        function (e) {
-          if (tryChecklistPanelAction(e)) {
-            try {
-              e.preventDefault();
-            } catch (ePn) {}
-          }
-        },
-        { passive: false }
-      );
-    }
     var panelCloseBtn = document.getElementById('m2aPanelCloseBtn');
-    if (panelCloseBtn) panelCloseBtn.addEventListener('click', closeChecklistPanel);
+    if (panelCloseBtn) m2ArmTap(panelCloseBtn, function () {
+      closeChecklistPanel();
+    });
     var checklistBackdrop = document.getElementById('m2aChecklistBackdrop');
     if (checklistBackdrop) checklistBackdrop.addEventListener('click', closeChecklistPanel);
     var clearBtn = document.getElementById('m2aPanelClearBtn');

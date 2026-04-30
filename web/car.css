@@ -7,6 +7,8 @@
   --bg-secondary: #0f1115;
   --panel: #171a21;
   --muted: #8b93a7;
+  /* m2/about 等页内联样式与 m2-legal-foot--muted 引用 */
+  --text-muted: var(--muted);
   --text: #e8ecf8;
   --brand: #ff6b35;
   --brand-light: #ff8c69;

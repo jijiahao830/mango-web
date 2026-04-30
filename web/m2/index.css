@@ -1076,7 +1076,7 @@ body {
   position: absolute;
   inset: 0;
   background-color: #05070d;
-  background-image: url('../media-webp/photos/index/m2/关于.webp?v=1777536200086');
+  background-image: url('../media-webp/photos/index/m2/关于.webp?v=1777545323642');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -1146,23 +1146,3 @@ body {
   );
 }
 
-/* 底部 footer：固定在 section 底部 */
-.m2-about__footer {
-  position: relative;
-  z-index: 1;
-  flex: 0 0 auto;
-  margin-top: auto;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1%;
-  padding: 3% 6% calc(env(safe-area-inset-bottom) + 4%);
-  background: #000;
-}
-
-.m2-about__footer-text {
-  margin: 0;
-  font-size: 3vw;
-  color: rgba(255, 255, 255, 0.7);
-  text-align: center;
-}

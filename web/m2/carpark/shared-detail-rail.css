@@ -1,0 +1,154 @@
+/* ════════════════════════════════════════
+   右侧快捷栏（与首页：加入清单 / 咨询 / 用车清单）
+   ════════════════════════════════════════ */
+.m2-car-rail {
+  --m2-car-rail-h: 226px;
+  position: fixed;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 48;
+  display: flex;
+  align-items: center;
+  pointer-events: none;
+  /* 封面区内不展示，滑过 .m2-cover-wrapper 进入月租区后由 JS 加 .is-past-cover */
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity 0.35s ease, visibility 0.35s ease;
+}
+
+.m2-car-rail.is-past-cover {
+  visibility: visible;
+  opacity: 1;
+}
+
+.m2-car-rail > * {
+  pointer-events: auto;
+}
+
+.m2-car-rail__panel {
+  --m2-car-rail-item-h: 44px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 15px 3px 8px;
+  max-width: 80px;
+  /* 白色毛玻璃 */
+  background: rgba(255, 255, 255, 0.38);
+  backdrop-filter: blur(18px) saturate(180%);
+  -webkit-backdrop-filter: blur(18px) saturate(180%);
+  border-radius: 16px 0 0 16px;
+  border-left: 1px solid rgba(255, 255, 255, 0.55);
+  height: var(--m2-car-rail-h);
+  min-height: var(--m2-car-rail-h);
+  box-sizing: border-box;
+}
+
+.m2-car-rail__action {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  width: 100%;
+  height: var(--m2-car-rail-item-h);
+  min-height: var(--m2-car-rail-item-h);
+  padding: 8px 5px;
+  margin: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  color: #fff;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  font: inherit;
+  transition: opacity 0.2s ease;
+}
+
+.m2-car-rail__action:active {
+  opacity: 0.72;
+}
+
+.m2-car-rail__icon {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+  display: block;
+}
+
+.m2-car-rail__label {
+  font-size: 9px;
+  line-height: 1.25;
+  letter-spacing: 0.02em;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.m2-car-rail__close {
+  margin-top: -2px;
+  width: 100%;
+  height: var(--m2-car-rail-item-h);
+  min-height: var(--m2-car-rail-item-h);
+  min-width: 0;
+  padding: 0 5px 8px;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  color: #fff;
+  font-size: 22px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: opacity 0.2s ease;
+}
+
+.m2-car-rail__close:active {
+  opacity: 0.65;
+}
+
+/* 收起后：仅保留右侧拉手（图2） */
+.m2-car-rail.is-collapsed .m2-car-rail__panel {
+  display: none;
+}
+
+.m2-car-rail.is-collapsed .m2-car-rail__peek {
+  display: flex;
+}
+
+.m2-car-rail:not(.is-collapsed) .m2-car-rail__peek {
+  display: none;
+}
+
+.m2-car-rail__peek {
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: var(--m2-car-rail-h);
+  min-height: var(--m2-car-rail-h);
+  margin: 0;
+  padding: 0 1px 0 0;
+  border: none;
+  border-radius: 14px 0 0 14px;
+  background: rgba(255, 255, 255, 0.42);
+  backdrop-filter: blur(14px) saturate(170%);
+  -webkit-backdrop-filter: blur(14px) saturate(170%);
+  border-left: 1px solid rgba(255, 255, 255, 0.6);
+  color: #fff;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: opacity 0.2s ease;
+}
+
+.m2-car-rail__peek:active {
+  opacity: 0.92;
+}
+
+.m2-car-rail__peek-chevron {
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1;
+}

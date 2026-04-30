@@ -22,8 +22,33 @@ html, body {
 
 body.page-services .fullscreen-carousel {
   margin-top: 56px;
-  height: calc(100vh - 56px - 44px);
-  min-height: calc(100svh - 56px - 44px);
+  height: calc(100vh - 56px - 172px - env(safe-area-inset-bottom, 0px));
+  min-height: calc(100svh - 56px - 172px - env(safe-area-inset-bottom, 0px));
+}
+
+/* m2/services.html：无顶栏备案流式布局——轮播占满剩余高度，避免出现「留白像素 > 备案块」的黑色缝隙 */
+body.page-services.page-services--m2 {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100svh;
+  overflow: hidden;
+}
+
+body.page-services.page-services--m2 .fullscreen-carousel {
+  flex: 1 1 auto;
+  min-height: 0;
+  height: auto;
+  margin-top: 0;
+}
+
+body.page-services.page-services--m2 .site-record-footer.m2-about__footer {
+  position: relative;
+  left: auto;
+  right: auto;
+  bottom: auto;
+  flex-shrink: 0;
+  justify-content: flex-start;
 }
 
 .site-record-footer {
@@ -33,33 +58,24 @@ body.page-services .fullscreen-carousel {
   bottom: 0;
   z-index: 20;
   min-height: 44px;
-  padding: 8px 12px calc(8px + env(safe-area-inset-bottom, 0px));
+  padding: 6px 10px calc(6px + env(safe-area-inset-bottom, 0px));
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 14px;
-  flex-wrap: wrap;
-  font-size: 12px;
-  line-height: 1.4;
-  color: #8b93a7;
-  background: rgba(8, 10, 14, 0.92);
+  color: #fff;
+  background: rgba(8, 10, 14, 0.94);
   border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-.site-record-footer__icp,
-.site-record-footer__phone {
-  color: inherit;
-  text-decoration: none;
+/* m2/services：纯色底栏外壳（定位为 .page-services--m2 中与 flex 匹配的 relative） */
+.site-record-footer.m2-about__footer {
+  min-height: 0;
+  background: #000;
 }
 
-.site-record-footer__icp:hover,
-.site-record-footer__icp:focus-visible {
-  color: #ff8c69;
-  outline: none;
-}
-
-.site-record-footer__icp:focus-visible {
-  text-decoration: underline;
+.site-record-footer .m2-legal-foot {
+  margin: 0;
+  color: #fff;
 }
 
 /* 幻灯片 */
@@ -202,6 +218,11 @@ body.page-services .slide-bg {
   body.page-services .fullscreen-carousel {
     min-height: calc(100svh - 56px - 44px);
     min-height: calc(100vh - 56px - 44px);
+  }
+
+  body.page-services.page-services--m2 .fullscreen-carousel {
+    min-height: 0;
+    height: auto;
   }
 
   /* 移动端：不盖渐变，靠文案 text-shadow 保证可读 */
