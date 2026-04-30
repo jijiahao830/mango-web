@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="zh-CN">
 <head>
-  <script>window.__MANGO_ASSET_VERSION__='1777545323642';</script>
+  <script>window.__MANGO_ASSET_VERSION__='1777545762058';</script>
 
 
   <meta charset="utf-8">
@@ -10,19 +10,12 @@
   <link rel="icon" href="../favicon.ico" sizes="any">
   <link rel="icon" type="image/png" href="../favicon.png">
   <title>芒果超跑 · 尊享服务</title>
-  <link rel="stylesheet" href="../car.css?v=1777545323642">
-  <link rel="stylesheet" href="../services.css?v=1777545323642">
-  <link rel="stylesheet" href="./m2-legal-foot.css?v=1777545323642">
-  <link rel="stylesheet" href="./m2-side-rail.css?v=1777545323642">
+  <link rel="stylesheet" href="../car.css?v=1777545762058">
+  <link rel="stylesheet" href="../services.css?v=1777545762058">
+  <link rel="stylesheet" href="./m2-legal-foot.css?v=1777545762058">
+  <link rel="stylesheet" href="./m2-side-rail.css?v=1777545762058">
   <style>
-    /* 版面由 services.css 中 page-services--m2 纵向 flex 控制（避免固定像素预留与页脚不齐） */
-    body.page-services.page-services--m2 .m2-service-add {
-      position: absolute;
-      left: 50%;
-      bottom: max(14px, env(safe-area-inset-bottom, 0px));
-      transform: translateX(-50%);
-      z-index: 25;
-    }
+    /* 立享服务 / toast 的定位见 services.css（按是否显示备案区分 bottom） */
     .m2-home-back {
       position: fixed;
       top: calc(env(safe-area-inset-top) + 16px);
@@ -43,29 +36,7 @@
       transition: background 0.2s ease;
     }
     .m2-home-back:active { background: rgba(255, 255, 255, 0.32); }
-    .m2-service-add {
-      min-width: 168px;
-      height: 40px;
-      padding: 0 18px;
-      border: 1px solid rgba(255, 255, 255, 0.22);
-      border-radius: 999px;
-      background: rgba(255, 255, 255, 0.08);
-      color: #fff;
-      font-size: 13px;
-      font-weight: 500;
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      cursor: pointer;
-      touch-action: manipulation;
-      -webkit-tap-highlight-color: transparent;
-    }
-    .m2-service-add:active { opacity: 0.85; }
     .m2-service-toast {
-      position: absolute;
-      left: 50%;
-      bottom: calc(58px + env(safe-area-inset-bottom, 0px));
-      transform: translateX(-50%);
-      z-index: 26;
       padding: 0;
       border-radius: 0;
       background: transparent;
@@ -79,7 +50,7 @@
   </style>
 </head>
 <body class="page-services page-services--m2">
-  <a class="m2-home-back" href="./index.html?v=1777545323642#m2Service" aria-label="返回首页服务区">
+  <a class="m2-home-back" href="./index.html?v=1777545762058#m2Service" aria-label="返回首页服务区">
     <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 6 9 12 15 18"></polyline></svg>
   </a>
 
@@ -171,7 +142,7 @@
     </button>
   </aside>
 
-  <footer class="site-record-footer m2-about__footer">
+  <footer class="site-record-footer m2-about__footer services-legal-foot--hidden" aria-hidden="true">
     <div class="m2-legal-foot" role="contentinfo" aria-label="网站备案与联系方式">
       <div class="m2-legal-foot__beian">
         <a class="m2-legal-foot__link" href="https://beian.miit.gov.cn/" target="_blank" rel="noopener noreferrer">滇ICP备2025055273号-3</a>
@@ -194,8 +165,8 @@
     </div>
   </footer>
 
-  <script src="./m2-actions.js?v=1777545323642"></script>
-  <script src="../services.js?v=1777545323642"></script>
-  <script src="./m2-side-rail.js?v=1777545323642"></script>
+  <script src="./m2-actions.js?v=1777545762058"></script>
+  <script src="../services.js?v=1777545762058"></script>
+  <script src="./m2-side-rail.js?v=1777545762058"></script>
 </body>
 </html>

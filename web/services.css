@@ -51,6 +51,40 @@ body.page-services.page-services--m2 .site-record-footer.m2-about__footer {
   justify-content: flex-start;
 }
 
+/* m2/services：非最后一屏不展示备案区（由 services.js 切换 .services-legal-foot--hidden） */
+body.page-services.page-services--m2 footer.site-record-footer.m2-about__footer.services-legal-foot--hidden {
+  display: none;
+}
+
+/* 「立享服务」与 toast：最后一屏有备案时贴近底；其余屏整体上移 */
+body.page-services.page-services--m2 #carousel .m2-service-add {
+  position: absolute;
+  left: 50%;
+  bottom: max(14px, env(safe-area-inset-bottom, 0px));
+  transform: translateX(-50%);
+  z-index: 25;
+}
+
+body.page-services.page-services--m2 #carousel .m2-service-toast {
+  position: absolute;
+  left: 50%;
+  bottom: calc(62px + env(safe-area-inset-bottom, 0px));
+  transform: translateX(-50%);
+  z-index: 26;
+}
+
+body.page-services.page-services--m2:has(
+  footer.site-record-footer.m2-about__footer.services-legal-foot--hidden
+) #carousel .m2-service-add {
+  bottom: max(76px, calc(env(safe-area-inset-bottom, 0px) + 56px));
+}
+
+body.page-services.page-services--m2:has(
+  footer.site-record-footer.m2-about__footer.services-legal-foot--hidden
+) #carousel .m2-service-toast {
+  bottom: calc(132px + env(safe-area-inset-bottom, 0px));
+}
+
 .site-record-footer {
   position: fixed;
   left: 0;

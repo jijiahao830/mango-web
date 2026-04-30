@@ -150,3 +150,35 @@
   font-weight: 600;
   line-height: 1;
 }
+
+/* 服务页「立享服务」：材质与 .m2-car-rail__panel 一致（毛玻璃 / 饱和度 / 描边语义） */
+.m2-service-add {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  min-height: var(--m2-car-rail-item-h, 44px);
+  min-width: 168px;
+  padding: 8px 22px;
+  margin: 0;
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.38);
+  backdrop-filter: blur(18px) saturate(180%);
+  -webkit-backdrop-filter: blur(18px) saturate(180%);
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  line-height: 1.25;
+  font-family: inherit;
+  white-space: nowrap;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition: opacity 0.2s ease;
+}
+
+.m2-service-add:active {
+  opacity: 0.72;
+}

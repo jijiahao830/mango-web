@@ -7,6 +7,17 @@ document.addEventListener('DOMContentLoaded', function() {
   let touchEndY = 0;
   let touchMoved = false;
 
+  /** m2/services：仅在最后一帧展示备案 footer */
+  function updateM2LegalFooterVisibility() {
+    const footer = document.querySelector(
+      'body.page-services--m2 footer.site-record-footer.m2-about__footer'
+    );
+    if (!footer || !slides.length) return;
+    const isLast = currentIndex === slides.length - 1;
+    footer.classList.toggle('services-legal-foot--hidden', !isLast);
+    footer.setAttribute('aria-hidden', isLast ? 'false' : 'true');
+  }
+
   function applyInitialSlideByPackage() {
     if (!slides.length || !dots.length) return;
     let pkg = '';
@@ -46,6 +57,8 @@ document.addEventListener('DOMContentLoaded', function() {
     currentIndex = index;
     slides[currentIndex].classList.add('active');
     dots[currentIndex].classList.add('active');
+
+    updateM2LegalFooterVisibility();
 
     // 800ms后允许下次切换
     setTimeout(() => {
@@ -184,6 +197,8 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 
   applyInitialSlideByPackage();
+
+  updateM2LegalFooterVisibility();
 
   // 初始化
   console.log('Services carousel initialized with', slides.length, 'slides');
