@@ -1,5 +1,76 @@
 /* 详情页右侧快捷栏（公共） */
 (function () {
+  function ensureCoverScrollHint() {
+    var knockout = document.getElementById('m2Knockout');
+    if (!knockout) return;
+    if (knockout.querySelector('.m2-cover-scroll-hint')) return;
+
+    var hint = document.createElement('div');
+    hint.className = 'm2-cover-scroll-hint';
+    hint.setAttribute('aria-hidden', 'true');
+    hint.innerHTML = '<span class="m2-cover-scroll-hint__text">向下滑动</span><span class="m2-cover-scroll-hint__arrow">⌄</span>';
+    knockout.appendChild(hint);
+
+    function syncHint() {
+      var y = window.scrollY || window.pageYOffset || 0;
+      if (y > 28) hint.classList.add('is-hidden');
+      else hint.classList.remove('is-hidden');
+    }
+    syncHint();
+    window.addEventListener('scroll', syncHint, { passive: true });
+  }
+
+  function setupCoverAutoReveal() {
+    var cover = document.querySelector('.m2-cover-wrapper');
+    var knockout = document.getElementById('m2Knockout');
+    if (!cover || !knockout) return;
+
+    var started = false;
+    var threshold = 18;
+
+    function getY() {
+      return window.scrollY || window.pageYOffset || document.documentElement.scrollTop || 0;
+    }
+
+    function revealTarget() {
+      return Math.round(cover.offsetTop + window.innerHeight * 1.8);
+    }
+
+    function animateScrollTo(target) {
+      var start = getY();
+      var dist = target - start;
+      var duration = 3000;
+      var t0 = window.performance ? window.performance.now() : Date.now();
+
+      function easeOutCubic(t) {
+        return 1 - Math.pow(1 - t, 3);
+      }
+
+      function step(now) {
+        var elapsed = now - t0;
+        var p = Math.min(elapsed / duration, 1);
+        window.scrollTo(0, start + dist * easeOutCubic(p));
+        if (p < 1) window.requestAnimationFrame(step);
+      }
+
+      window.requestAnimationFrame(step);
+    }
+
+    function maybeReveal() {
+      if (started) return;
+      var y = getY();
+      var target = revealTarget();
+      if (y < threshold || y >= target - 4) return;
+      started = true;
+      animateScrollTo(target);
+    }
+
+    window.addEventListener('scroll', maybeReveal, { passive: true });
+    window.addEventListener('resize', function () {
+      if (started && getY() < revealTarget() - 4) started = false;
+    }, { passive: true });
+  }
+
   function applyM2CurrentCar(car) {
     var name = String(document.body.getAttribute('data-car-display-name') || '').trim();
     var dayEl = document.querySelector('#m2Pricing .m2-car__pricing-num');
@@ -23,6 +94,8 @@
   }
 
   applyM2CurrentCar(null);
+  ensureCoverScrollHint();
+  setupCoverAutoReveal();
   window.addEventListener('m2-detail-catalog-ready', function (ev) {
     var c = ev.detail && ev.detail.car;
     applyM2CurrentCar(c || null);

@@ -152,3 +152,48 @@
   font-weight: 600;
   line-height: 1;
 }
+
+/* 封面白色遮罩下滑提示 */
+.m2-cover-scroll-hint {
+  position: absolute;
+  left: 50%;
+  bottom: 12px;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  color: rgba(0, 0, 0, 0.88);
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.18);
+  pointer-events: none;
+  opacity: 0.9;
+  transition: opacity 0.2s ease;
+  animation: m2-cover-hint-float 1.5s ease-in-out infinite;
+}
+
+.m2-cover-scroll-hint.is-hidden {
+  opacity: 0;
+}
+
+.m2-cover-scroll-hint__text {
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: 0;
+  white-space: nowrap;
+}
+
+.m2-cover-scroll-hint__arrow {
+  display: block;
+  font-size: 42px;
+  line-height: 0.9;
+  font-weight: 700;
+  color: #000;
+  transform: translateY(-12px);
+}
+
+@keyframes m2-cover-hint-float {
+  0%, 100% { transform: translateX(-50%) translateY(0); }
+  50% { transform: translateX(-50%) translateY(3px); }
+}
