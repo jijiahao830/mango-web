@@ -101,31 +101,6 @@ body {
   touch-action: manipulation;
 }
 
-/* 首页右上角固定 logo */
-.index-floating-logo {
-  position: fixed;
-  top: clamp(14px, 3.5vh, 32px);
-  right: clamp(16px, 4vw, 52px);
-  z-index: 50;
-  display: block;
-  line-height: 0;
-}
-
-.index-floating-logo img {
-  display: block;
-  height: clamp(30px, 4.8vw, 46px);
-  width: auto;
-  max-width: min(44vw, 200px);
-  object-fit: contain;
-  filter: drop-shadow(0 2px 10px rgba(0, 0, 0, 0.4));
-}
-
-.index-floating-logo:focus-visible {
-  outline: 2px solid var(--brand);
-  outline-offset: 4px;
-  border-radius: 4px;
-}
-
 /* Header */
 .site-header {
   position: fixed;
@@ -248,6 +223,8 @@ body {
   flex-direction: column;
   align-items: flex-start;
   gap: 8px;
+  width: max-content;
+  max-width: 100%;
 }
 
 .hero-eyebrow {
@@ -311,9 +288,12 @@ body {
 
 .hero-actions {
   display: flex;
-  gap: 20px;
+  gap: 0;
   justify-content: flex-start;
-  flex-wrap: wrap;
+  align-items: stretch;
+  flex-wrap: nowrap;
+  width: 110%;
+  max-width: min(96vw, 110%);
 }
 
 .btn-primary {
@@ -332,6 +312,81 @@ body {
   display: inline-block;
   text-decoration: none;
   text-align: center;
+}
+
+.hero-choose-btn {
+  flex: 0 0 40%;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+  min-height: 54px;
+  padding-left: 10px;
+  padding-right: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+}
+
+.hero-logo-btn {
+  position: relative;
+  flex: 0 0 60%;
+  min-width: 0;
+  min-height: 54px;
+  padding: 0 clamp(16px, 2.4vw, 30px);
+  border-radius: 0 8px 8px 0;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-left: 0;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.24) 0%, rgba(255, 255, 255, 0.09) 100%);
+  box-shadow:
+    inset 0 1px 0.5px rgba(255, 255, 255, 0.56),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.1),
+    0 14px 36px rgba(0, 0, 0, 0.28);
+  backdrop-filter: blur(32px) saturate(180%);
+  -webkit-backdrop-filter: blur(32px) saturate(180%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  text-decoration: none;
+  transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+}
+
+.hero-logo-btn::after {
+  content: '';
+  position: absolute;
+  inset: 1px;
+  border-radius: 0 7px 7px 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.28), rgba(255, 255, 255, 0));
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.hero-logo-btn img {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: 100%;
+  max-width: 128px;
+  height: 24px;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.38));
+}
+
+.hero-logo-btn:hover {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0.12) 100%);
+  border-color: rgba(255, 255, 255, 0.28);
+}
+
+.hero-logo-btn:active {
+  transform: translateY(1px);
+}
+
+.hero-choose-btn:focus-visible,
+.hero-logo-btn:focus-visible {
+  outline: 2px solid rgba(255, 122, 26, 0.9);
+  outline-offset: 4px;
 }
 
 .btn-primary::after {
@@ -401,9 +456,6 @@ body {
 @media (max-width: 768px) {
   .site-header { padding: 0 20px; height: 64px; }
   .brand-logo, .brand-logo-center { height: 32px; }
-  .index-floating-logo img {
-    height: clamp(26px, 9vw, 36px);
-  }
   .hero-eyebrow-highlight {
     background: linear-gradient(90deg, #ff6b35, #ffcc6a, #ff6b35, #ffcc6a);
     background-size: 300% 100%;
@@ -429,12 +481,13 @@ body {
   }
   .hero-header {
     align-items: flex-start;
-    width: 100%;
+    width: max-content;
+    max-width: 100%;
   }
   /* 移动端缩小 RACING COMFORTABLE… 英文行 */
   .hero-eyebrow {
     justify-content: flex-start;
-    margin-bottom: 12px;
+    margin-bottom: 5px;
     font-size: clamp(10px, 2.9vw, 14px);
     letter-spacing: 0.35px;
     flex-wrap: wrap;
@@ -449,7 +502,23 @@ body {
   }
   .hero-actions {
     justify-content: flex-start;
-    width: 100%;
+    width: 110%;
+    max-width: min(94vw, 110%);
+  }
+  .hero-choose-btn {
+    min-height: 50px;
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+  .hero-logo-btn {
+    min-height: 50px;
+    min-width: 78px;
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+  .hero-logo-btn img {
+    height: 21px;
+    max-width: 110px;
   }
 }
 

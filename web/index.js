@@ -2,6 +2,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const video = document.querySelector('.hero-video');
   const videoWrap = document.querySelector('.hero-video-wrapper');
   const scrollport = document.querySelector('.index-scrollport');
+
   if (!video || !scrollport) return;
 
   function isInAppOrWebView() {
