@@ -149,6 +149,26 @@ body {
   z-index: 1;
 }
 
+.hero-video-fallback {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.hero-video-fallback img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center center;
+  display: block;
+}
+
 .hero-video {
   position: absolute;
   top: 50%;
@@ -168,6 +188,7 @@ body {
   user-select: none;
   -webkit-user-select: none;
   -webkit-touch-callout: none;
+  z-index: 1;
 }
 
 .hero-video::-webkit-media-controls,
@@ -288,12 +309,102 @@ body {
 
 .hero-actions {
   display: flex;
-  gap: 0;
+  flex-direction: column;
   justify-content: flex-start;
-  align-items: stretch;
+  align-items: flex-start;
   flex-wrap: nowrap;
-  width: 110%;
-  max-width: min(96vw, 110%);
+  width: 100%;
+  max-width: min(96vw, 100%);
+}
+
+/* Logo 区纵向编排：与 SVG 同宽，按钮拉满该宽 */
+.hero-brand-stack {
+  --hero-brand-w: 140px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  width: min(var(--hero-brand-w), 100%);
+  gap: clamp(16px, 3.2vw, 26px);
+}
+
+/* 仅消除链接内图片底缝，无滤镜/投影 */
+.hero-logo-link {
+  display: block;
+  width: 100%;
+  line-height: 0;
+  text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+  tap-highlight-color: transparent;
+}
+
+.hero-logo-link:focus:not(:focus-visible) {
+  outline: none;
+}
+
+.hero-logo-link:focus-visible {
+  outline: 2px solid rgba(255, 122, 26, 0.9);
+  outline-offset: 4px;
+}
+
+.hero-logo-link img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* 立即选车：全透明背景 + 橙色勾边与外圈光晕 */
+.hero-car-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  box-sizing: border-box;
+  width: 100%;
+  padding: 14px 12px;
+  border-radius: 999px;
+  text-decoration: none;
+  font-size: clamp(14px, 2vw, 16px);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: #ffd9b8;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+  background: transparent;
+  border: 1px solid rgba(255, 130, 72, 0.55);
+  box-shadow: 0 0 24px rgba(255, 85, 35, 0.22);
+  transition:
+    border-color 0.25s ease,
+    box-shadow 0.25s ease,
+    color 0.25s ease,
+    transform 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+  tap-highlight-color: transparent;
+}
+
+.hero-car-cta:focus:not(:focus-visible) {
+  outline: none;
+}
+
+.hero-car-cta:hover {
+  color: #fff2e6;
+  border-color: rgba(255, 170, 100, 0.75);
+  box-shadow: 0 0 32px rgba(255, 100, 45, 0.32);
+}
+
+.hero-car-cta:active {
+  transform: translateY(1px);
+  background: transparent;
+}
+
+.hero-car-cta:focus-visible {
+  outline: 2px solid rgba(255, 180, 100, 0.95);
+  outline-offset: 4px;
+}
+
+.hero-car-cta__chev {
+  font-size: 1.05em;
+  font-weight: 700;
+  opacity: 0.95;
+  margin-left: -2px;
 }
 
 .btn-primary {
@@ -383,8 +494,20 @@ body {
   transform: translateY(1px);
 }
 
+.hero-logo-only {
+  flex: 1 1 100%;
+  border-left: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+}
+
+.hero-logo-only::after {
+  border-radius: 7px;
+}
+
+
 .hero-choose-btn:focus-visible,
-.hero-logo-btn:focus-visible {
+.hero-logo-btn:focus-visible,
+.hero-logo-only:focus-visible {
   outline: 2px solid rgba(255, 122, 26, 0.9);
   outline-offset: 4px;
 }
@@ -502,8 +625,12 @@ body {
   }
   .hero-actions {
     justify-content: flex-start;
-    width: 110%;
-    max-width: min(94vw, 110%);
+    width: 100%;
+    max-width: min(94vw, 100%);
+  }
+  .hero-car-cta {
+    padding: 12px 8px;
+    letter-spacing: 0.05em;
   }
   .hero-choose-btn {
     min-height: 50px;
@@ -519,6 +646,9 @@ body {
   .hero-logo-btn img {
     height: 21px;
     max-width: 110px;
+  }
+  .hero-logo-only {
+    min-width: 0;
   }
 }
 

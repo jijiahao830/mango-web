@@ -5,6 +5,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (!video || !scrollport) return;
 
+  const widthFallbackMq = window.matchMedia('(max-width: 1024px)');
+
+  function detectMobilePad() {
+    try {
+      if (window.MangoDeviceRedirect && typeof window.MangoDeviceRedirect.isMobileOrTablet === 'function') {
+        return !!window.MangoDeviceRedirect.isMobileOrTablet();
+      }
+    } catch (e) {}
+
+    const ua = navigator.userAgent || '';
+    const isIOSPad = /iPad/i.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    const isAndroid = /Android/i.test(ua);
+    const isIPhone = /iPhone|iPod/i.test(ua);
+    if (isIOSPad || isAndroid || isIPhone) return true;
+
+    return widthFallbackMq.matches;
+  }
+
   function isInAppOrWebView() {
     const ua = String((navigator && navigator.userAgent) || '');
     // 微信/QQ/微博/抖音/头条/支付宝/钉钉等内置浏览器，以及 Android WebView。
@@ -31,7 +49,6 @@ document.addEventListener('DOMContentLoaded', () => {
   function applyStaticHeroFallback() {
     if (heroVideoUnavailable) return;
     heroVideoUnavailable = true;
-    const fallbackImage = 'media-webp/photos/index/time/自驾/自驾1.webp';
     try {
       video.pause();
     } catch (e) {}
@@ -41,10 +58,14 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (e2) {}
     video.style.display = 'none';
     if (videoWrap) {
-      videoWrap.style.backgroundImage = "url('" + fallbackImage + "')";
-      videoWrap.style.backgroundSize = 'cover';
-      videoWrap.style.backgroundPosition = 'center center';
-      videoWrap.style.backgroundRepeat = 'no-repeat';
+      videoWrap.style.backgroundImage = '';
+      videoWrap.style.backgroundSize = '';
+      videoWrap.style.backgroundPosition = '';
+      videoWrap.style.backgroundRepeat = '';
+    }
+    const vfb = document.querySelector('.hero-video-fallback');
+    if (vfb) {
+      vfb.removeAttribute('hidden');
     }
   }
 
@@ -55,29 +76,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const desktopSrc = video.dataset.srcDesktop || '';
   const mobileSrc = video.dataset.srcMobile || desktopSrc;
-  const widthFallbackMq = window.matchMedia('(max-width: 1024px)');
   let isMobilePad = false;
 
   function uriMatchesCurrentVideo(expectedPath) {
     if (!expectedPath) return false;
     const cur = String(video.currentSrc || video.getAttribute('src') || '');
     return cur.indexOf(expectedPath) !== -1;
-  }
-
-  function detectMobilePad() {
-    try {
-      if (window.MangoDeviceRedirect && typeof window.MangoDeviceRedirect.isMobileOrTablet === 'function') {
-        return !!window.MangoDeviceRedirect.isMobileOrTablet();
-      }
-    } catch (e) {}
-
-    const ua = navigator.userAgent || '';
-    const isIOSPad = /iPad/i.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-    const isAndroid = /Android/i.test(ua);
-    const isIPhone = /iPhone|iPod/i.test(ua);
-    if (isIOSPad || isAndroid || isIPhone) return true;
-
-    return widthFallbackMq.matches;
   }
 
   function setupSourceAndAudioPolicy() {
@@ -89,17 +93,12 @@ document.addEventListener('DOMContentLoaded', () => {
       video.load();
     }
 
-    if (isMobilePad) {
-      video.muted = true;
-      video.defaultMuted = true;
-      video.volume = 0;
-      video.setAttribute('muted', '');
-    } else {
-      video.muted = false;
-      video.defaultMuted = false;
-      video.volume = 1;
-      video.removeAttribute('muted');
-    }
+    /* 首页背景视频始终静音（含桌面端），便于 autoplay 且不出声 */
+    video.muted = true;
+    video.defaultMuted = true;
+    video.volume = 0;
+    video.setAttribute('muted', '');
+    video.removeAttribute('poster');
   }
 
   setupSourceAndAudioPolicy();
@@ -107,7 +106,7 @@ document.addEventListener('DOMContentLoaded', () => {
   video.controls = false;
   video.playsInline = true;
   video.setAttribute('playsinline', '');
-  video.setAttribute('webkit-playsinline', 'true');
+  video.setAttribute('webkit-playsinline', '');
   /* 腾讯 X5（微信内置浏览器等）：播放前设置才可靠 */
   video.setAttribute('x5-playsinline', 'true');
   video.setAttribute('x5-video-player-type', 'h5-page');
@@ -135,19 +134,11 @@ document.addEventListener('DOMContentLoaded', () => {
   function tryPlayWithPolicy() {
     if (heroVideoUnavailable) return;
     video.play().catch(() => {
-      if (!isMobilePad) {
-        // 桌面端若被自动播放策略拦截，先静音保底播放；首个用户手势后恢复声音。
-        video.muted = true;
-        video.defaultMuted = true;
-        video.play().catch(() => {});
-        const restoreAudioOnce = () => {
-          video.muted = false;
-          video.defaultMuted = false;
-          video.play().catch(() => {});
-        };
-        window.addEventListener('pointerdown', restoreAudioOnce, { once: true });
-        window.addEventListener('keydown', restoreAudioOnce, { once: true });
-      }
+      video.muted = true;
+      video.defaultMuted = true;
+      video.setAttribute('muted', '');
+      video.volume = 0;
+      video.play().catch(() => {});
     });
   }
 

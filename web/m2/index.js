@@ -264,6 +264,14 @@
         return c.brand;
       })
     );
+    if (String(activeCategory || '').trim() === '超跑') {
+      var idxLambo = brands.indexOf('兰博基尼');
+      var idxAudi = brands.indexOf('奥迪');
+      if (idxLambo !== -1 && idxAudi !== -1) {
+        brands[idxLambo] = '奥迪';
+        brands[idxAudi] = '兰博基尼';
+      }
+    }
     if (!brands.length) {
       activeBrand = '';
       brandRoot.innerHTML = '<button type="button" class="is-active">暂无品牌</button>';
@@ -703,6 +711,20 @@
     }
   }
 
+  /** F5 / 刷新：滑动时写入的 #m2* 仍会留在地址栏；否则 sync 会把 .m2-home 滚回原区块 */
+  function isReloadNavigation() {
+    try {
+      var list = performance.getEntriesByType('navigation');
+      if (list && list.length && list[0].type === 'reload') return true;
+    } catch (e0) {}
+    try {
+      if (typeof performance.navigation !== 'undefined' && performance.navigation.type === 1) {
+        return true;
+      }
+    } catch (e1) {}
+    return false;
+  }
+
   function hashIsChooser() {
     return /^m2chooser$/i.test(homeHashRaw());
   }
@@ -717,11 +739,39 @@
     return '';
   }
 
+  /** 封面 DOM 仍存在但可被 CSS（如 display:none）隐藏 — 此时 #m2Hero 应对齐到选车区 */
+  function m2HomeHeroLayoutVisible() {
+    var el = document.getElementById('m2Hero');
+    if (!el) return false;
+    try {
+      var st = window.getComputedStyle(el);
+      if (st.display === 'none' || st.visibility === 'hidden') return false;
+    } catch (e) {
+      return false;
+    }
+    return true;
+  }
+
+  function normalizeM2HomeSectionId(id) {
+    if (!id || id !== 'm2Hero') return id;
+    return m2HomeHeroLayoutVisible() ? 'm2Hero' : 'm2Chooser';
+  }
+
+  function urlAnchorsConcreteM2Section(hid) {
+    return (
+      hid === 'm2Hero' ||
+      hid === 'm2Chooser' ||
+      hid === 'm2Packages' ||
+      hid === 'm2Service' ||
+      hid === 'm2About'
+    );
+  }
+
   /* 从关于/服务等返回时带 hash，不得再按 session 里的套餐记忆滚到套餐区 */
   function hashSkipsPkgRestore() {
     /* 选车 query 常驻时：仅在当前应落在选车区时跳过套餐恢复；若在套餐/服务/关于则仍恢复套餐卡片（如从自驾页返回） */
     if (urlHasChooserRestoreParams()) {
-      var sid = homeHashSectionId(homeHashRaw());
+      var sid = normalizeM2HomeSectionId(homeHashSectionId(homeHashRaw()));
       if (sid === 'm2Packages' || sid === 'm2Service' || sid === 'm2About' || sid === 'm2Hero') return false;
       return true;
     }
@@ -760,8 +810,14 @@
   function syncM2HomeScrollToHashSection() {
     var home = document.querySelector('.m2-home');
     if (!home) return;
-    var id = homeHashSectionId(homeHashRaw());
-    if (!id) return;
+    var idRaw = homeHashSectionId(homeHashRaw());
+    if (!idRaw) return;
+    var id = normalizeM2HomeSectionId(idRaw);
+    if (idRaw !== id) {
+      try {
+        history.replaceState(null, '', location.pathname + location.search + '#' + id);
+      } catch (eHash) {}
+    }
     var el = document.getElementById(id);
     if (!el) return;
     try {
@@ -772,12 +828,19 @@
     } catch (e) {}
   }
 
+  /* IntersectionObserver 会在首帧把视口内的选车区误判为当前段，赶在 sync 对齐 #m2Service 之前把 hash 写成 #m2Chooser */
+  var m2ObserverHashWritesAllowed = false;
+
   function scrollM2HomeFromHash() {
     if (document.body && document.body.classList.contains('m2-splash-active')) {
       window.setTimeout(scrollM2HomeFromHashWithRetries, 120);
       return;
     }
     try {
+      /* 刷新仅清详情返回残留的 m2HomeScrollTarget，勿改写 #m2Service 等与地址栏一致的 hash */
+      if (isReloadNavigation() && !urlHasChooserRestoreParams()) {
+        clearM2HomeScrollTargetStorage();
+      }
       if (urlHasChooserRestoreParams()) {
         var hr = homeHashRaw();
         var sidFromHash = homeHashSectionId(hr);
@@ -812,11 +875,14 @@
           try {
             sessionStorage.removeItem('m2HomeScrollTarget');
           } catch (e2) {}
-          try {
-            history.replaceState(null, '', location.pathname + location.search + '#' + stNav);
-          } catch (e3) {}
-          scrollM2HomeToSectionById(stNav);
-          return;
+          /* URL 已为明确区块(#m2Service 等)：尊重 hash，不可用旧 session 顶掉 */
+          if (!urlAnchorsConcreteM2Section(hid)) {
+            try {
+              history.replaceState(null, '', location.pathname + location.search + '#' + stNav);
+            } catch (e3) {}
+            scrollM2HomeToSectionById(stNav);
+            return;
+          }
         }
       }
       if (/^m2hero$/i.test(raw)) {
@@ -852,8 +918,14 @@
         scrollM2HomeToSectionById(sid);
       }
     } finally {
+      m2ObserverHashWritesAllowed = false;
       syncM2HomeScrollToHashSection();
-      requestAnimationFrame(syncM2HomeScrollToHashSection);
+      requestAnimationFrame(function () {
+        syncM2HomeScrollToHashSection();
+        requestAnimationFrame(function () {
+          m2ObserverHashWritesAllowed = true;
+        });
+      });
     }
   }
 
@@ -879,11 +951,26 @@
   function setupM2HomeScrollHashSync() {
     var home = document.querySelector('.m2-home');
     if (!home || typeof IntersectionObserver === 'undefined') return;
-    var order = ['m2Hero', 'm2Chooser', 'm2Packages', 'm2Service', 'm2About'];
+    var orderBase = ['m2Hero', 'm2Chooser', 'm2Packages', 'm2Service', 'm2About'];
+    var order = [];
+    for (var oi = 0; oi < orderBase.length; oi++) {
+      var oid = orderBase[oi];
+      if (oid === 'm2Hero' && !m2HomeHeroLayoutVisible()) continue;
+      order.push(oid);
+    }
+    if (!order.length) order = ['m2Chooser', 'm2Packages', 'm2Service', 'm2About'];
     var ratios = Object.create(null);
     var debounceTimer = null;
 
     function pickAndReplace() {
+      if (
+        document.body &&
+        document.body.classList.contains('m2-splash-active')
+      ) {
+        return;
+      }
+      if (!m2ObserverHashWritesAllowed) return;
+
       var bestId = '';
       var bestR = -1;
       for (var i = 0; i < order.length; i++) {
@@ -994,6 +1081,8 @@
   var isFromCarDetail = isFromM2Detail || isFromV1Detail;
 
   var refLower = referrer.toLowerCase();
+  var isFromPackage =
+    /\/m2\/package-(business|wedding|event|drive)\.html/i.test(referrer);
   var isFromServicesOrAbout =
     refLower.indexOf('services.html') !== -1 || refLower.indexOf('about.html') !== -1;
 
@@ -1085,17 +1174,12 @@
   /* 详情返回标记（hash / head / session）须跳过开屏；部分浏览器链回首页会误报 type=reload */
   var skipFromDetailNav =
     skipFromDetailQuery || skipSplashEarly || skipSplashOnce === '1';
-  /* 同会话已在本标签播过开屏：部分移动端从详情返回时为 navigate（非 back_forward）且 referrer 常为空，
-   * 不能与桌面一致地走「后退 + hasShown」；在非刷新且已有标记时跳过。 */
-  var isReturningWithinSession =
-    hasShownSplash === 'true' &&
-    !isReload &&
-    navigation &&
-    (navigation.type === 'back_forward' || navigation.type === 'navigate');
+  /* 首页进入 m2 时始终播放开屏；仅在详情返回等明确场景跳过。 */
+  var isReturningWithinSession = false;
   var shouldSkipSplash =
     skipFromDetailNav ||
     (!isReload &&
-      (isFromCarDetail || isFromServicesOrAbout || isReturningWithinSession));
+      (isFromCarDetail || isFromServicesOrAbout || isFromPackage || isReturningWithinSession));
 
   if (shouldSkipSplash) {
     try {

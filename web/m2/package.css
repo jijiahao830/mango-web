@@ -1,14 +1,17 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 html, body {
+  height: 100%;
   min-height: 100%;
-  overflow-x: hidden;
+  overflow: hidden;
   background: #000;
 }
 
 body.m2-package {
   color: #fff;
   font-family: "PingFang SC", "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+  height: 100dvh;
+  overflow: hidden;
 }
 
 /* 返回首页套餐区（与车辆详情返回样式一致） */
@@ -37,15 +40,50 @@ body.m2-package {
 
 .m2p-page {
   width: 100%;
+  height: 100dvh;
+  overflow: hidden;
+  position: relative;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.m2p-page::-webkit-scrollbar {
+  display: none;
 }
 
 .m2p-section {
-  min-height: 100vh;
-  padding: 22px 20px;
+  min-height: 100dvh;
+  --m2p-sec-pl: 40px;
+  --m2p-sec-pr: 20px;
+  --m2p-sec-pt: 22px;
+  --m2p-sec-pb: 22px;
+  padding: var(--m2p-sec-pt) var(--m2p-sec-pr) var(--m2p-sec-pb) var(--m2p-sec-pl);
   display: flex;
   flex-direction: column;
   justify-content: center;
   background: url('../media-webp/photos/index/m2/背景图1.webp') center / cover no-repeat;
+  opacity: 0.16;
+  transition: opacity 0.8s ease-in-out;
+}
+
+.m2p-section.is-active {
+  opacity: 1;
+}
+
+.m2p-page.m2p-page--fade .m2p-section {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.m2p-page.m2p-page--fade .m2p-section.is-active {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  z-index: 1;
 }
 
 .m2p-title {
@@ -65,6 +103,22 @@ body.m2-package {
 .m2p-hero .m2p-title,
 .m2p-hero .m2p-desc {
   transform: translateY(-20vh);
+}
+
+.m2-package--business .m2p-hero {
+  background: url('../media-webp/photos/index/m2/商务接待套餐.webp') center / cover no-repeat;
+}
+
+.m2-package--wedding .m2p-hero {
+  background: url('../media-webp/photos/index/m2/婚礼套餐.webp') center / cover no-repeat;
+}
+
+.m2-package--event .m2p-hero {
+  background: url('../media-webp/photos/index/m2/摆展套餐.webp') center / cover no-repeat;
+}
+
+.m2-package--drive .m2p-hero {
+  background: url('../media-webp/photos/index/m2/自驾套餐.webp') center / cover no-repeat;
 }
 
 .m2p-points {
@@ -124,6 +178,8 @@ body.m2-package {
   min-width: 0;
   flex: 1 1 auto;
   overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  touch-action: pan-y;
   scrollbar-width: none;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-x: contain;
@@ -138,6 +194,8 @@ body.m2-package {
 
 .m2p-plan__card {
   flex: 0 0 var(--m2p-plan-card-w);
+  scroll-snap-align: center;
+  scroll-snap-stop: always;
   min-width: 0;
   /* 与视口匹配，保证标题/说明/价格整块可见 */
   min-height: 62vh;
@@ -255,10 +313,72 @@ body.m2-package {
 }
 
 .m2p-live {
-  min-height: 90vh;
-  height: 90vh;
+  min-height: 100dvh;
+  height: 100dvh;
   padding-top: calc(26px + 8vh);
+  padding-bottom: 0;
   justify-content: flex-start;
+}
+
+/* 套餐页整屏导航点（与 services.css 的 .carousel-dots/.dot 同款） */
+.m2p-page-dots {
+  position: fixed;
+  left: max(16px, env(safe-area-inset-left));
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.m2p-page-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.3);
+  padding: 0;
+  position: relative;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.m2p-page-dot:hover {
+  background: rgba(255, 255, 255, 0.6);
+  transform: scale(1.2);
+}
+
+.m2p-page-dot.active,
+.m2p-page-dot.is-active {
+  background: #ff6b35;
+  border-color: #ff6b35;
+  box-shadow: 0 0 20px rgba(255, 107, 53, 0.6);
+}
+
+.m2p-page-dot.active::after,
+.m2p-page-dot.is-active::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(255, 107, 53, 0.4);
+  border-radius: 50%;
+  animation: dotPulse 2s ease-in-out infinite;
+}
+
+@keyframes dotPulse {
+  0%, 100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.5);
+    opacity: 0;
+  }
 }
 
 .m2p-live__title {
@@ -291,4 +411,18 @@ body.m2-package {
   height: 100%;
   object-fit: cover;
   background: #111;
+}
+
+/* 隐藏原有页尾备案（位于 m2p-page 末尾），改为最后一屏内底部展示 */
+.m2p-page > .m2-about__footer:not(.m2p-live__footer) {
+  display: none;
+}
+
+/* 套餐页最后一屏底部备案区（沿用 m2-legal-foot 视觉） */
+.m2p-live .m2-about__footer.m2p-live__footer {
+  margin-top: auto;
+  margin-left: calc(-1 * var(--m2p-sec-pl));
+  margin-right: calc(-1 * var(--m2p-sec-pr));
+  width: calc(100% + var(--m2p-sec-pl) + var(--m2p-sec-pr));
+  background: #000;
 }

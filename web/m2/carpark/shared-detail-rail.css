@@ -197,3 +197,204 @@
   0%, 100% { transform: translateX(-50%) translateY(0); }
   50% { transform: translateX(-50%) translateY(3px); }
 }
+
+/* 详情页底部下滑提示（所有车型页共用） */
+.m2-detail-scroll-hint {
+  position: fixed;
+  left: 50%;
+  bottom: calc(env(safe-area-inset-bottom) + 12px + 15vh);
+  transform: translateX(-50%);
+  z-index: 55;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  color: rgba(255, 255, 255, 0.9);
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
+  pointer-events: none;
+  opacity: 0.95;
+  transition: opacity 0.22s ease;
+  animation: m2-detail-hint-float 1.5s ease-in-out infinite;
+}
+
+.m2-detail-scroll-hint.is-hidden {
+  opacity: 0;
+}
+
+.m2-detail-scroll-hint__text {
+  font-size: 18px;
+  line-height: 1.2;
+  letter-spacing: 0;
+  white-space: nowrap;
+}
+
+.m2-detail-scroll-hint__arrow {
+  font-size: 34px;
+  line-height: 0.9;
+  font-weight: 700;
+}
+
+@keyframes m2-detail-hint-float {
+  0%, 100% { transform: translateX(-50%) translateY(0); }
+  50% { transform: translateX(-50%) translateY(3px); }
+}
+
+/* 详情页整屏淡入淡出翻页（与服务页/套餐页同风格） */
+body.m2d-page--fade {
+  overflow: hidden;
+  height: 100dvh;
+}
+
+.m2d-page-section {
+  position: fixed;
+  inset: 0;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  z-index: 0;
+  transition: opacity 0.8s ease-in-out;
+}
+
+.m2d-page-section.is-active {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  z-index: 1;
+}
+
+/* 封面仅显示单图 */
+.m2d-page-section.m2-cover-wrapper .m2-car__bg {
+  width: 100%;
+  height: 100dvh;
+  object-fit: cover;
+  object-position: center;
+}
+
+.m2d-page-dots {
+  position: fixed;
+  left: max(16px, env(safe-area-inset-left));
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.m2d-page-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.3);
+  padding: 0;
+  position: relative;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.m2d-page-dot:hover {
+  background: rgba(255, 255, 255, 0.6);
+  transform: scale(1.2);
+}
+
+.m2d-page-dot.active,
+.m2d-page-dot.is-active {
+  background: #ff6b35;
+  border-color: #ff6b35;
+  box-shadow: 0 0 20px rgba(255, 107, 53, 0.6);
+}
+
+.m2d-page-dot.active::after,
+.m2d-page-dot.is-active::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(255, 107, 53, 0.4);
+  border-radius: 50%;
+  animation: m2dDotPulse 2s ease-in-out infinite;
+}
+
+@keyframes m2dDotPulse {
+  0%, 100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.5);
+    opacity: 0;
+  }
+}
+
+/* 车辆详情：价格部分样式取消（改为普通展示） */
+body.m2d-page--fade .m2-pricing-wrapper {
+  height: auto;
+}
+
+body.m2d-page--fade .m2-car__pricing {
+  position: relative;
+  top: auto;
+  height: auto;
+  min-height: 100dvh;
+  background: url('../../../media-webp/photos/index/m2/背景图1.webp') center / cover no-repeat;
+  display: block;
+}
+
+body.m2d-page--fade .m2-car__pricing-card {
+  width: 100%;
+  height: auto;
+  min-height: auto;
+  display: block;
+  margin-top: 0;
+  padding: 20vh 24px 40px 30px;
+}
+
+body.m2d-page--fade .m2-car__pricing-title,
+body.m2d-page--fade .m2-car__pricing-row {
+  opacity: 1 !important;
+  transform: none !important;
+  margin-top: 0;
+}
+
+/* 详情页特征区：去掉左右箭头按钮的六边形背景，仅保留箭头 */
+body.m2d-page--fade .m2-car__features.m2d-page-section.is-active .m2-features__hex polygon {
+  display: none;
+}
+
+body.m2d-page--fade #m2GalleryPrev polygon,
+body.m2d-page--fade #m2GalleryNext polygon {
+  fill: transparent !important;
+  stroke: transparent !important;
+  opacity: 0 !important;
+}
+
+body.m2d-page--fade #m2SamePricePrev polygon,
+body.m2d-page--fade #m2SamePriceNext polygon {
+  fill: transparent !important;
+  stroke: transparent !important;
+  opacity: 0 !important;
+}
+
+/* 详情页同价位屏：修复底部备案区高度异常 */
+body.m2d-page--fade .m2-car__same-price.m2d-page-section {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  padding-bottom: 0;
+}
+
+body.m2d-page--fade .m2-car__same-price.m2d-page-section .m2-same-price__vehicle-zone {
+  flex: 1 1 auto;
+  height: auto;
+  min-height: 0;
+}
+
+body.m2d-page--fade .m2-car__same-price.m2d-page-section footer.m2-same-price__record-zone {
+  flex: 0 0 auto;
+  margin: 0;
+}

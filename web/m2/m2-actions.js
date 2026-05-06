@@ -1,6 +1,6 @@
 (function () {
   var STORAGE_KEY = 'mangoCarChecklist';
-  var m2FallbackAssetV = '1777792097410';
+  var m2FallbackAssetV = '1778073381545';
   function m2AssetV() {
     try {
       return (typeof window !== 'undefined' && window.__MANGO_ASSET_VERSION__) || m2FallbackAssetV;
@@ -351,6 +351,8 @@
       '.m2a-consult__msg{max-width:88%;padding:8px 10px;border-radius:10px;font-size:13px;line-height:1.5;white-space:pre-wrap;word-break:break-word}',
       '.m2a-consult__msg--assistant{align-self:flex-start;background:rgba(255,255,255,.1);color:rgba(255,255,255,.92)}',
       '.m2a-consult__msg--user{align-self:flex-end;background:rgba(255,255,255,.14);color:#fff}',
+      '.m2a-consult__msg-text{display:block}',
+      '.m2a-consult__msg-qr{display:block;width:120px;height:120px;margin-top:8px;border-radius:10px;border:1px solid rgba(255,255,255,.2);object-fit:cover;background:#fff}',
       '.m2a-consult__input-wrap{margin-top:10px;display:flex;gap:8px;flex-shrink:0}',
       '.m2a-consult__input{flex:1;height:38px;border-radius:9px;border:1px solid rgba(255,255,255,.22);background:rgba(255,255,255,.08);color:#fff;font-size:16px;padding:0 10px;outline:none}',
       '.m2a-consult__send{height:38px;border-radius:999px;border:1px solid rgba(255,255,255,.22);background:rgba(255,255,255,.12);color:#fff;font-size:13px;padding:0 14px;cursor:pointer;flex-shrink:0;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}',
@@ -895,19 +897,33 @@
 
   /* ── Consult ── */
   var consultBusy = false;
-  function appendConsultMsg(role, text) {
+  function appendConsultMsg(role, text, opts) {
     var chat = document.getElementById('m2aConsultChat');
     if (!chat) return;
     var el = document.createElement('div');
     el.className = 'm2a-consult__msg m2a-consult__msg--' + (role === 'user' ? 'user' : 'assistant');
-    el.textContent = String(text || '');
+    var textEl = document.createElement('span');
+    textEl.className = 'm2a-consult__msg-text';
+    textEl.textContent = String(text || '');
+    el.appendChild(textEl);
+    if (opts && opts.qrSrc && role !== 'user') {
+      var qr = document.createElement('img');
+      qr.className = 'm2a-consult__msg-qr';
+      qr.src = String(opts.qrSrc);
+      qr.alt = String(opts.qrAlt || '客服微信二维码');
+      el.appendChild(qr);
+    }
     chat.appendChild(el);
     chat.scrollTop = chat.scrollHeight;
   }
   function ensureConsultWelcome() {
     var chat = document.getElementById('m2aConsultChat');
     if (!chat || chat.childElementCount > 0) return;
-    appendConsultMsg('assistant', '您好，我是芒果超跑 AI 客服。请问您想咨询车型、价格、用车天数还是下单流程？');
+    appendConsultMsg(
+      'assistant',
+      '您好，我是芒果超跑的AI客服，有什么问题您可以直接问我，或者联系我们的客服他们将给您最专业的回答，他们的联系方式是：13033333370，也可以扫描下方的二维码添加微信',
+      { qrSrc: '../media-webp/photos/index/logo/二维码.webp?v=' + m2AssetV(), qrAlt: '客服微信二维码' }
+    );
   }
   function openConsultModal() {
     var modal = document.getElementById('m2aConsultModal');

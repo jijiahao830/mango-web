@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <script>window.__MANGO_ASSET_VERSION__='1778073381545';</script>
+
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>高端豪车租赁 | 商务出行专属礼遇</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://unpkg.com/framer-motion@11.11.17/dist/framer-motion.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@300;400;500;600&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #050507; overflow-x: hidden; }
+
+    .liquid-glass {
+      background: rgba(255,255,255,0.02);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 9999px;
+    }
+    .liquid-glass-card {
+      background: rgba(255,255,255,0.02);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 1.5rem;
+    }
+    .bg-hero {
+      background: linear-gradient(to right, #0a0a0e, #101018);
+    }
+  </style>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            serif: ['Instrument Serif', 'serif'],
+            sans: ['Barlow', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="font-sans text-white">
+<div id="root"></div>
+
+<script type="text/babel">
+const { motion } = window.FramerMotion;
+
+export default function RentalLanding() {
+  return (
+    <div className="min-h-screen bg-hero">
+      {/* 导航栏 */}
+      <motion.nav
+        initial={{ y: -40, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.8 }}
+        className="fixed top-6 left-1/2 -translate-x-1/2 z-50 w-full max-w-5xl px-6"
+      >
+        <div className="liquid-glass flex items-center justify-between py-3 px-6">
+          <div className="font-serif italic text-xl">Mango Auto</div>
+          <div className="hidden md:flex items-center gap-8 text-sm text-white/80">
+            <a href="#" className="hover:text-white transition">首页</a>
+            <a href="#" className="hover:text-white transition">全部车型</a>
+            <a href="#" className="hover:text-white transition">服务介绍</a>
+            <a href="#" className="hover:text-white transition">关于我们</a>
+          </div>
+          <button className="bg-white text-black rounded-full px-4 py-2 text-sm font-medium">
+            立即预约
+          </button>
+        </div>
+      </motion.nav>
+
+      {/* 首屏Hero */}
+      <section className="relative min-h-screen flex items-center justify-center px-6 pt-20">
+        <div className="absolute inset-0 overflow-hidden opacity-20">
+          <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-black to-gray-950"></div>
+        </div>
+
+        <div className="relative z-10 text-center max-w-4xl">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="liquid-glass inline-block rounded-full px-4 py-2 mb-6"
+          >
+            <span className="text-white/80 text-sm">高端豪车租赁 · 专业司机随行</span>
+          </motion.div>
+
+          <motion.h1
+            initial={{ opacity: 0, y: 30, filter: "blur(8px)" }}
+            animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+            transition={{ delay: 0.5, duration: 1 }}
+            className="font-serif italic text-5xl md:text-7xl leading-tight mb-6"
+          >
+            尊崇出行<br/>驭见非凡旅程
+          </motion.h1>
+
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.8 }}
+            className="text-white/70 text-lg max-w-2xl mx-auto mb-10"
+          >
+            超跑｜商务豪车｜婚礼车队｜机场接送<br/>
+            全城配送，专业司机迎宾，全程私密尊享服务
+          </motion.p>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 1 }}
+            className="flex flex-wrap justify-center gap-4"
+          >
+            <button className="liquid-glass-card px-8 py-3 hover:bg-white/10 transition">
+              浏览车型
+            </button>
+            <button className="bg-white text-black rounded-full px-8 py-3">
+              一对一咨询
+            </button>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* 服务板块 */}
+      <section className="relative py-24 px-6 bg-black/40">
+        <div className="max-w-6xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="mb-16 text-center"
+          >
+            <p className="text-white/60 text-sm mb-2">// Our Services</p>
+            <h2 className="font-serif italic text-4xl md:text-5xl">尊享专属服务</h2>
+          </motion.div>
+
+          <div className="grid md:grid-cols-3 gap-6">
+            {[
+              {title:"全系豪车车队",desc:"超跑、商务轿车、豪华SUV、婚庆车队，车型齐全车况全新"},
+              {title:"专业司机接送",desc:"正装礼仪司机，商务迎宾、开门服务，路线熟悉稳重靠谱"},
+              {title:"24小时全天候",desc:"机场高铁接送、商务接待、婚礼用车，随时预约即刻安排"}
+            ].map((item,i)=>(
+              <motion.div
+                key={i}
+                initial={{ opacity:0, y:40 }}
+                whileInView={{ opacity:1, y:0 }}
+                viewport={{ once:true }}
+                transition={{ delay:i*0.2 }}
+                className="liquid-glass-card p-8 hover:border-white/20 transition"
+              >
+                <h3 className="font-serif italic text-2xl mb-3">{item.title}</h3>
+                <p className="text-white/70 text-sm">{item.desc}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<RentalLanding />);
+</script>
+</body>
+</html>

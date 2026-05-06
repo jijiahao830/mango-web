@@ -5,7 +5,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="format-detection" content="telephone=no">
-  <script>window.__MANGO_ASSET_VERSION__='1777792097410';</script>
+  <script>window.__MANGO_ASSET_VERSION__='1778073381545';</script>
   <script>
   (function () {
     try {
@@ -22,7 +22,7 @@
   <link rel="icon" type="image/png" href="/favicon.png">
 
   <title>芒果超跑 · 极速出行</title>
-  <link rel="stylesheet" href="./index.css?v=1777792097410">
+  <link rel="stylesheet" href="./index.css?v=1778073381545">
   <style>
     /* 移除内联样式，因为已经移入独立文件 */
   </style>
@@ -32,6 +32,11 @@
     <!-- Hero Banner -->
     <section class="hero">
       <div class="hero-video-wrapper">
+        <!-- 仅当视频不可用或出错时显示；能播视频时保持隐藏，避免先图后视频的闪烁 -->
+        <picture class="hero-video-fallback" hidden aria-hidden="true">
+          <source media="(max-width: 1024px)" srcset="media-webp/photos/index/m2/m2-img.webp" type="image/webp" />
+          <img src="media-webp/photos/index/m2/pc-img.webp" alt="" decoding="async" fetchpriority="high" />
+        </picture>
         <!--
           muted：未静音时 autoplay 常被拦截。
           playsinline / webkit-playsinline：iOS 等内联播放。
@@ -45,8 +50,8 @@
           muted
           loop
           preload="auto"
-          playsinline="true"
-          webkit-playsinline="true"
+          playsinline
+          webkit-playsinline
           x-webkit-airplay="deny"
           x5-playsinline="true"
           x5-video-player-type="h5-page"
@@ -68,10 +73,14 @@
           </div>
           <h1 class="hero-title animate-in" style="--delay: 0.3s">MANGO SUPERCAR</h1>
           <div class="hero-actions animate-in" style="--delay: 0.5s">
-            <a href="car.html?v=1777792097410#carSection" class="btn-primary btn-lg hero-choose-btn">立即选车</a>
-            <a href="car.html?v=1777792097410#carSection" class="hero-logo-btn" aria-label="芒果超跑选车">
-              <img src="media-webp/photos/index/logo/logo3.webp?v=1777792097410" alt="芒果超跑">
-            </a>
+            <div class="hero-brand-stack">
+              <a href="car.html?v=1778073381545#carSection" class="hero-logo-link" aria-label="进入选车，芒果超跑">
+                <img src="media-webp/photos/index/m2/logo.svg" alt="" width="140" height="140">
+              </a>
+              <a href="car.html?v=1778073381545#carSection" class="hero-car-cta" aria-label="立即选车">
+                立即选车<span class="hero-car-cta__chev" aria-hidden="true">&gt;</span>
+              </a>
+            </div>
           </div>
         </div>
       </div>
@@ -89,18 +98,20 @@
     </div>
   </div>
 
-  <script src="./device-redirect.js?v=1777792097410"></script>
+  <script src="./device-redirect.js?v=1778073381545"></script>
   <script>
     (function () {
       function applyCarEntryLinks() {
         if (!window.MangoDeviceRedirect || typeof MangoDeviceRedirect.carEntryHref !== 'function') return;
         var href = MangoDeviceRedirect.carEntryHref();
-        document.querySelectorAll('.hero-choose-btn, .hero-logo-btn').forEach(function (a) {
+        document.querySelectorAll('.hero-logo-link, .hero-car-cta').forEach(function (a) {
           if (a && a.tagName === 'A') a.setAttribute('href', href);
         });
       }
       if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', applyCarEntryLinks);
+        document.addEventListener('DOMContentLoaded', function () {
+          applyCarEntryLinks();
+        });
       } else {
         applyCarEntryLinks();
       }
@@ -111,6 +122,6 @@
       });
     })();
   </script>
-  <script src="./index.js?v=1777792097410"></script>
+  <script src="./index.js?v=1778073381545"></script>
 </body>
 </html>

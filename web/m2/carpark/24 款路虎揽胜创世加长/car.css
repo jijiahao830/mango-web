@@ -18,42 +18,34 @@ body {
    sticky 子元素吸顶，在容器内提供 300vh 可用滚动距离
    ════════════════════════════════════════ */
 .m2-cover-wrapper {
-  height: 280vh;
+  height: auto;
 }
 
 .m2-cover-sticky {
-  position: sticky;
-  top: 0;
-  height: 100vh;
-  overflow: hidden;
-  /* 独立合成层：避免 mix-blend-mode 与 body 黑底错误混合导致首屏封面全白/全黑，需滑到后面才正常 */
-  isolation: isolate;
-  transform: translateZ(0);
-  -webkit-transform: translateZ(0);
+  position: relative;
+  top: auto;
+  height: auto;
+  overflow: visible;
+  isolation: auto;
+  transform: none;
+  -webkit-transform: none;
 }
 
 /* 封面图：铺满 sticky 容器 */
 .m2-car__bg {
-  position: absolute;
-  inset: 0;
+  position: relative;
+  inset: auto;
   width: 100%;
-  height: 100%;
+  height: auto;
   object-fit: cover;
   object-position: center;
   z-index: 0;
+  display: block;
 }
 
 /* 白色遮罩 + 镂空文字 */
 .m2-car__knockout {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  background: #fff;
-  mix-blend-mode: screen;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  pointer-events: none;
+  display: none;
 }
 
 /* 容器：多行时纵向堆叠；具体行在 .m2-car__knockout-line 内 nowrap（与 25 款库里南一致） */

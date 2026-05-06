@@ -26,7 +26,7 @@ body {
   overflow-anchor: none;
 }
 
-/* 主容器：全屏高度，纵向连续滚动（无 scroll-snap） */
+/* 主容器：全屏高度，纵向整页翻动（scroll-snap） */
 .m2-home {
   display: flex;
   flex-direction: column;
@@ -35,8 +35,14 @@ body {
   overflow-y: scroll;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-y: contain;
+  scroll-snap-type: y mandatory;
   scrollbar-width: none;
   -ms-overflow-style: none;
+}
+
+.m2-home > section {
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
 }
 
 .m2-home::-webkit-scrollbar {
@@ -57,8 +63,14 @@ body {
   background-repeat: no-repeat;
 }
 
+/* 临时隐藏 m2 首页封面区（保留 DOM 与样式定义，不删除代码） */
+.m2-home__hero {
+  display: none;
+}
+
 .m2-chooser {
   --m2-chooser-gap: 18px;
+  --m2-chooser-intro-cut: clamp(108px, 16vh, 170px);
   position: relative;
   display: flex;
   flex-direction: column;
@@ -83,6 +95,57 @@ body {
   object-fit: cover;
   object-position: center center;
   display: block;
+}
+
+.m2-chooser__intro-cover {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: calc(100% - (10vh + env(safe-area-inset-bottom)));
+  z-index: 30;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  background: transparent;
+  cursor: pointer;
+  opacity: 1;
+  transition: opacity 0.45s ease;
+}
+
+/* 进入选车界面后不显示引导图与提示文案 */
+.m2-chooser__intro-cover {
+  display: none !important;
+}
+
+.m2-chooser__intro-tip {
+  position: absolute;
+  top: 30vh;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1;
+  color: #fff;
+  font-size: 15px;
+  line-height: 1.3;
+  letter-spacing: 0.02em;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+  pointer-events: none;
+}
+
+.m2-chooser__intro-cover-img {
+  display: block;
+  width: 100vw;
+  height: 100%;
+  object-fit: fill;
+  object-position: center center;
+}
+
+.m2-chooser__intro-cover.is-fading {
+  opacity: 0;
+}
+
+.m2-chooser__intro-cover.is-hidden {
+  display: none;
 }
 
 .m2-chooser__banner-wrap {
@@ -403,12 +466,14 @@ body {
 
 .m2-chooser__bottom {
   flex: 0 0 auto;
+  height: 10vh;
+  min-height: 10vh;
   justify-content: space-between;
   align-items: center;
   gap: 2px;
   border-top: 1px solid rgba(255, 255, 255, 0.08);
-  padding-top: 14px;
-  padding-bottom: max(2px, env(safe-area-inset-bottom));
+  padding-top: 0;
+  padding-bottom: max(0px, env(safe-area-inset-bottom));
   background: linear-gradient(180deg, rgba(4, 9, 18, 0) 0%, rgba(4, 9, 18, 0.32) 100%);
 }
 
@@ -597,6 +662,8 @@ body {
   padding-right: max(12px, calc((100% - var(--m2-pkg-slide-w)) / 2));
   overflow-x: auto;
   overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  touch-action: pan-y;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-x: contain;
   scrollbar-width: none;
@@ -611,6 +678,8 @@ body {
 .m2-packages__item {
   flex: 0 0 var(--m2-pkg-slide-w);
   width: var(--m2-pkg-slide-w);
+  scroll-snap-align: center;
+  scroll-snap-stop: always;
   min-width: 0;
   display: flex;
   flex-direction: column;
@@ -629,6 +698,7 @@ body {
   border-radius: 0;
   overflow: hidden;
   box-shadow: none;
+  cursor: pointer;
 }
 
 /* 图片区：缩短高度，和文字区共同构成整张卡片高度 */
@@ -1076,7 +1146,7 @@ body {
   position: absolute;
   inset: 0;
   background-color: #05070d;
-  background-image: url('../media-webp/photos/index/m2/关于.webp?v=1777792097410');
+  background-image: url('../media-webp/photos/index/m2/关于.webp?v=1778073381545');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -1091,12 +1161,22 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 58%;
+  gap: clamp(12px, 3.6vh, 28px);
   padding-top: calc(env(safe-area-inset-top) + 22%);
   padding-bottom: 4%;
 }
 
 .m2-about__title {
+  margin: 0;
+  font-size: 6vw;
+  font-weight: 600;
+  color: #fff;
+  letter-spacing: 0.06em;
+  text-align: center;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+}
+
+.m2-about__center-text {
   margin: 0;
   font-size: 6vw;
   font-weight: 600;
