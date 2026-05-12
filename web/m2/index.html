@@ -230,6 +230,14 @@
         <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"></polyline></svg>
       </button>
       <div class="m2-chooser__overlay"></div>
+      <img class="m2-chooser__index-logo" src="../media-webp/photos/index/m2/index-logo.webp" alt="Mango Supercar">
+      <div class="m2-chooser__ad" id="m2ChooserAd">
+        <div class="m2-chooser__ad-image-wrap">
+          <img class="m2-chooser__ad-image" id="m2ChooserAdImage" src="../media-webp/photos/index/m2/广告.webp" alt="广告图">
+          <button type="button" class="m2-chooser__ad-cta m2-chooser__ad-glass-btn" id="m2ChooserAdCta">立即了解</button>
+        </div>
+        <button type="button" class="m2-chooser__ad-close m2-chooser__ad-glass-btn" id="m2ChooserAdClose" aria-label="关闭广告">×</button>
+      </div>
 
       <div class="m2-chooser__top">
         <nav id="m2CategoryTabs" class="m2-chooser__tabs" aria-label="车辆分类"></nav>
@@ -367,6 +375,51 @@
   </main>
   <script src="./index.js?v=1778073381545"></script>
   <script src="./m2-actions.js?v=1778073381545"></script>
+  <script>
+  (function () {
+    var ad = document.getElementById('m2ChooserAd');
+    var adImg = document.getElementById('m2ChooserAdImage');
+    var adCta = document.getElementById('m2ChooserAdCta');
+    var closeBtn = document.getElementById('m2ChooserAdClose');
+    if (!ad || !closeBtn || !adImg || !adCta) return;
+    var KEY = 'm2ChooserAdDismissed';
+
+    function navType() {
+      try {
+        var nav = performance.getEntriesByType && performance.getEntriesByType('navigation');
+        if (nav && nav[0] && nav[0].type) return nav[0].type;
+      } catch (e) {}
+      return '';
+    }
+
+    /* 仅刷新页面时重置；返回/前进(back_forward)不重置 */
+    if (navType() === 'reload') {
+      try { sessionStorage.removeItem(KEY); } catch (e) {}
+    }
+
+    var dismissed = false;
+    try {
+      dismissed = sessionStorage.getItem(KEY) === '1';
+    } catch (e) {}
+    if (dismissed) ad.classList.add('is-hidden');
+
+    function dismissAd() {
+      if (dismissed) return;
+      dismissed = true;
+      try { sessionStorage.setItem(KEY, '1'); } catch (e) {}
+      ad.classList.add('is-hidden');
+    }
+    closeBtn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      dismissAd();
+    });
+    adImg.addEventListener('click', dismissAd);
+    adCta.addEventListener('click', function (e) {
+      e.stopPropagation();
+      dismissAd();
+    });
+  })();
+  </script>
   <script>
   (function () {
     var cover = document.getElementById('m2ChooserIntroCover');

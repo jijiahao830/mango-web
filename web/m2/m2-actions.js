@@ -633,8 +633,8 @@
         '</li>';
     }).join('');
     if (emptyEl) emptyEl.style.display = ids.length ? 'none' : '';
-    if (originalEl) originalEl.textContent = '原价：¥' + Math.round(origTotal).toLocaleString('zh-CN');
-    if (totalEl) totalEl.textContent = '总价：¥' + Math.round(total).toLocaleString('zh-CN');
+    if (originalEl) originalEl.textContent = '原价：¥' + Math.round(origTotal);
+    if (totalEl) totalEl.textContent = '总价：¥' + Math.round(total);
     syncValueAddButtons(map);
     var removes = listEl.querySelectorAll('.m2a-panel__item-remove');
     for (var ri = 0; ri < removes.length; ri++) {
@@ -847,24 +847,24 @@
       if (id.indexOf('service:') === 0) {
         var sn = String(item.model_name || item.car_name || id).trim();
         var st = Math.round(calcItemTotal(item));
-        pushTrim(valueAdd, sn + ' ¥' + st.toLocaleString('zh-CN'));
+        pushTrim(valueAdd, sn + ' ¥' + st);
       } else if (pl && pl.length) {
         for (var j = 0; j < pl.length; j++) pushTrim(packages, pl[j]);
       } else if (id.indexOf('pkg:') === 0) {
         var pn = String(item.model_name || item.car_name || id).trim();
         var pd = String(item.days || '套餐').trim();
         var pt = Math.round(calcItemTotal(item));
-        pushTrim(packages, pn + '（' + pd + '） ¥' + pt.toLocaleString('zh-CN'));
+        pushTrim(packages, pn + '（' + pd + '） ¥' + pt);
       } else {
         var vn = String(item.model_name || item.car_name || id).trim();
         var vd = String(item.days || '单日 (24小时)').trim();
         var vt = Math.round(calcItemTotal(item));
         vehicleSubtotal += vt;
-        pushTrim(vehicles, vn + '（' + vd + '） ¥' + vt.toLocaleString('zh-CN'));
+        pushTrim(vehicles, vn + '（' + vd + '） ¥' + vt);
       }
     });
     if (vehicles.length) {
-      pushTrim(vehicles, '合计 ¥' + Math.round(vehicleSubtotal).toLocaleString('zh-CN'));
+      pushTrim(vehicles, '合计 ¥' + Math.round(vehicleSubtotal));
     }
     var flatLines = vehicles.concat(packages, valueAdd);
     fetchPost('/api/wecom/checklist-send', {
@@ -922,7 +922,7 @@
     appendConsultMsg(
       'assistant',
       '您好，我是芒果超跑的AI客服，有什么问题您可以直接问我，或者联系我们的客服他们将给您最专业的回答，他们的联系方式是：13033333370，也可以扫描下方的二维码添加微信',
-      { qrSrc: '../media-webp/photos/index/logo/二维码.webp?v=' + m2AssetV(), qrAlt: '客服微信二维码' }
+      { qrSrc: '/media-webp/photos/index/logo/二维码.webp?v=' + m2AssetV(), qrAlt: '客服微信二维码' }
     );
   }
   function openConsultModal() {

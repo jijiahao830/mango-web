@@ -37,7 +37,7 @@
     var detailText = detail ? String(detail.textContent || '').trim() : '';
     var priceEl = card.querySelector('.m2p-plan__price');
     var price = parseYuan(priceEl);
-    var priceStr = priceEl ? String(priceEl.textContent || '').trim() : ('¥' + Math.round(price).toLocaleString('zh-CN'));
+    var priceStr = priceEl ? String(priceEl.textContent || '').trim() : ('¥' + Math.round(price));
     var scenario = SCENARIO_BY_TRACK[key] || '套餐';
     var count = parseCarCount(detailText);
     var hasCustom = detailText.indexOf('自由组合') !== -1;

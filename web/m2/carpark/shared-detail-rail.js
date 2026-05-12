@@ -1,5 +1,38 @@
 /* 详情页右侧快捷栏（公共） */
 (function () {
+  function remapGalleryAndFeatures() {
+    var features = document.getElementById('m2Features');
+    var gallery = document.getElementById('m2Gallery');
+    if (!features || !gallery) return;
+
+    var featTrack = features.querySelector('#m2FeatTrack');
+    var galleryTrack = gallery.querySelector('#m2GalleryTrack');
+    if (featTrack && galleryTrack) {
+      var featureSlides = Array.prototype.slice.call(
+        featTrack.querySelectorAll('.m2-features__slide')
+      );
+      featureSlides.forEach(function (slide, idx) {
+        var img = slide.querySelector('.m2-features__img');
+        if (!img || !img.getAttribute('src')) return;
+        var gSlide = document.createElement('div');
+        gSlide.className = 'm2-gallery__slide';
+        var gImg = document.createElement('img');
+        gImg.className = 'm2-gallery__img';
+        gImg.src = img.getAttribute('src');
+        gImg.alt = img.getAttribute('alt') || ('图赏补充 ' + (idx + 1));
+        gSlide.appendChild(gImg);
+        galleryTrack.appendChild(gSlide);
+      });
+    }
+
+    if (features.parentNode) {
+      features.parentNode.insertBefore(gallery, features);
+      features.parentNode.removeChild(features);
+    }
+  }
+
+  remapGalleryAndFeatures();
+
   function ensureDetailScrollHint() {
     if (document.querySelector('.m2-detail-scroll-hint')) return;
     var hint = document.createElement('div');
@@ -91,7 +124,7 @@
 
     var startX = 0;
     var startY = 0;
-    var threshold = 40;
+    var threshold = 24;
     var suppressLinkTapUntil = 0;
 
     zone.addEventListener(
@@ -116,7 +149,7 @@
          * 明显横向时才切车：避免与同屏纵向翻页争抢；阈值略大减少误触。
          */
         if (Math.abs(dx) < threshold) return;
-        if (Math.abs(dx) < Math.abs(dy) * 1.1) return;
+        if (Math.abs(dx) <= Math.abs(dy)) return;
 
         /*
          * 禁用按钮上不触发 click — 已由 paint 设为 disabled。
@@ -180,10 +213,8 @@
   function initDetailFadePager() {
     var selectors = [
       '.m2-cover-wrapper',
-      '.m2-pricing-wrapper',
-      '#m2Features',
-      '#m2Scenario',
       '#m2Gallery',
+      '#m2Scenario',
       '#m2SamePriceSection'
     ];
     var sections = selectors
@@ -194,6 +225,56 @@
     document.body.classList.add('m2d-page--fade');
     sections.forEach(function (sec) { sec.classList.add('m2d-page-section'); });
 
+    var gallerySection = document.querySelector('.m2-car__gallery.m2d-page-section');
+    if (gallerySection && !gallerySection.querySelector('.m2-gallery__heading')) {
+      var galleryHeading = document.createElement('div');
+      galleryHeading.className = 'm2-gallery__heading';
+      galleryHeading.textContent = '实车图赏';
+      var galleryViewport = gallerySection.querySelector('.m2-gallery__viewport');
+      if (galleryViewport) gallerySection.insertBefore(galleryHeading, galleryViewport);
+      else gallerySection.appendChild(galleryHeading);
+    }
+
+    var scenarioSection = document.querySelector('.m2-car__scenario-section.m2d-page-section');
+    if (scenarioSection) {
+      var oldScenarioIntro = scenarioSection.querySelector('.m2-scenario__section-intro');
+      if (oldScenarioIntro && oldScenarioIntro.parentNode) {
+        oldScenarioIntro.parentNode.removeChild(oldScenarioIntro);
+      }
+      var scenarioCard = scenarioSection.querySelector('.m2-scenario-card');
+      if (scenarioCard && !scenarioCard.querySelector('.m2-scenario__section-intro')) {
+        var scenarioIntro = document.createElement('span');
+        scenarioIntro.className = 'm2-scenario__section-intro';
+        scenarioIntro.textContent = '使用场景';
+        scenarioCard.appendChild(scenarioIntro);
+      }
+    }
+
+    var samePriceSection = document.querySelector('.m2-car__same-price.m2d-page-section');
+    if (samePriceSection) {
+      var oldHeading = samePriceSection.querySelector('.m2-same-price__heading');
+      if (oldHeading && oldHeading.parentNode) oldHeading.parentNode.removeChild(oldHeading);
+    }
+    if (samePriceSection) {
+      var samePriceTitle = samePriceSection.querySelector('.m2-same-price__title');
+      if (samePriceTitle && samePriceTitle.parentNode) {
+        samePriceTitle.parentNode.removeChild(samePriceTitle);
+      }
+    }
+    if (samePriceSection) {
+      var vehicleZone = samePriceSection.querySelector('.m2-same-price__vehicle-zone');
+      if (vehicleZone && !vehicleZone.querySelector('.m2-same-price__section-intro')) {
+        var sectionIntro = document.createElement('span');
+        sectionIntro.className = 'm2-same-price__section-intro';
+        sectionIntro.textContent = '同价位其他车型';
+        vehicleZone.insertBefore(sectionIntro, vehicleZone.firstChild);
+      }
+      var oldInlineTitle = samePriceSection.querySelector('.m2-same-price__inline-title');
+      if (oldInlineTitle && oldInlineTitle.parentNode) {
+        oldInlineTitle.parentNode.removeChild(oldInlineTitle);
+      }
+    }
+
     var dotsWrap = document.createElement('div');
     dotsWrap.className = 'm2d-page-dots';
     dotsWrap.setAttribute('aria-label', '页面导航');
@@ -202,6 +283,8 @@
     var isAnimating = false;
     var touchStartY = 0;
     var touchEndY = 0;
+    var touchStartX = 0;
+    var touchEndX = 0;
     var touchMoved = false;
     var stateKey = 'm2_detail_active_section:' + String(location.pathname || '');
 
@@ -272,19 +355,24 @@
     }
 
     function onTouchStart(e) {
+      touchStartX = e.touches[0].clientX;
+      touchEndX = touchStartX;
       touchStartY = e.touches[0].clientY;
       touchEndY = touchStartY;
       touchMoved = false;
     }
 
     function onTouchMove(e) {
+      touchEndX = e.touches[0].clientX;
       touchEndY = e.touches[0].clientY;
       touchMoved = true;
     }
 
     function onTouchEnd() {
       if (!touchMoved) return;
+      var deltaX = touchStartX - touchEndX;
       var deltaY = touchStartY - touchEndY;
+      if (Math.abs(deltaX) > Math.abs(deltaY)) return;
       if (Math.abs(deltaY) > 50) {
         if (deltaY > 0) nextSection();
         else prevSection();
@@ -422,7 +510,11 @@
     var name = String(document.body.getAttribute('data-car-display-name') || '').trim();
     var dayEl = document.querySelector('#m2Pricing .m2-car__pricing-num');
     var rent = 0;
-    if (dayEl) rent = parseInt(String(dayEl.textContent || '').replace(/[^\d]/g, ''), 10) || 0;
+    if (dayEl) {
+      var txt = String(dayEl.textContent || '');
+      var m = txt.match(/(\d[\d,]*)/);
+      rent = m ? (parseInt(String(m[1]).replace(/,/g, ''), 10) || 0) : 0;
+    }
     if (car) {
       window.m2CurrentCar = {
         car_id: String(car.car_name || name || '').trim(),
@@ -464,21 +556,10 @@
   }
 
   /**
-   * 封面（含淡出分页模式下当前屏为封面）不出现侧边栏；离开封面后再显示。
+   * 需求：封面部分也显示侧边栏。
    */
   function updateRailScrollGate() {
-    if (document.body.classList.contains('m2d-page--fade')) {
-      var coverSec = document.querySelector('.m2-cover-wrapper');
-      if (coverSec && coverSec.classList.contains('is-active')) {
-        rail.classList.remove('is-past-cover');
-      } else {
-        rail.classList.add('is-past-cover');
-      }
-      return;
-    }
-    var y = window.scrollY || window.pageYOffset || 0;
-    if (y >= coverScrollEndPx() - 0.5) rail.classList.add('is-past-cover');
-    else rail.classList.remove('is-past-cover');
+    rail.classList.add('is-past-cover');
   }
 
   window.__m2SyncDetailRail = updateRailScrollGate;

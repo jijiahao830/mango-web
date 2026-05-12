@@ -10,7 +10,7 @@
 
   function formatWithComma(n) {
     var x = parseInt(String(n), 10) || 0;
-    return String(x).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    return String(x);
   }
 
   function derivedFromDay(day) {
@@ -81,14 +81,65 @@
   }
 
   function applyPricing(prices) {
+    var floor = 1111;
     var card = document.querySelector('#m2Pricing .m2-car__pricing-card');
     if (!card) return;
+    card.classList.add('m2-pricing-range-card');
+    var titleEl = card.querySelector('.m2-car__pricing-title');
+    if (titleEl) titleEl.textContent = '日租';
+    var labels = card.querySelectorAll('.m2-car__pricing-label');
+    if (labels.length >= 4) {
+      labels[0].textContent = '日租';
+      labels[1].textContent = '周租(7天)';
+      labels[2].textContent = '半月(15天)';
+      labels[3].textContent = '月(30天)';
+    }
     var nums = card.querySelectorAll('.m2-car__pricing-num');
     if (nums.length < 4) return;
-    nums[0].textContent = formatWithComma(prices.day);
-    nums[1].textContent = formatWithComma(prices.w);
-    nums[2].textContent = formatWithComma(prices.h);
-    nums[3].textContent = formatWithComma(prices.m);
+    nums[0].textContent = formatWithComma(floor) + '-' + formatWithComma(prices.day);
+    nums[1].textContent = formatWithComma(floor) + '-' + formatWithComma(prices.w);
+    nums[2].textContent = formatWithComma(floor) + '-' + formatWithComma(prices.h);
+    nums[3].textContent = formatWithComma(floor) + '-' + formatWithComma(prices.m);
+    applyCoverPricing({
+      day: formatWithComma(floor) + '-' + formatWithComma(prices.day),
+      week: formatWithComma(floor) + '-' + formatWithComma(prices.w),
+      half: formatWithComma(floor) + '-' + formatWithComma(prices.h),
+      month: formatWithComma(floor) + '-' + formatWithComma(prices.m),
+    });
+  }
+
+  function ensureCoverPricingNode() {
+    var cover = document.querySelector('.m2-cover-wrapper .m2-cover-sticky') || document.querySelector('.m2-cover-wrapper');
+    if (!cover) return null;
+    var node = cover.querySelector('.m2-cover-price');
+    if (node) return node;
+    node = document.createElement('div');
+    node.className = 'm2-cover-price';
+    node.innerHTML =
+      '<div class="m2-cover-price__day">' +
+      '<div class="m2-cover-price__day-title">日租</div>' +
+      '<div class="m2-cover-price__day-value" data-cover-price=\"day\">-</div>' +
+      '</div>' +
+      '<div class="m2-cover-price__grid">' +
+      '<div class="m2-cover-price__item"><div class="m2-cover-price__item-label">周租(7天)</div><div class="m2-cover-price__item-value" data-cover-price=\"week\">-</div></div>' +
+      '<div class="m2-cover-price__item"><div class="m2-cover-price__item-label">半月(15天)</div><div class="m2-cover-price__item-value" data-cover-price=\"half\">-</div></div>' +
+      '<div class="m2-cover-price__item"><div class="m2-cover-price__item-label">月(30天)</div><div class="m2-cover-price__item-value" data-cover-price=\"month\">-</div></div>' +
+      '</div>';
+    cover.appendChild(node);
+    return node;
+  }
+
+  function applyCoverPricing(v) {
+    var node = ensureCoverPricingNode();
+    if (!node) return;
+    var day = node.querySelector('[data-cover-price="day"]');
+    var week = node.querySelector('[data-cover-price="week"]');
+    var half = node.querySelector('[data-cover-price="half"]');
+    var month = node.querySelector('[data-cover-price="month"]');
+    if (day) day.textContent = String(v.day || '-');
+    if (week) week.textContent = String(v.week || '-');
+    if (half) half.textContent = String(v.half || '-');
+    if (month) month.textContent = String(v.month || '-');
   }
 
   /* 仅用于在目录名/接口 car_name 不一致时命中同一条车数据（与 m2/index.js 别名一致） */
@@ -142,5 +193,19 @@
       if (!prices) return;
       applyPricing(prices);
     })
-    .catch(function () {});
+    .catch(function () {
+      /* 兜底：接口失败时，仍把页面原有数值搬到封面展示 */
+      var nums = document.querySelectorAll('#m2Pricing .m2-car__pricing-num');
+      if (!nums || nums.length < 4) return;
+      var floor = 1111;
+      function pick(i) {
+        return parseInt(String(nums[i].textContent || '').replace(/[^\d]/g, ''), 10) || 0;
+      }
+      applyCoverPricing({
+        day: formatWithComma(floor) + '-' + formatWithComma(pick(0)),
+        week: formatWithComma(floor) + '-' + formatWithComma(pick(1)),
+        half: formatWithComma(floor) + '-' + formatWithComma(pick(2)),
+        month: formatWithComma(floor) + '-' + formatWithComma(pick(3)),
+      });
+    });
 })();

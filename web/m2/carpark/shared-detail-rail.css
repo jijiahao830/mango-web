@@ -176,6 +176,12 @@
   opacity: 0;
 }
 
+/* 需求：车辆详情页取消“向下滑动”文字和箭头 */
+.m2-cover-scroll-hint,
+.m2-detail-scroll-hint {
+  display: none !important;
+}
+
 .m2-cover-scroll-hint__text {
   font-size: 20px;
   font-weight: 600;
@@ -332,6 +338,10 @@ body.m2d-page--fade {
 }
 
 /* 车辆详情：价格部分样式取消（改为普通展示） */
+body .m2-pricing-wrapper {
+  display: none !important;
+}
+
 body.m2d-page--fade .m2-pricing-wrapper {
   height: auto;
 }
@@ -359,6 +369,207 @@ body.m2d-page--fade .m2-car__pricing-row {
   opacity: 1 !important;
   transform: none !important;
   margin-top: 0;
+}
+
+/* 封面价格区（替代原价格屏） */
+.m2-cover-price {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  transform: translateX(-50%);
+  width: min(82vw, 380px);
+  height: 100%;
+  z-index: 8;
+  display: block;
+}
+
+.m2-cover-price__day {
+  position: absolute;
+  top: 10vh;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
+
+.m2-cover-price__day-title {
+  font-size: clamp(34px, 9vw, 50px);
+  line-height: 1.2;
+  color: rgba(255, 255, 255, 0.96);
+}
+
+.m2-cover-price__day-value {
+  font-size: clamp(36px, 10vw, 54px);
+  line-height: 1.3;
+  letter-spacing: 2px;
+  font-weight: 400;
+  color: #fff;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.45);
+}
+
+.m2-cover-price__grid {
+  position: absolute;
+  top: 77vh;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.m2-cover-price__grid::after {
+  content: "包月更划算";
+  grid-column: 1 / -1;
+  justify-self: center;
+  margin-top: 4px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #ffffff;
+  letter-spacing: 0;
+}
+
+.m2-cover-price__item {
+  border-radius: 14px;
+  padding: 8px 6px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.18) 0%,
+    rgba(255, 255, 255, 0.07) 100%
+  );
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.32),
+    0 4px 14px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.m2-cover-price__item-label {
+  font-size: 13px;
+  line-height: 1.2;
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.m2-cover-price__item-value {
+  font-size: 14px;
+  line-height: 1.25;
+  color: #fff;
+  text-align: center;
+}
+
+/* 价格区：上方日租，下方周/半月/月三列 */
+body.m2d-page--fade .m2-car__pricing-card.m2-pricing-range-card {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-areas:
+    "title title title"
+    "day day day"
+    "week half month";
+  gap: 14px 10px;
+  align-content: start;
+}
+
+body.m2d-page--fade .m2-pricing-range-card .m2-car__pricing-title {
+  grid-area: title;
+  font-size: clamp(34px, 9vw, 46px);
+  font-weight: 500;
+  margin-bottom: 2px;
+  text-align: center;
+}
+
+body.m2d-page--fade .m2-pricing-range-card .m2-car__pricing-row {
+  border-top: 0;
+  padding: 0;
+}
+
+body.m2d-page--fade .m2-pricing-range-card .m2-car__pricing-row[data-pricing-line="1"] {
+  grid-area: day;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  margin-bottom: 4px;
+}
+
+body.m2d-page--fade .m2-pricing-range-card .m2-car__pricing-row[data-pricing-line="2"] {
+  grid-area: week;
+}
+
+body.m2d-page--fade .m2-pricing-range-card .m2-car__pricing-row[data-pricing-line="3"] {
+  grid-area: half;
+}
+
+body.m2d-page--fade .m2-pricing-range-card .m2-car__pricing-row[data-pricing-line="4"] {
+  grid-area: month;
+}
+
+body.m2d-page--fade .m2-pricing-range-card .m2-car__pricing-row[data-pricing-line="2"],
+body.m2d-page--fade .m2-pricing-range-card .m2-car__pricing-row[data-pricing-line="3"],
+body.m2d-page--fade .m2-pricing-range-card .m2-car__pricing-row[data-pricing-line="4"] {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  min-height: 92px;
+  padding: 10px 8px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.18) 0%,
+    rgba(255, 255, 255, 0.07) 100%
+  );
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.32),
+    0 4px 14px rgba(0, 0, 0, 0.2);
+}
+
+body.m2d-page--fade .m2-pricing-range-card .m2-car__pricing-label {
+  display: none;
+}
+
+body.m2d-page--fade .m2-pricing-range-card .m2-car__pricing-row[data-pricing-line="2"]::before,
+body.m2d-page--fade .m2-pricing-range-card .m2-car__pricing-row[data-pricing-line="3"]::before,
+body.m2d-page--fade .m2-pricing-range-card .m2-car__pricing-row[data-pricing-line="4"]::before {
+  font-size: 16px;
+  line-height: 1.25;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.96);
+}
+
+body.m2d-page--fade .m2-pricing-range-card .m2-car__pricing-row[data-pricing-line="2"]::before {
+  content: "周";
+}
+
+body.m2d-page--fade .m2-pricing-range-card .m2-car__pricing-row[data-pricing-line="3"]::before {
+  content: "半月";
+}
+
+body.m2d-page--fade .m2-pricing-range-card .m2-car__pricing-row[data-pricing-line="4"]::before {
+  content: "月";
+}
+
+body.m2d-page--fade .m2-pricing-range-card .m2-car__pricing-value {
+  font-size: 16px;
+  line-height: 1.3;
+  text-align: center;
+}
+
+body.m2d-page--fade .m2-pricing-range-card .m2-car__pricing-num {
+  font-size: 22px;
+  font-weight: 500;
 }
 
 /* 详情页特征区：去掉左右箭头按钮的六边形背景，仅保留箭头 */
@@ -394,7 +605,95 @@ body.m2d-page--fade .m2-car__same-price.m2d-page-section .m2-same-price__vehicle
   min-height: 0;
 }
 
+body.m2d-page--fade .m2-car__same-price.m2d-page-section .m2-same-price__section-intro {
+  position: absolute;
+  top: 12vh;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 4;
+  display: block;
+  text-align: center;
+  font-size: clamp(26px, 8.4vw, 52px);
+  line-height: 1.12;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.9);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+body.m2d-page--fade .m2-car__scenario-section.m2d-page-section .m2-scenario-card .m2-scenario__section-intro {
+  position: absolute;
+  top: 2vh;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 4;
+  display: block;
+  text-align: center;
+  font-size: clamp(26px, 8.4vw, 52px);
+  line-height: 1.12;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.9);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+body.m2d-page--fade .m2-car__same-price.m2d-page-section .m2-same-price__car-brand,
+body.m2d-page--fade .m2-car__same-price.m2d-page-section .m2-same-price__car-model,
+body.m2d-page--fade .m2-car__same-price.m2d-page-section .m2-same-price__car-image {
+  transform: translateY(5vh);
+}
+
+body.m2d-page--fade .m2-car__same-price.m2d-page-section .m2-same-price__dots {
+  transform: translate(-50%, 5vh);
+}
+
+body.m2d-page--fade .m2-car__same-price.m2d-page-section .m2-same-price__switch-nav {
+  transform: translateY(-7vh);
+}
+
 body.m2d-page--fade .m2-car__same-price.m2d-page-section footer.m2-same-price__record-zone {
   flex: 0 0 auto;
   margin: 0;
+}
+
+/* 无同价位车型时：联系客服按钮改为与使用场景文案区同款毛玻璃 */
+body.m2d-page--fade .m2-car__same-price.m2d-page-section .m2-same-price__contact-btn {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(8, 10, 16, 0.34));
+  backdrop-filter: blur(28px) saturate(180%);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.24);
+  color: #fff;
+}
+
+body.m2d-page--fade .m2-car__same-price.m2d-page-section .m2-same-price__empty-image,
+body.m2d-page--fade .m2-car__same-price.m2d-page-section .m2-same-price__empty-title {
+  transform: translateY(5vh);
+}
+
+/* 实车图赏页：内容下移 + 标题 */
+body.m2d-page--fade .m2-car__gallery.m2d-page-section {
+  position: relative;
+  padding-top: 72px;
+}
+
+body.m2d-page--fade .m2-car__gallery.m2d-page-section .m2-gallery__heading {
+  position: absolute;
+  top: 12vh;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 4;
+  display: block;
+  text-align: center;
+  font-size: clamp(26px, 8.4vw, 52px);
+  line-height: 1.12;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.9);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+body.m2d-page--fade .m2-car__gallery.m2d-page-section .m2-gallery__viewport,
+body.m2d-page--fade .m2-car__gallery.m2d-page-section .m2-gallery__nav {
+  transform: translateY(-3vh);
 }
