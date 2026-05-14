@@ -171,13 +171,11 @@
     return isoForDayOffset(0);
   }
 
+  /**
+   * 所选活动日不写回地址栏（避免出现 ?v=…&date=…）；分享指定日仍可用首次进入时的 ?date=YYYY-MM-DD。
+   */
   function replaceBrowserUrlDate(iso) {
-    try {
-      if (String(location.protocol || '').indexOf('http') !== 0) return;
-      var u = new URL(location.href);
-      u.searchParams.set('date', iso);
-      history.replaceState(null, '', u.pathname + u.search + u.hash);
-    } catch (eR) {}
+    void iso;
   }
 
   function activityPriceQueryString(iso) {
