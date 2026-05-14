@@ -42,6 +42,17 @@ body.m2-activity-page {
   flex: 0 0 8vh;
   width: 100%;
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.m2-activity-spacer-logo {
+  width: min(44vw, 220px);
+  height: auto;
+  display: block;
+  object-fit: contain;
+  pointer-events: none;
 }
 
 .m2-activity-back {
