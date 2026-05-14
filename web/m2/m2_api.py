@@ -4,6 +4,8 @@
 m2 专用轻量接口：
 - /api/cars-catalog
 - /api/site-ui
+- /api/activity
+- /api/activity-dates
 
 默认将请求转发到第一版 member_api（upstream），
 用于 m2 在本地 file:// 预览时也能稳定取到数据。
@@ -111,6 +113,30 @@ def create_app(upstream_base: str) -> Flask:
         if pre is not None:
             return pre
         status, payload = fetch_json(f"{upstream_base}/api/site-ui")
+        return cors(make_response(jsonify(payload), status))
+
+    @app.route("/api/activity", methods=["GET", "OPTIONS"])
+    def api_activity():
+        pre = pass_options()
+        if pre is not None:
+            return pre
+        qs = request.query_string.decode("utf-8") if request.query_string else ""
+        url = f"{upstream_base}/api/activity"
+        if qs:
+            url += "?" + qs
+        status, payload = fetch_json(url)
+        return cors(make_response(jsonify(payload), status))
+
+    @app.route("/api/activity-dates", methods=["GET", "OPTIONS"])
+    def api_activity_dates():
+        pre = pass_options()
+        if pre is not None:
+            return pre
+        qs = request.query_string.decode("utf-8") if request.query_string else ""
+        url = f"{upstream_base}/api/activity-dates"
+        if qs:
+            url += "?" + qs
+        status, payload = fetch_json(url)
         return cors(make_response(jsonify(payload), status))
 
     return app

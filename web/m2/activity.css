@@ -1,0 +1,519 @@
+/* 活动详情页（日期栏 + 车票式车型卡片 + 备案） */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  height: 100%;
+}
+
+body.m2-activity-page {
+  margin: 0;
+  min-height: 100dvh;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  /* 与套餐详情页 .m2p-section 同款底图（package.css） */
+  background-color: #070c16;
+  background-image: url('../media-webp/photos/index/m2/背景图1.webp');
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  color: rgba(255, 255, 255, 0.92);
+  font-family: "PingFang SC", "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+  overflow: hidden;
+}
+
+.m2-activity-dates {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  flex: 0 0 20vh;
+  height: 20vh;
+  width: 100vw;
+  background: transparent;
+  border-bottom: none;
+}
+
+/* 上部留白：与下方日期条高度相加仍为整块 20vh */
+.m2-activity-dates-spacer {
+  flex: 0 0 8vh;
+  width: 100%;
+  flex-shrink: 0;
+}
+
+.m2-activity-back {
+  position: absolute;
+  left: max(12px, env(safe-area-inset-left));
+  top: max(10px, env(safe-area-inset-top));
+  z-index: 3;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(16px) saturate(160%);
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.m2-activity-date-grid {
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  align-items: stretch;
+}
+
+.m2-activity-date-cell.m2-activity-picker-trigger {
+  gap: 3px;
+}
+
+.m2-activity-date-label {
+  font-size: clamp(12px, 3.4vw, 16px);
+  font-weight: 600;
+  color: #fff;
+  letter-spacing: 0.03em;
+  line-height: 1.15;
+}
+
+.m2-activity-date-cell.is-today:not(.is-selected) .m2-activity-date-label {
+  color: #fff;
+}
+
+.m2-activity-date-cell.is-selected .m2-activity-date-label {
+  color: #fff;
+}
+
+.m2-activity-date-cell.m2-activity-picker-trigger:focus-visible {
+  outline: 2px solid rgba(255, 210, 140, 0.95);
+  outline-offset: -2px;
+  z-index: 2;
+}
+
+.m2-activity-picker-date-line {
+  font-size: clamp(11px, 3vw, 14px);
+  font-weight: 600;
+  color: #fff;
+  letter-spacing: 0.04em;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  min-height: 1em;
+}
+
+.m2-activity-picker-date-line:empty {
+  display: none;
+}
+
+.m2-activity-picker-icon {
+  display: block;
+  width: clamp(26px, 6.5vw, 36px);
+  height: clamp(26px, 6.5vw, 36px);
+  object-fit: contain;
+  pointer-events: none;
+}
+
+.m2-activity-picker-chevron {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.72);
+  pointer-events: none;
+  line-height: 0;
+}
+
+.m2-activity-picker-chevron svg {
+  transition: transform 0.18s ease;
+}
+
+.m2-activity-picker-trigger[aria-expanded="true"] .m2-activity-picker-chevron svg {
+  transform: rotate(180deg);
+}
+
+.m2-activity-cal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  background: rgba(0, 0, 0, 0.48);
+  border: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+}
+
+.m2-activity-cal-panel {
+  position: fixed;
+  z-index: 91;
+  width: min(318px, calc(100vw - 24px));
+  padding: 14px 14px 16px;
+  border-radius: 16px;
+  background: linear-gradient(165deg, rgba(22, 28, 42, 0.98), rgba(10, 14, 24, 0.98));
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+}
+
+.m2-activity-cal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.m2-activity-cal-title {
+  flex: 1;
+  text-align: center;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.m2-activity-cal-nav {
+  flex: 0 0 40px;
+  height: 40px;
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.m2-activity-cal-nav:focus-visible {
+  outline: 2px solid rgba(255, 210, 140, 0.95);
+  outline-offset: 2px;
+}
+
+.m2-activity-cal-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  margin-bottom: 6px;
+  font-size: 11px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.45);
+  text-align: center;
+}
+
+.m2-activity-cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 5px;
+}
+
+.m2-activity-cal-day {
+  position: relative;
+  margin: 0;
+  padding: 0;
+  min-height: 38px;
+  border: none;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: default;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.m2-activity-cal-day.is-muted {
+  background: transparent;
+  color: rgba(255, 255, 255, 0.22);
+}
+
+.m2-activity-cal-day.is-disabled {
+  background: rgba(255, 255, 255, 0.03);
+  color: rgba(255, 255, 255, 0.28);
+  cursor: not-allowed;
+}
+
+.m2-activity-cal-day.is-selectable {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  cursor: pointer;
+}
+
+.m2-activity-cal-day.is-selectable:focus-visible {
+  outline: 2px solid rgba(255, 210, 140, 0.95);
+  outline-offset: 1px;
+}
+
+.m2-activity-cal-day.is-selectable.is-picked {
+  background: rgba(255, 190, 100, 0.28);
+  box-shadow: inset 0 0 0 1px rgba(255, 210, 140, 0.55);
+}
+
+.m2-activity-date-cell {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 8px 2px 8px;
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
+  margin: 0;
+  appearance: none;
+  -webkit-appearance: none;
+  border-top: none;
+  border-bottom: none;
+  border-left: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: center;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.m2-activity-date-cell:last-child {
+  border-right: none;
+}
+
+.m2-activity-date-cell:focus-visible {
+  outline: 2px solid rgba(255, 210, 140, 0.95);
+  outline-offset: -2px;
+  z-index: 2;
+}
+
+.m2-activity-date-cell.is-today:not(.is-selected) {
+  background: rgba(255, 255, 255, 0.06);
+  box-shadow: inset 0 -3px 0 rgba(255, 255, 255, 0.45);
+}
+
+.m2-activity-date-cell.is-selected {
+  background: rgba(255, 200, 120, 0.14);
+  box-shadow: inset 0 -3px 0 rgba(255, 190, 100, 0.92);
+}
+
+.m2-activity-date-md {
+  font-size: clamp(12px, 3.4vw, 17px);
+  font-weight: 600;
+  color: #fff;
+  letter-spacing: 0.04em;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* 占满除日期栏(20vh)、备案(7vh)外的剩余高度 */
+.m2-activity-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  height: auto;
+  width: 100vw;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+}
+
+.m2-activity-car {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  flex-shrink: 0;
+  margin: 0 0 10px;
+  padding: 0;
+  text-decoration: none;
+  color: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.m2-activity-car:last-child {
+  margin-bottom: 0;
+}
+
+.m2-activity-car:active .m2-activity-car-card {
+  transform: scale(0.992);
+  opacity: 0.96;
+}
+
+/* 卡片：封面与底部毛玻璃条叠放（文案条对齐封面底边） */
+.m2-activity-car-card {
+  display: block;
+  width: 100%;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 4px 22px rgba(0, 0, 0, 0.22);
+  transition: transform 0.12s ease, opacity 0.12s ease;
+}
+
+.m2-activity-car-cover-wrap {
+  position: relative;
+  width: 100%;
+}
+
+.m2-activity-car-cover {
+  display: block;
+  width: 100%;
+  height: 40vh;
+  object-fit: cover;
+  /* cover 纵向溢出：上下被裁区域按约 40% : 60%（上 : 下）；垂直对齐取图高 40% 位置 */
+  object-position: center 75%;
+  flex-shrink: 0;
+  background: rgba(7, 12, 22, 0.45);
+}
+
+.m2-activity-car-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 76px;
+  padding: 14px 14px;
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+  /* 与首页筛选面板 .m2-filter-sheet 同款毛玻璃 */
+  border-top: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(10px) saturate(112%);
+  -webkit-backdrop-filter: blur(10px) saturate(112%);
+}
+
+.m2-activity-car-info {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.m2-activity-car-price-col {
+  flex: 0 0 auto;
+  text-align: right;
+}
+
+.m2-activity-car-name {
+  margin: 0;
+  font-size: clamp(15px, 4vw, 17px);
+  font-weight: 600;
+  line-height: 1.35;
+  color: #fff;
+  letter-spacing: 0.04em;
+  text-align: left;
+}
+
+.m2-activity-car-curr {
+  margin: 0;
+  font-size: clamp(22px, 6vw, 26px);
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: #fff;
+}
+
+.m2-activity-car-curr-yen {
+  font-size: 0.72em;
+  font-weight: 700;
+  margin-right: 1px;
+}
+
+.m2-activity-car-curr-suffix {
+  margin-left: 2px;
+  font-size: 0.42em;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.82);
+  vertical-align: 0.15em;
+}
+
+.m2-activity-car-subrow {
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.m2-activity-car-orig {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.62);
+  text-decoration: line-through;
+}
+
+.m2-activity-car-disc {
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255, 236, 200, 0.96);
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: rgba(255, 200, 120, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+/* 备案：活动页单独压缩高度为 7vh（详情页仍按 m2-legal-foot.css） */
+footer.m2-activity-footer.m2-same-price__record-zone {
+  flex: 0 0 7vh;
+  height: 7vh;
+  min-height: 7vh;
+  max-height: 7vh;
+  width: 100vw;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+footer.m2-activity-footer.m2-same-price__record-zone .m2-legal-foot {
+  flex-shrink: 1;
+  min-height: 0;
+}
+
+/* ============================================================
+ * Pad / 平板（769px–1366px，含 iPad Pro 横屏）：后续与本页相关的调整请只写在本 @media 内。
+ * 手机 ≤768px、宽屏桌面 >1366px 勿在此区块外为平板单独改样式。
+ * ============================================================ */
+@media (min-width: 769px) and (max-width: 1366px) {
+  body.m2-activity-page {
+    --m2-activity-pad-col-max: 560px;
+  }
+
+  .m2-activity-dates {
+    width: 100%;
+    max-width: var(--m2-activity-pad-col-max);
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .m2-activity-scroll {
+    max-width: var(--m2-activity-pad-col-max);
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  footer.m2-activity-footer.m2-same-price__record-zone {
+    width: 100%;
+    max-width: var(--m2-activity-pad-col-max);
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  /* 竖屏 Pad 上过高的封面改为上限，避免卡片比例像「拉长的条」 */
+  .m2-activity-car-cover {
+    height: min(40vh, 420px);
+  }
+
+  /* 返回钮与限宽容器左缘对齐（不小于 safe-area） */
+  .m2-activity-back {
+    left: max(env(safe-area-inset-left), 12px, calc(50% - var(--m2-activity-pad-col-max) / 2 + 12px));
+  }
+}

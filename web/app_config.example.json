@@ -20,6 +20,11 @@
       "user": "root",
       "password": "",
       "database": "请填写你的库名"
-    }
+    },
+    "cars_table": "cars",
+    "activity_table": "activity",
+    "activity_date_column": "date",
+    "activity_discount_column": "discount",
+    "activity_id_column": "id"
   }
 }

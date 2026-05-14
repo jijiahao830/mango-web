@@ -2,17 +2,19 @@
   var backLink = document.querySelector('.m2-car__back');
   if (backLink) {
     var qIn = new URLSearchParams(location.search || '');
-    var qOut = new URLSearchParams();
-    ['cat', 'brand', 'search', 'carIndex'].forEach(function (k) {
-      var v = qIn.get(k);
-      if (v != null && v !== '') qOut.set(k, v);
-    });
-    var fromSection = String(qIn.get('from') || '').trim();
-    var allow = { m2Chooser: true, m2Packages: true, m2Service: true, m2About: true };
-    var hash = allow[fromSection] ? fromSection : 'm2Chooser';
-    var qs = qOut.toString();
-    var qstr = qs ? ('?' + qs) : '';
-    backLink.href = '../../index.html' + qstr + '#' + hash + '--m2ns';
+    if (String(qIn.get('m2from') || '').trim() !== 'm2activity') {
+      var qOut = new URLSearchParams();
+      ['cat', 'brand', 'search', 'carIndex'].forEach(function (k) {
+        var v = qIn.get(k);
+        if (v != null && v !== '') qOut.set(k, v);
+      });
+      var fromSection = String(qIn.get('from') || '').trim();
+      var allow = { m2Chooser: true, m2Packages: true, m2Service: true, m2About: true };
+      var hash = allow[fromSection] ? fromSection : 'm2Chooser';
+      var qs = qOut.toString();
+      var qstr = qs ? ('?' + qs) : '';
+      backLink.href = '../../index.html' + qstr + '#' + hash + '--m2ns';
+    }
   }
 
   function resetToTop() {

@@ -87,6 +87,47 @@
     } catch (e) {}
   }
 
+  /** 分类栏总宽度不超过容器时单行居中；超出则左对齐可横向滑动 */
+  function syncCategoryTabsFitCenter() {
+    if (!categoryRoot) return;
+    try {
+      var slack = 2;
+      var fits = categoryRoot.scrollWidth <= categoryRoot.clientWidth + slack;
+      categoryRoot.classList.toggle('m2-chooser__tabs--fits-row', fits);
+      if (fits) categoryRoot.scrollLeft = 0;
+    } catch (e) {}
+  }
+
+  function syncCategoryTabsScrollActive() {
+    if (!categoryRoot) return;
+    try {
+      if (categoryRoot.classList.contains('m2-chooser__tabs--fits-row')) return;
+      var activeBtn = categoryRoot.querySelector('.is-active');
+      if (activeBtn && !shouldDeferChooserTabScroll()) {
+        scrollChooserTabRowToActive(categoryRoot, activeBtn);
+      }
+    } catch (e) {}
+  }
+
+  function scheduleCategoryTabsLayoutSync() {
+    syncCategoryTabsFitCenter();
+    syncCategoryTabsScrollActive();
+    try {
+      requestAnimationFrame(function () {
+        syncCategoryTabsFitCenter();
+        syncCategoryTabsScrollActive();
+      });
+    } catch (e) {}
+    try {
+      if (document.fonts && document.fonts.ready) {
+        document.fonts.ready.then(function () {
+          syncCategoryTabsFitCenter();
+          syncCategoryTabsScrollActive();
+        });
+      }
+    } catch (e2) {}
+  }
+
   function escHtml(s) {
     return String(s == null ? '' : s)
       .replace(/&/g, '&amp;')
@@ -232,6 +273,7 @@
     });
     if (!cats.length) {
       categoryRoot.innerHTML = '<button type="button" class="is-active">暂无分类</button>';
+      scheduleCategoryTabsLayoutSync();
       return;
     }
     if (!activeCategory || cats.indexOf(activeCategory) === -1) {
@@ -251,11 +293,7 @@
       })
       .join('');
 
-    /* 横向滚动条内居中当前分类；不改变 .m2-home 纵向滚动 */
-    var activeBtn = categoryRoot.querySelector('.is-active');
-    if (activeBtn && !shouldDeferChooserTabScroll()) {
-      scrollChooserTabRowToActive(categoryRoot, activeBtn);
-    }
+    scheduleCategoryTabsLayoutSync();
   }
 
   function renderBrands() {
@@ -628,6 +666,25 @@
   }
 
   bindEvents();
+
+  try {
+    if (typeof ResizeObserver !== 'undefined') {
+      var categoryTabsRo = new ResizeObserver(function () {
+        syncCategoryTabsFitCenter();
+        syncCategoryTabsScrollActive();
+      });
+      categoryTabsRo.observe(categoryRoot);
+    }
+    window.addEventListener(
+      'resize',
+      function () {
+        syncCategoryTabsFitCenter();
+        syncCategoryTabsScrollActive();
+      },
+      { passive: true }
+    );
+  } catch (e) {}
+
   loadCatalog()
     .then(function (cars) {
       catalogCars = cars.slice();
@@ -650,6 +707,7 @@
     })
     .catch(function () {
       categoryRoot.innerHTML = '<button type="button" class="is-active">分类加载失败</button>';
+      scheduleCategoryTabsLayoutSync();
       brandRoot.innerHTML = '<button type="button" class="is-active">品牌加载失败</button>';
       titleEl.textContent = '请先启动接口后再预览';
       setChooserBgByCar('');
@@ -1083,6 +1141,7 @@
   var refLower = referrer.toLowerCase();
   var isFromPackage =
     /\/m2\/package-(business|wedding|event|drive)\.html/i.test(referrer);
+  var isFromActivity = /\/m2\/activity\.html/i.test(referrer);
   var isFromServicesOrAbout =
     refLower.indexOf('services.html') !== -1 || refLower.indexOf('about.html') !== -1;
 
@@ -1179,7 +1238,7 @@
   var shouldSkipSplash =
     skipFromDetailNav ||
     (!isReload &&
-      (isFromCarDetail || isFromServicesOrAbout || isFromPackage || isReturningWithinSession));
+      (isFromCarDetail || isFromServicesOrAbout || isFromPackage || isFromActivity || isReturningWithinSession));
 
   if (shouldSkipSplash) {
     try {

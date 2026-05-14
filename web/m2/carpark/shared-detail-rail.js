@@ -555,11 +555,34 @@
     return Math.round(cover.offsetTop + cover.offsetHeight);
   }
 
+  /** 用于仅在「进入 / 离开封面」时切换收起态，避免 resize 时打断用户在封面手动展开 */
+  var railCoverPrevOnCover = null;
+
   /**
-   * 需求：封面部分也显示侧边栏。
+   * 封面：快捷栏收起为小拉手；离开封面（fade：下一屏 / 滚动过长页）后自动展开面板。
    */
   function updateRailScrollGate() {
-    rail.classList.add('is-past-cover');
+    var onCover = false;
+    if (document.body.classList.contains('m2d-page--fade')) {
+      var coverSec = document.querySelector('.m2-cover-wrapper.m2d-page-section');
+      onCover = !!(coverSec && coverSec.classList.contains('is-active'));
+    } else {
+      var y = window.scrollY || window.pageYOffset || document.documentElement.scrollTop || 0;
+      var threshold = 8;
+      onCover = y + threshold < coverScrollEndPx();
+    }
+
+    var crossed =
+      railCoverPrevOnCover === null ? true : onCover !== railCoverPrevOnCover;
+    railCoverPrevOnCover = onCover;
+
+    if (!crossed) return;
+
+    if (onCover) {
+      rail.classList.add('is-collapsed');
+    } else {
+      rail.classList.remove('is-collapsed');
+    }
   }
 
   window.__m2SyncDetailRail = updateRailScrollGate;

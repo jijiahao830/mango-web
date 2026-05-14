@@ -259,14 +259,49 @@ body {
   pointer-events: none;
 }
 
+/* 全屏遮罩 + 与套餐区 .m2-packages__bg 同款模糊底图 */
 .m2-chooser__ad {
   position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 85vw;
-  height: 70vh;
+  inset: 0;
   z-index: 6;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.m2-chooser__ad-visual-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+/* 全屏模糊底：与广告主图同源（广告.webp），cover + blur + 轻微压暗 */
+.m2-chooser__ad-bg {
+  position: absolute;
+  inset: 0;
+  background:
+    url("../media-webp/photos/index/m2/广告.webp") center / cover no-repeat;
+  filter: blur(5px) brightness(0.95);
+  transform: scale(1.02);
+}
+
+/* 与 .m2-packages__bg-gradient 一致 */
+.m2-chooser__ad-bg-gradient {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    transparent 40%,
+    rgba(0, 0, 0, 0.72) 100%
+  );
+  pointer-events: none;
+}
+
+.m2-chooser__ad-content {
+  position: relative;
+  z-index: 2;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -285,7 +320,12 @@ body {
   object-fit: cover;
   object-position: center;
   display: block;
-  cursor: pointer;
+  cursor: default;
+}
+
+a.m2-chooser__ad-glass-btn {
+  text-decoration: none;
+  color: inherit;
 }
 
 .m2-chooser__ad-glass-btn {
@@ -322,7 +362,7 @@ body {
 .m2-chooser__ad-cta {
   position: absolute;
   left: 50%;
-  bottom: 18px;
+  bottom: 34px;
   transform: translateX(-50%);
   min-width: 130px;
   height: 42px;
@@ -372,7 +412,7 @@ body {
   display: flex;
   flex-wrap: nowrap;
   align-items: center;
-  /* QQ/X5：space-around + overflow-x 易出现分布异常；与品牌行一致用 flex-start */
+  /* 默认左对齐便于横向滚动；单行放得下时由 JS 加 .m2-chooser__tabs--fits-row 居中 */
   justify-content: flex-start;
   gap: var(--m2-chooser-gap);
   width: 100%;
@@ -387,6 +427,11 @@ body {
   padding: 0;
   scrollbar-width: none;
   -ms-overflow-style: none;
+}
+
+.m2-chooser__tabs.m2-chooser__tabs--fits-row {
+  justify-content: center;
+  overflow-x: hidden;
 }
 
 .m2-chooser__tabs::-webkit-scrollbar {
@@ -599,6 +644,11 @@ body {
   -webkit-touch-callout: none;
 }
 
+a.m2-chooser__bottom-btn {
+  text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
 .m2-chooser__bottom-icon {
   width: 28px;
   height: 28px;
@@ -616,6 +666,41 @@ body {
   .m2-chooser__bottom-icon {
     width: 22px;
     height: 22px;
+  }
+}
+
+/* ============================================================
+ * Pad / 平板（769px–1366px，含 iPad Pro 横屏）：后续与本页相关的调整请只写在本 @media 内。
+ * 手机 ≤768px、宽屏桌面 >1366px 勿在此区块外为平板单独改样式。
+ * ============================================================ */
+@media (min-width: 769px) and (max-width: 1366px) {
+  /* 全屏广告：限制主图区域最大尺寸，避免横屏 Pad 上比例失衡 */
+  .m2-chooser__ad-image-wrap {
+    width: min(85vw, 520px);
+    height: min(70vh, 580px);
+  }
+
+  .m2-chooser__ad-image {
+    width: min(85vw, 520px);
+    height: min(70vh, 580px);
+  }
+
+  /* 选车主视觉横幅略收窄，接近手机上的观感密度 */
+  .m2-chooser__banner-image {
+    width: min(72vw, 520px);
+    max-width: min(72vw, 520px);
+  }
+}
+
+/* Pad 横屏：车辆图宽度 60vw，详情按钮下移避免挤叠 */
+@media (min-width: 769px) and (max-width: 1366px) and (orientation: landscape) {
+  .m2-chooser__banner-image {
+    width: 60vw;
+    max-width: 60vw;
+  }
+
+  .m2-chooser__detail-btn {
+    top: 84%;
   }
 }
 
@@ -1249,7 +1334,7 @@ body {
   position: absolute;
   inset: 0;
   background-color: #05070d;
-  background-image: url('../media-webp/photos/index/m2/关于.webp?v=1778590742681');
+  background-image: url('../media-webp/photos/index/m2/关于.webp?v=1778748733079');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;

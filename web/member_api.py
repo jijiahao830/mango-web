@@ -15,7 +15,7 @@ import sys
 import unicodedata
 import urllib.error
 import urllib.request
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from decimal import Decimal
 from http import HTTPStatus
 from pathlib import Path
@@ -991,6 +991,226 @@ def api_cars_catalog():
             return _cors(jsonify(ok=False, error="bad_cars_table")), HTTPStatus.BAD_REQUEST
         return _cors(jsonify(ok=False, error="db_error", detail=err)), HTTPStatus.SERVICE_UNAVAILABLE
     return _cors(jsonify(ok=True, cars=rows))
+
+
+def _parse_activity_query_date() -> date:
+    """查询参数 date=YYYY-MM-DD；缺省或非法则用服务端当天日历日。"""
+    raw = (request.args.get("date") or "").strip()
+    if raw:
+        try:
+            parts = raw.split("-")
+            if len(parts) == 3:
+                y, mo, d = int(parts[0]), int(parts[1]), int(parts[2])
+                return date(y, mo, d)
+        except (ValueError, TypeError):
+            pass
+    return date.today()
+
+
+def _activity_discount_payload(activity_day: date) -> tuple[dict[str, Any] | None, str | None]:
+    """
+    活动页折扣：MySQL `activity` 表按「活动日期」一行一条（与你的建表一致：id / date / discount）。
+    discount 为「折」口径（如 8.5 表示 8.5 折）。同日多条时取 id 最大的一条。
+    """
+    cfg = load_config()
+    db = cfg.get("database") or {}
+    mq = db.get("mysql") or {}
+    table_raw = (db.get("activity_table") or "activity").strip()
+    if not re.match(r"^[A-Za-z0-9_]+$", table_raw):
+        return None, "bad_activity_table"
+    host = str(mq.get("host") or "").strip()
+    database = str(mq.get("database") or "").strip()
+    if not host or not database:
+        return None, "no_database"
+    try:
+        col_d = _sql_ident_mysql(str(db.get("activity_date_column") or "date"))
+        col_disc = _sql_ident_mysql(str(db.get("activity_discount_column") or "discount"))
+        col_id = _sql_ident_mysql(str(db.get("activity_id_column") or "id"))
+    except ValueError as e:
+        return None, str(e)
+    try:
+        import pymysql
+        from pymysql.cursors import DictCursor
+    except ImportError:
+        return None, "import_pymysql"
+
+    conn = pymysql.connect(
+        host=host,
+        port=int(mq.get("port") or 3306),
+        user=str(mq.get("user") or "root"),
+        password=str(mq.get("password") or ""),
+        database=database,
+        charset="utf8mb4",
+        cursorclass=DictCursor,
+    )
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                f"SELECT `{col_disc}` AS `discount` FROM `{table_raw}` "
+                f"WHERE `{col_d}` = %s ORDER BY `{col_id}` DESC LIMIT 1",
+                (activity_day,),
+            )
+            row = cur.fetchone()
+    except Exception as e:
+        return None, str(e)
+    finally:
+        conn.close()
+
+    out: dict[str, Any] = {"ok": True, "items": [], "activity_date": activity_day.isoformat()}
+    if row and row.get("discount") is not None and str(row.get("discount")).strip() != "":
+        out["discount_zhe"] = _json_safe_mysql_value(row.get("discount"))
+    return out, None
+
+
+@app.route("/api/activity", methods=["GET", "OPTIONS"])
+def api_activity():
+    """活动详情页：按日期查 activity.discount；?date=YYYY-MM-DD 缺省为当天。"""
+    if request.method == "OPTIONS":
+        return _cors(make_response("", HTTPStatus.NO_CONTENT))
+    activity_day = _parse_activity_query_date()
+    payload, err = _activity_discount_payload(activity_day)
+    if err:
+        if err == "no_database":
+            return (
+                _cors(jsonify(ok=False, error="db_error", detail="未配置 database.mysql")),
+                HTTPStatus.SERVICE_UNAVAILABLE,
+            )
+        if err == "import_pymysql":
+            return (
+                _cors(jsonify(ok=False, error="db_error", detail="请安装 pymysql")),
+                HTTPStatus.SERVICE_UNAVAILABLE,
+            )
+        if err == "bad_activity_table":
+            return _cors(jsonify(ok=False, error="bad_activity_table")), HTTPStatus.BAD_REQUEST
+        return _cors(jsonify(ok=False, error="db_error", detail=err)), HTTPStatus.SERVICE_UNAVAILABLE
+    assert payload is not None
+    return _cors(jsonify(payload))
+
+
+def _parse_iso_date_arg(arg_name: str, default: date) -> date:
+    raw = (request.args.get(arg_name) or "").strip()
+    if raw:
+        try:
+            parts = raw.split("-")
+            if len(parts) == 3:
+                y, mo, d = int(parts[0]), int(parts[1]), int(parts[2])
+                return date(y, mo, d)
+        except (ValueError, TypeError):
+            pass
+    return default
+
+
+def _activity_dates_with_discounts(d_start: date, d_end: date) -> tuple[list[str] | None, str | None]:
+    """
+    返回区间 [d_start, d_end] 内、按 activity 表「同日 id 最大一条」有有效 discount 的日期列表（ISO）。
+    """
+    if d_end < d_start:
+        d_start, d_end = d_end, d_start
+    cfg = load_config()
+    db = cfg.get("database") or {}
+    mq = db.get("mysql") or {}
+    table_raw = (db.get("activity_table") or "activity").strip()
+    if not re.match(r"^[A-Za-z0-9_]+$", table_raw):
+        return None, "bad_activity_table"
+    host = str(mq.get("host") or "").strip()
+    database = str(mq.get("database") or "").strip()
+    if not host or not database:
+        return None, "no_database"
+    try:
+        col_d = _sql_ident_mysql(str(db.get("activity_date_column") or "date"))
+        col_disc = _sql_ident_mysql(str(db.get("activity_discount_column") or "discount"))
+        col_id = _sql_ident_mysql(str(db.get("activity_id_column") or "id"))
+    except ValueError as e:
+        return None, str(e)
+    try:
+        import pymysql
+        from pymysql.cursors import DictCursor
+    except ImportError:
+        return None, "import_pymysql"
+
+    conn = pymysql.connect(
+        host=host,
+        port=int(mq.get("port") or 3306),
+        user=str(mq.get("user") or "root"),
+        password=str(mq.get("password") or ""),
+        database=database,
+        charset="utf8mb4",
+        cursorclass=DictCursor,
+    )
+    try:
+        with conn.cursor() as cur:
+            sql = (
+                f"SELECT a.`{col_d}` AS ad FROM `{table_raw}` a "
+                f"INNER JOIN ( "
+                f"SELECT `{col_d}` AS d2, MAX(`{col_id}`) AS mx FROM `{table_raw}` GROUP BY `{col_d}` "
+                f") t ON a.`{col_d}` = t.d2 AND a.`{col_id}` = t.mx "
+                f"WHERE a.`{col_d}` >= %s AND a.`{col_d}` <= %s "
+                f"AND a.`{col_disc}` IS NOT NULL AND TRIM(CAST(a.`{col_disc}` AS CHAR)) <> '' "
+                f"ORDER BY a.`{col_d}`"
+            )
+            cur.execute(sql, (d_start, d_end))
+            rows = cur.fetchall()
+    except Exception as e:
+        return None, str(e)
+    finally:
+        conn.close()
+
+    out_dates: list[str] = []
+    seen: set[str] = set()
+    for row in rows or []:
+        ad = row.get("ad")
+        if hasattr(ad, "isoformat"):
+            iso = ad.isoformat()
+        else:
+            try:
+                text = str(ad).strip()[:10]
+                iso = date.fromisoformat(text).isoformat()
+            except (ValueError, TypeError):
+                continue
+        if iso not in seen:
+            seen.add(iso)
+            out_dates.append(iso)
+    return out_dates, None
+
+
+@app.route("/api/activity-dates", methods=["GET", "OPTIONS"])
+def api_activity_dates():
+    """活动页日历：`from` / `to` 为 YYYY-MM-DD；返回区间内数据库中有折扣的日期列表。"""
+    if request.method == "OPTIONS":
+        return _cors(make_response("", HTTPStatus.NO_CONTENT))
+    today = date.today()
+    d_end_default = today + timedelta(days=180)
+    d_start_default = today - timedelta(days=60)
+    d_start = _parse_iso_date_arg("from", d_start_default)
+    d_end = _parse_iso_date_arg("to", d_end_default)
+    max_span = timedelta(days=400)
+    if d_end - d_start > max_span:
+        d_end = d_start + max_span
+    dates, err = _activity_dates_with_discounts(d_start, d_end)
+    if err:
+        if err == "no_database":
+            return (
+                _cors(jsonify(ok=False, error="db_error", detail="未配置 database.mysql")),
+                HTTPStatus.SERVICE_UNAVAILABLE,
+            )
+        if err == "import_pymysql":
+            return (
+                _cors(jsonify(ok=False, error="db_error", detail="请安装 pymysql")),
+                HTTPStatus.SERVICE_UNAVAILABLE,
+            )
+        if err == "bad_activity_table":
+            return _cors(jsonify(ok=False, error="bad_activity_table")), HTTPStatus.BAD_REQUEST
+        return _cors(jsonify(ok=False, error="db_error", detail=err)), HTTPStatus.SERVICE_UNAVAILABLE
+    return _cors(
+        jsonify(
+            {
+                "ok": True,
+                "dates": dates or [],
+                "from": d_start.isoformat(),
+                "to": d_end.isoformat(),
+            }
+        )
+    )
 
 
 def _get_ui_config_from_disk() -> dict:
