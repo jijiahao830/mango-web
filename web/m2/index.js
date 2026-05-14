@@ -1310,5 +1310,5 @@
         splashScreen.parentNode.removeChild(splashScreen);
       }
     }, 800);
-  }, 4500);
+  }, 2000);
 })();
