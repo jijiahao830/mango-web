@@ -1,6 +1,6 @@
 (function () {
   var STORAGE_KEY = 'mangoCarChecklist';
-  var m2FallbackAssetV = '1778764916558';
+  var m2FallbackAssetV = '1778852221250';
   function m2AssetV() {
     try {
       return (typeof window !== 'undefined' && window.__MANGO_ASSET_VERSION__) || m2FallbackAssetV;
@@ -56,6 +56,11 @@
         var obj = JSON.parse(raw);
         window.__MANGO_CHECKLIST_MEM__ = obj && typeof obj === 'object' ? obj : {};
       }
+      if (m2aMigrateLegacyChecklistKeys(window.__MANGO_CHECKLIST_MEM__)) {
+        try {
+          writeChecklistRaw(JSON.stringify(window.__MANGO_CHECKLIST_MEM__));
+        } catch (ePersist) {}
+      }
       return window.__MANGO_CHECKLIST_MEM__;
     } catch (e) {
       if (window.__MANGO_CHECKLIST_MEM__ == null) window.__MANGO_CHECKLIST_MEM__ = {};
@@ -71,6 +76,115 @@
     } catch (e) {
       return false;
     }
+  }
+
+  /** 用车清单存储键：同款车可多档租期并存，每条占用独立 row / pkg / service 键 */
+  function m2aVehicleRowStorageKey(carId, daysText) {
+    return (
+      'row:' +
+      encodeURIComponent(String(carId || '')) +
+      ':' +
+      encodeURIComponent(String(daysText || '单日 (24小时)'))
+    );
+  }
+  function m2aPackageRowStorageKey(carId) {
+    return 'pkg:' + encodeURIComponent(String(carId || ''));
+  }
+  function m2aChecklistNeedsKeyMigration(map) {
+    if (!map || typeof map !== 'object') return false;
+    for (var k in map) {
+      if (!Object.prototype.hasOwnProperty.call(map, k)) continue;
+      if (k.indexOf('row:') === 0 || k.indexOf('pkg:') === 0 || k.indexOf('service:') === 0) continue;
+      return true;
+    }
+    return false;
+  }
+  /** 将旧版「以 car_id 为唯一键」迁为 row:/pkg:；原地改写 map，返回是否发生了改写 */
+  function m2aMigrateLegacyChecklistKeys(map) {
+    if (!m2aChecklistNeedsKeyMigration(map)) return false;
+    var snap = cloneChecklistMap(map);
+    var next = {};
+    Object.keys(snap).forEach(function (k) {
+      var item = snap[k];
+      if (!item || typeof item !== 'object') return;
+      if (k.indexOf('service:') === 0) {
+        next[k] = item;
+        return;
+      }
+      if (k.indexOf('row:') === 0 || k.indexOf('pkg:') === 0) {
+        next[k] = item;
+        return;
+      }
+      var nk =
+        item.pkg_lines && item.pkg_lines.length
+          ? m2aPackageRowStorageKey(item.car_id || k)
+          : m2aVehicleRowStorageKey(item.car_id || k, item.days || '单日 (24小时)');
+      if (next[nk] && nk.indexOf('row:') === 0) {
+        var q1 = parseInt(String(next[nk].qty != null ? next[nk].qty : 1), 10) || 1;
+        var q2 = parseInt(String(item.qty != null ? item.qty : 1), 10) || 1;
+        if (q1 < 1) q1 = 1;
+        if (q2 < 1) q2 = 1;
+        next[nk].qty = Math.min(99, q1 + q2);
+      } else {
+        next[nk] = item;
+      }
+    });
+    Object.keys(map).forEach(function (kd) {
+      delete map[kd];
+    });
+    Object.keys(next).forEach(function (kn) {
+      map[kn] = next[kn];
+    });
+    return true;
+  }
+  function m2aCarHasChecklistRows(map, carId) {
+    var enc = encodeURIComponent(String(carId || ''));
+    var pfx = 'row:' + enc + ':';
+    var pk = m2aPackageRowStorageKey(carId);
+    for (var k in map) {
+      if (!Object.prototype.hasOwnProperty.call(map, k)) continue;
+      if (k.indexOf(pfx) === 0 || k === pk) return true;
+    }
+    return false;
+  }
+  function m2aRemoveAllChecklistRowsForCar(map, carId) {
+    var enc = encodeURIComponent(String(carId || ''));
+    var pfx = 'row:' + enc + ':';
+    var pk = m2aPackageRowStorageKey(carId);
+    var dels = [];
+    for (var k in map) {
+      if (!Object.prototype.hasOwnProperty.call(map, k)) continue;
+      if (k.indexOf(pfx) === 0 || k === pk) dels.push(k);
+    }
+    for (var i = 0; i < dels.length; i++) delete map[dels[i]];
+  }
+  function m2aVehicleGroupsFromMap(map) {
+    var rowIds = [];
+    Object.keys(map || {}).forEach(function (id) {
+      if (id.indexOf('row:') === 0 && map[id]) rowIds.push(id);
+    });
+    var groupIdx = {};
+    var groups = [];
+    for (var ri = 0; ri < rowIds.length; ri++) {
+      var rid = rowIds[ri];
+      var item = map[rid];
+      var cid = String(item.car_id || '');
+      var gi = groupIdx[cid];
+      if (gi == null) {
+        groupIdx[cid] = groups.length;
+        groups.push({ carId: cid, rows: [{ id: rid, item: item }] });
+      } else {
+        groups[gi].rows.push({ id: rid, item: item });
+      }
+    }
+    return groups;
+  }
+  function m2aOtherChecklistIdsInKeyOrder(map) {
+    var out = [];
+    Object.keys(map || {}).forEach(function (id) {
+      if (id.indexOf('row:') !== 0) out.push(id);
+    });
+    return out;
   }
 
   /* ── API 根地址：与 detail-fab / login 一致；静态页与 member_api 不同端口时必须能落到 8765 ── */
@@ -115,6 +229,55 @@
     return list.length ? list : ['https://www.mangov8.com'];
   }
 
+  /* ── 弹窗层叠：锁住底层滚动（首页滚动容器为 .m2-home；其余页为 window/body） ── */
+  var m2aOverlayScrollLocks = 0;
+  var m2aOverlayScrollSavedY = 0;
+  var m2aOverlayScrollHomeEl = null;
+
+  function m2aLockOverlayScroll() {
+    if (m2aOverlayScrollLocks === 0) {
+      var home = document.querySelector('.m2-home');
+      if (home) {
+        m2aOverlayScrollHomeEl = home;
+        m2aOverlayScrollSavedY = home.scrollTop;
+        home.classList.add('m2-scroll-lock');
+      } else {
+        m2aOverlayScrollHomeEl = null;
+        m2aOverlayScrollSavedY =
+          window.scrollY ||
+          (document.documentElement && document.documentElement.scrollTop) ||
+          (document.body && document.body.scrollTop) ||
+          0;
+        document.documentElement.classList.add('m2a-overlay-scroll-lock');
+        document.body.classList.add('m2a-overlay-scroll-lock');
+        document.body.style.top = '-' + m2aOverlayScrollSavedY + 'px';
+      }
+    }
+    m2aOverlayScrollLocks++;
+  }
+
+  function m2aUnlockOverlayScroll() {
+    if (m2aOverlayScrollLocks <= 0) return;
+    m2aOverlayScrollLocks--;
+    if (m2aOverlayScrollLocks > 0) return;
+    if (m2aOverlayScrollHomeEl) {
+      var el = m2aOverlayScrollHomeEl;
+      m2aOverlayScrollHomeEl = null;
+      el.classList.remove('m2-scroll-lock');
+      el.scrollTop = m2aOverlayScrollSavedY;
+    } else {
+      document.documentElement.classList.remove('m2a-overlay-scroll-lock');
+      document.body.classList.remove('m2a-overlay-scroll-lock');
+      document.body.style.top = '';
+      window.scrollTo(0, m2aOverlayScrollSavedY);
+    }
+  }
+
+  try {
+    window.m2aLockOverlayScroll = m2aLockOverlayScroll;
+    window.m2aUnlockOverlayScroll = m2aUnlockOverlayScroll;
+  } catch (eLockExp) {}
+
   function fetchPost(path, body) {
     var candidates = apiBaseCandidates();
     var i = 0;
@@ -156,14 +319,21 @@
     if (String(daysText || '').indexOf('整月') !== -1) return Math.floor((p * cfg.day30.multiplier) / cfg.day30.divisor);
     return p;
   }
+  function getItemQty(item) {
+    var q = parseInt(String(item && item.qty != null ? item.qty : 1), 10);
+    if (!isFinite(q) || q < 1) q = 1;
+    if (q > 99) q = 99;
+    return q;
+  }
   function calcItemTotal(item) {
     var it = item || {};
-    return getDailyUnitPrice(it.rent_price, it.days) * getDaysMultiplier(it.days);
+    return getDailyUnitPrice(it.rent_price, it.days) * getDaysMultiplier(it.days) * getItemQty(it);
   }
   function calcItemOriginal(item) {
     var it = item || {};
     var p = parseInt(String(it.rent_price), 10);
-    return (isNaN(p) || p <= 0) ? 0 : p * getDaysMultiplier(it.days);
+    var base = (isNaN(p) || p <= 0) ? 0 : p * getDaysMultiplier(it.days);
+    return base * getItemQty(it);
   }
 
   /* ── HTML escape ── */
@@ -266,6 +436,8 @@
     var s = document.createElement('style');
     s.id = 'm2ActionsStyle';
     s.textContent = [
+      'html.m2a-overlay-scroll-lock,body.m2a-overlay-scroll-lock{overflow:hidden!important}',
+      'body.m2a-overlay-scroll-lock{position:fixed;left:0;right:0;width:100%;}',
       /* ── overlay backdrop ── */
       '.m2a-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.14);backdrop-filter:blur(10px) saturate(108%);-webkit-backdrop-filter:blur(10px) saturate(108%);z-index:8799}',
       '.m2a-backdrop[hidden]{display:none}',
@@ -275,6 +447,13 @@
       '.m2a-days-modal{position:fixed;inset:0;z-index:9000;display:flex;align-items:flex-end;justify-content:center;padding:0 0 calc(80px + env(safe-area-inset-bottom));background:rgba(0,0,0,.14);backdrop-filter:blur(10px) saturate(108%);-webkit-backdrop-filter:blur(10px) saturate(108%)}',
       'body[data-car-display-name] .m2a-days-modal{align-items:center;justify-content:center;padding:max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left))}',
       'body.m2-package .m2a-days-modal{align-items:center;justify-content:center;padding:max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left))}',
+      '#m2aQtyModal.m2a-days-modal{z-index:9015}',
+      '.m2a-qty-step{display:flex;align-items:center;justify-content:center;gap:clamp(20px,8vw,36px);padding:18px 8px 8px}',
+      '.m2a-qty-btn{width:44px;height:44px;border-radius:50%;border:1px solid rgba(255,255,255,.28);background:rgba(255,255,255,.12);color:#fff;font-size:22px;font-weight:500;line-height:1;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;flex-shrink:0;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);touch-action:manipulation;-webkit-tap-highlight-color:transparent}',
+      '.m2a-qty-btn:disabled{opacity:.35;cursor:default}',
+      '.m2a-qty-value{font-size:28px;font-weight:600;color:#fff;min-width:52px;text-align:center;line-height:1;letter-spacing:.02em}',
+      '.m2a-qty-total-days{margin:0;padding:6px 0 2px;text-align:center;font-size:13px;font-weight:500;letter-spacing:.02em;color:rgba(255,255,255,.85)}',
+      '.m2a-qty-actions{margin-top:14px;display:flex;gap:10px}',
       '.m2a-days-modal[hidden]{display:none}',
       '.m2a-days-card{width:min(96vw,460px);max-height:min(72vh,620px);background:rgba(255,255,255,.06);color:#fff;border-radius:16px;padding:16px 14px 14px;border:1px solid rgba(255,255,255,.16);backdrop-filter:blur(10px) saturate(112%);-webkit-backdrop-filter:blur(10px) saturate(112%);overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;justify-content:flex-start;box-shadow:none}',
       '.m2a-days-title{font-size:17px;font-weight:500;letter-spacing:.02em;text-align:center;margin:0 0 12px;color:#fff}',
@@ -315,8 +494,17 @@
       '.m2a-panel__close{border:none;background:transparent;color:#fff;font-size:22px;line-height:1;cursor:pointer}',
       '.m2a-panel__body{padding:12px 14px 14px;overflow-y:auto;flex:1}',
       '.m2a-panel__list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}',
-      '.m2a-panel__item{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 2px;border-radius:0;background:transparent;border-top:1px solid rgba(255,255,255,.2)}',
-      '.m2a-panel__item-name{font-size:13px;font-weight:500;letter-spacing:.02em;color:#fff;flex:1}',
+      '.m2a-panel__group{list-style:none;margin:0;padding:0;border-top:1px solid rgba(255,255,255,.2)}',
+      '.m2a-panel__group-head{font-size:13px;font-weight:700;letter-spacing:.02em;color:#fff;padding:10px 2px 4px}',
+      '.m2a-panel__sublist{list-style:none;margin:0;padding:0 0 6px;display:flex;flex-direction:column;gap:2px}',
+      '.m2a-panel__subitem{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 2px 6px 10px;border-radius:0;background:transparent;flex-wrap:wrap}',
+      '.m2a-panel__subitem-main{flex:1;min-width:min(200px,100%)}',
+      '.m2a-panel__subitem-name{font-size:13px;font-weight:500;letter-spacing:.02em;color:rgba(255,255,255,.9);line-height:1.35}',
+      '.m2a-panel__subitem-actions{display:flex;align-items:center;gap:8px;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end}',
+      '.m2a-panel__edit-qty{border:1px solid rgba(255,255,255,.28);border-radius:999px;padding:6px 12px;background:rgba(255,255,255,.1);color:#fff;font-size:12px;font-weight:600;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent}',
+      '.m2a-panel__subtotal{font-size:12px;font-weight:600;letter-spacing:.02em;color:rgba(255,255,255,.72);padding:8px 2px 10px 10px;margin-top:2px;border-top:1px dashed rgba(255,255,255,.14)}',
+      '.m2a-panel__item{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 2px;border-radius:0;background:transparent;border-top:1px solid rgba(255,255,255,.2);flex-wrap:wrap}',
+      '.m2a-panel__item-name{font-size:13px;font-weight:500;letter-spacing:.02em;color:#fff;flex:1;min-width:min(220px,100%)}',
       '.m2a-panel__item-remove{border:1px solid rgba(255,255,255,.22);border-radius:999px;padding:5px 10px;background:transparent;color:#fff;font-size:13px;font-weight:500;cursor:pointer;flex-shrink:0}',
       '.m2a-panel__empty{margin:8px 0;color:rgba(255,255,255,.84);font-size:14px}',
       '.m2a-panel__original{margin:6px 0 2px;color:rgba(255,255,255,.72);font-size:12px;font-weight:500;letter-spacing:.05em;text-align:right;text-decoration:line-through}',
@@ -332,7 +520,7 @@
       '.m2a-valueadd__add{align-self:stretch;width:100%;box-sizing:border-box;border:1px solid rgba(255,255,255,.22);border-radius:999px;padding:4px 2px;background:rgba(255,255,255,.08);color:#fff;font-size:10px;font-weight:500;cursor:pointer;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}',
       '.m2a-valueadd__add:disabled{opacity:.55;cursor:default}',
       '/* UC/旧 WebView：加快点击、弱化与横向溢出列表的触控冲突 */',
-      '.m2a-days-confirm,.m2a-panel__item-remove,.m2a-modal__btn,.m2a-panel__clear,.m2a-panel__send{touch-action:manipulation;-webkit-tap-highlight-color:transparent}',
+      '.m2a-days-confirm,.m2a-panel__item-remove,.m2a-panel__edit-qty,.m2a-modal__btn,.m2a-panel__clear,.m2a-panel__send,.m2a-qty-btn{touch-action:manipulation;-webkit-tap-highlight-color:transparent}',
       '.m2a-valueadd__add{touch-action:manipulation;-webkit-tap-highlight-color:transparent;-webkit-user-select:none}',
       '.m2a-valueadd__list{-webkit-overflow-scrolling:touch;overflow-x:auto;overscroll-behavior-x:contain}',
       '.m2a-panel__body{touch-action:pan-y}',
@@ -356,6 +544,8 @@
       '.m2a-consult__input-wrap{margin-top:10px;display:flex;gap:8px;flex-shrink:0}',
       '.m2a-consult__input{flex:1;height:38px;border-radius:9px;border:1px solid rgba(255,255,255,.22);background:rgba(255,255,255,.08);color:#fff;font-size:16px;padding:0 10px;outline:none}',
       '.m2a-consult__send{height:38px;border-radius:999px;border:1px solid rgba(255,255,255,.22);background:rgba(255,255,255,.12);color:#fff;font-size:13px;padding:0 14px;cursor:pointer;flex-shrink:0;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}',
+      '.m2a-add-success-toast{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:9100;max-width:min(92vw,380px);padding:14px 22px;border-radius:999px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.22);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);color:#fff;font-size:15px;font-weight:500;letter-spacing:.02em;line-height:1.45;text-align:center;pointer-events:none;opacity:0;visibility:hidden;transition:opacity .22s ease,visibility .22s ease;box-shadow:none}',
+      '.m2a-add-success-toast.is-visible{opacity:1;visibility:visible}',
     ].join('');
     document.head.appendChild(s);
   }
@@ -374,6 +564,28 @@
       '<div id="m2aDaysOptions"></div>' +
       '</div>' +
       '<button class="m2a-days-close" id="m2aDaysCloseBtn" aria-label="关闭">×</button>' +
+      '</div>';
+
+    var qtyModal = document.createElement('div');
+    qtyModal.id = 'm2aQtyModal';
+    qtyModal.className = 'm2a-days-modal';
+    qtyModal.setAttribute('hidden', '');
+    qtyModal.innerHTML =
+      '<div style="position:relative">' +
+      '<div class="m2a-days-card">' +
+      '<h3 class="m2a-days-title">选择份数</h3>' +
+      '<div class="m2a-qty-step">' +
+      '<button type="button" class="m2a-qty-btn" id="m2aQtyMinus" aria-label="减少份数">−</button>' +
+      '<span class="m2a-qty-value" id="m2aQtyValue">1</span>' +
+      '<button type="button" class="m2a-qty-btn" id="m2aQtyPlus" aria-label="增加份数">+</button>' +
+      '</div>' +
+      '<p class="m2a-qty-total-days" id="m2aQtyTotalDays" aria-live="polite"></p>' +
+      '<div class="m2a-qty-actions">' +
+      '<button type="button" class="m2a-modal__btn m2a-modal__btn--ghost" id="m2aQtyCancelBtn">取消</button>' +
+      '<button type="button" class="m2a-modal__btn m2a-modal__btn--primary" id="m2aQtyConfirmBtn">确认</button>' +
+      '</div>' +
+      '</div>' +
+      '<button type="button" class="m2a-days-close" id="m2aQtyCloseBtn" aria-label="关闭">×</button>' +
       '</div>';
 
     /* phone */
@@ -495,7 +707,16 @@
       '<button type="button" class="m2a-days-close" id="m2aPackagePickClose" aria-label="关闭">×</button>' +
       '</div>';
 
+    var addSuccessToast = document.createElement('div');
+    addSuccessToast.id = 'm2aAddSuccessToast';
+    addSuccessToast.className = 'm2a-add-success-toast';
+    addSuccessToast.setAttribute('role', 'status');
+    addSuccessToast.setAttribute('aria-live', 'polite');
+    addSuccessToast.setAttribute('aria-hidden', 'true');
+    addSuccessToast.textContent = '添加成功，可在用车清单中查看';
+
     document.body.appendChild(daysModal);
+    document.body.appendChild(qtyModal);
     document.body.appendChild(phoneModal);
     document.body.appendChild(successModal);
     document.body.appendChild(failModal);
@@ -504,6 +725,7 @@
     document.body.appendChild(panel);
     document.body.appendChild(consultModal);
     document.body.appendChild(pkgPickModal);
+    document.body.appendChild(addSuccessToast);
     fillValueAddSection();
   }
 
@@ -511,7 +733,9 @@
     var panel = document.getElementById('m2aChecklistPanel');
     var backdrop = document.getElementById('m2aChecklistBackdrop');
     if (!panel) return;
+    var opening = panel.hasAttribute('hidden');
     renderPanel();
+    if (opening) m2aLockOverlayScroll();
     panel.removeAttribute('hidden');
     if (backdrop) backdrop.removeAttribute('hidden');
   }
@@ -519,20 +743,28 @@
   function closeChecklistPanel() {
     var panel = document.getElementById('m2aChecklistPanel');
     var backdrop = document.getElementById('m2aChecklistBackdrop');
-    if (panel) panel.setAttribute('hidden', '');
+    if (!panel || panel.hasAttribute('hidden')) return;
+    panel.setAttribute('hidden', '');
     if (backdrop) backdrop.setAttribute('hidden', '');
+    m2aUnlockOverlayScroll();
   }
 
   function showMessageModal(text) {
     var modal = document.getElementById('m2aMessageModal');
     var el = document.getElementById('m2aMessageText');
     if (el) el.textContent = String(text == null ? '' : text);
-    if (modal) modal.removeAttribute('hidden');
+    if (modal) {
+      var opening = modal.hasAttribute('hidden');
+      if (opening) m2aLockOverlayScroll();
+      modal.removeAttribute('hidden');
+    }
   }
 
   function closeMessageModal() {
     var modal = document.getElementById('m2aMessageModal');
-    if (modal) modal.setAttribute('hidden', '');
+    if (!modal || modal.hasAttribute('hidden')) return;
+    modal.setAttribute('hidden', '');
+    m2aUnlockOverlayScroll();
   }
 
   /** 是否至少有一辆已选车辆（不含仅增值服务）——「选择完成」校验用 */
@@ -613,31 +845,130 @@
   /* ── Render checklist panel ── */
   function renderPanel() {
     var map = readChecklistMap();
-    var ids = Object.keys(map);
     var listEl = document.getElementById('m2aPanelList');
     var emptyEl = document.getElementById('m2aPanelEmpty');
     var originalEl = document.getElementById('m2aPanelOriginal');
     var totalEl = document.getElementById('m2aPanelTotal');
     if (!listEl) return;
-    var origTotal = 0, total = 0;
-    listEl.innerHTML = ids.map(function (id) {
-      var item = map[id] || {};
-      var name = esc(String(item.model_name || item.car_name || id));
-      var isFreeService = (parseInt(String(item.rent_price), 10) || 0) <= 0;
-      var daysText = isFreeService ? ' - 免费' : (item.days ? ' - ' + esc(item.days) : '');
-      origTotal += calcItemOriginal(item);
-      total += calcItemTotal(item);
-      return '<li class="m2a-panel__item">' +
-        '<span class="m2a-panel__item-name">' + name + daysText + '</span>' +
-        '<button type="button" class="m2a-panel__item-remove" data-remove-id="' + esc(id) + '">移除</button>' +
-        '</li>';
-    }).join('');
+
+    var origTotal = 0;
+    var total = 0;
+    var htmlParts = [];
+
+    var groups = m2aVehicleGroupsFromMap(map);
+    for (var gi = 0; gi < groups.length; gi++) {
+      var g = groups[gi];
+      var title = esc(String(g.rows[0].item.model_name || g.rows[0].item.car_name || g.carId));
+      var subDays = 0;
+      var subMoney = 0;
+      var linesInner = '';
+      for (var ri = 0; ri < g.rows.length; ri++) {
+        var r = g.rows[ri];
+        var item = r.item;
+        var vd = String(item.days || '').trim();
+        var qNow = getItemQty(item);
+        var qtyPart = qNow > 1 ? ' ×' + qNow + '份' : '';
+        var lt = calcItemTotal(item);
+        var lo = calcItemOriginal(item);
+        origTotal += lo;
+        total += lt;
+        subDays += getDaysMultiplier(item.days) * qNow;
+        subMoney += lt;
+        var lineLabel = esc(vd + qtyPart);
+        var pricePart = lt <= 0 ? '' : '¥' + Math.round(lt);
+        linesInner +=
+          '<li class="m2a-panel__subitem">' +
+          '<div class="m2a-panel__subitem-main">' +
+          '<span class="m2a-panel__subitem-name">' +
+          lineLabel +
+          (pricePart ? ' · ' + pricePart : '') +
+          '</span></div>' +
+          '<div class="m2a-panel__subitem-actions">' +
+          '<button type="button" class="m2a-panel__edit-qty" data-m2a-checklist-edit-row="' +
+          esc(r.id) +
+          '">修改</button>' +
+          '<button type="button" class="m2a-panel__item-remove m2a-panel__subitem-remove" data-remove-id="' +
+          esc(r.id) +
+          '">移除</button>' +
+          '</div></li>';
+      }
+      htmlParts.push(
+        '<li class="m2a-panel__group">' +
+          '<div class="m2a-panel__group-head">' +
+          title +
+          '</div>' +
+          '<ul class="m2a-panel__sublist">' +
+          linesInner +
+          '<li class="m2a-panel__subtotal">本车合计 · ' +
+          subDays +
+          ' 天 · ¥' +
+          Math.round(subMoney) +
+          '</li></ul></li>'
+      );
+    }
+
+    var otherIds = m2aOtherChecklistIdsInKeyOrder(map);
+    for (var oi = 0; oi < otherIds.length; oi++) {
+      var oid = otherIds[oi];
+      var oitem = map[oid] || {};
+      var oname = esc(String(oitem.model_name || oitem.car_name || oid));
+      var isFreeService = (parseInt(String(oitem.rent_price), 10) || 0) <= 0;
+      var odaysText = isFreeService ? ' - 免费' : oitem.days ? ' - ' + esc(oitem.days) : '';
+      var showQtyRow = oid.indexOf('service:') !== 0;
+      origTotal += calcItemOriginal(oitem);
+      total += calcItemTotal(oitem);
+      if (showQtyRow) {
+        var qFlat = getItemQty(oitem);
+        var qFlatPart = qFlat > 1 ? ' ×' + qFlat + '份' : '';
+        htmlParts.push(
+          '<li class="m2a-panel__item">' +
+            '<span class="m2a-panel__item-name">' +
+            oname +
+            odaysText +
+            esc(qFlatPart) +
+            '</span>' +
+            '<div class="m2a-panel__subitem-actions">' +
+            '<button type="button" class="m2a-panel__edit-qty" data-m2a-checklist-edit-row="' +
+            esc(oid) +
+            '">修改</button>' +
+            '<button type="button" class="m2a-panel__item-remove" data-remove-id="' +
+            esc(oid) +
+            '">移除</button>' +
+            '</div>' +
+            '</li>'
+        );
+      } else {
+        htmlParts.push(
+          '<li class="m2a-panel__item">' +
+            '<span class="m2a-panel__item-name">' +
+            oname +
+            odaysText +
+            '</span>' +
+            '<button type="button" class="m2a-panel__item-remove" data-remove-id="' +
+            esc(oid) +
+            '">移除</button>' +
+            '</li>'
+        );
+      }
+    }
+
+    listEl.innerHTML = htmlParts.join('');
+    var ids = Object.keys(map || {});
     if (emptyEl) emptyEl.style.display = ids.length ? 'none' : '';
     if (originalEl) originalEl.textContent = '原价：¥' + Math.round(origTotal);
     if (totalEl) totalEl.textContent = '总价：¥' + Math.round(total);
     syncValueAddButtons(map);
+    var m2RailAdd = document.getElementById('m2BtnAddChecklist');
+    if (m2RailAdd && window.m2CurrentCar && window.m2CurrentCar.car_id) {
+      var railPicked = m2aCarHasChecklistRows(map, window.m2CurrentCar.car_id);
+      var railSpan =
+        m2RailAdd.querySelector('.m2-car-rail__label') ||
+        m2RailAdd.querySelector('span:not(.m2-chooser__bottom-icon)');
+      if (railSpan) railSpan.textContent = railPicked ? '继续添加' : '加入清单';
+      m2RailAdd.setAttribute('aria-label', railPicked ? '继续添加' : '加入清单');
+    }
     var removes = listEl.querySelectorAll('.m2a-panel__item-remove');
-    for (var ri = 0; ri < removes.length; ri++) {
+    for (var rmx = 0; rmx < removes.length; rmx++) {
       (function (rb) {
         m2ArmTap(rb, function () {
           var rid = String(rb.getAttribute('data-remove-id') || '').trim();
@@ -647,13 +978,276 @@
           writeChecklistMap(mmap);
           renderPanel();
         });
-      })(removes[ri]);
+      })(removes[rmx]);
+    }
+    var editBtns = listEl.querySelectorAll('[data-m2a-checklist-edit-row]');
+    for (var ei = 0; ei < editBtns.length; ei++) {
+      (function (eb) {
+        m2ArmTap(eb, function () {
+          var ek = String(eb.getAttribute('data-m2a-checklist-edit-row') || '').trim();
+          if (ek) openQtyStepModalForChecklistEdit(ek);
+        });
+      })(editBtns[ei]);
     }
   }
 
-  /* ── Days select modal ── */
+  /* ── Days select → 份数 ── */
   var pendingCarItem = null;
+  var pendingQtyDraft = null;
+  var m2aQtyCurrent = 1;
+  /** 套餐档位确认后进入份数；取消份数时应回到套餐弹窗而非用车天数 */
+  var m2aQtyFollowsPackagePick = false;
+  /** 详情页价格区直达份数弹窗（未经过「请选择用车天数」层） */
+  var m2aQtyStandaloneMode = false;
+  /** 清单「修改」→ 份数弹窗：写入已有 storage key，不与新增合并 */
+  var m2aChecklistEditRowKey = null;
+  var m2aAddSuccessToastTimer = null;
+
+  function showM2aAddSuccessToast() {
+    var el = document.getElementById('m2aAddSuccessToast');
+    if (!el) return;
+    if (m2aAddSuccessToastTimer) {
+      clearTimeout(m2aAddSuccessToastTimer);
+      m2aAddSuccessToastTimer = null;
+    }
+    el.setAttribute('aria-hidden', 'false');
+    el.classList.add('is-visible');
+    m2aAddSuccessToastTimer = setTimeout(function () {
+      el.classList.remove('is-visible');
+      el.setAttribute('aria-hidden', 'true');
+      m2aAddSuccessToastTimer = null;
+    }, 1000);
+  }
+
+  function hideDaysModalOnly() {
+    var modal = document.getElementById('m2aDaysModal');
+    if (modal) modal.setAttribute('hidden', '');
+  }
+  function showDaysModalOnly() {
+    var modal = document.getElementById('m2aDaysModal');
+    if (modal) modal.removeAttribute('hidden');
+  }
+
+  function closeQtyStepModalUi() {
+    var qm = document.getElementById('m2aQtyModal');
+    if (qm) qm.setAttribute('hidden', '');
+  }
+
+  function setM2aQtyModalTitle(titleText) {
+    var qm = document.getElementById('m2aQtyModal');
+    if (!qm) return;
+    var h = qm.querySelector('.m2a-days-title');
+    if (h) h.textContent = String(titleText || '选择份数');
+  }
+
+  function openQtyStepModalForChecklistEdit(rowKey) {
+    var map = readChecklistMap();
+    var item = map[rowKey];
+    if (!item || !item.car_id) return;
+    m2aChecklistEditRowKey = rowKey;
+    pendingQtyDraft = {
+      car_id: item.car_id,
+      car_name: item.car_name,
+      model_name: item.model_name,
+      rent_price: item.rent_price,
+      days: item.days,
+    };
+    if (item.pkg_lines && item.pkg_lines.length) {
+      pendingQtyDraft.pkg_lines = item.pkg_lines.slice();
+    }
+    m2aQtyCurrent = getItemQty(item);
+    m2aQtyStandaloneMode = true;
+    setM2aQtyModalTitle('修改份数');
+    var qmEl = document.getElementById('m2aQtyModal');
+    var qtyAlreadyVisible = qmEl && !qmEl.hasAttribute('hidden');
+    if (!qtyAlreadyVisible) m2aLockOverlayScroll();
+    syncQtyStepUi();
+    if (qmEl) qmEl.removeAttribute('hidden');
+  }
+
+  function syncQtyStepUi() {
+    var span = document.getElementById('m2aQtyValue');
+    var minus = document.getElementById('m2aQtyMinus');
+    var plus = document.getElementById('m2aQtyPlus');
+    var totalDaysEl = document.getElementById('m2aQtyTotalDays');
+    if (span) span.textContent = String(m2aQtyCurrent);
+    if (minus) minus.disabled = m2aQtyCurrent <= 1;
+    if (plus) plus.disabled = m2aQtyCurrent >= 99;
+    if (totalDaysEl) {
+      var draft = pendingQtyDraft;
+      if (draft && draft.pkg_lines && draft.pkg_lines.length) {
+        totalDaysEl.textContent = '合计 ' + Math.max(1, m2aQtyCurrent) + ' 套';
+      } else {
+        var dtext = draft && draft.days;
+        var per = getDaysMultiplier(dtext);
+        var total = Math.max(0, per) * Math.max(1, m2aQtyCurrent);
+        totalDaysEl.textContent = '合计 ' + total + ' 天';
+      }
+    }
+  }
+
+  function openQtyStepModal(entryDraft, standalone) {
+    m2aChecklistEditRowKey = null;
+    pendingQtyDraft = entryDraft;
+    m2aQtyCurrent = 1;
+    m2aQtyStandaloneMode = !!standalone;
+    setM2aQtyModalTitle('选择份数');
+    if (!m2aQtyStandaloneMode) hideDaysModalOnly();
+    if (m2aQtyStandaloneMode) {
+      var qmEl = document.getElementById('m2aQtyModal');
+      var qtyAlreadyVisible = qmEl && !qmEl.hasAttribute('hidden');
+      if (!qtyAlreadyVisible) m2aLockOverlayScroll();
+    }
+    syncQtyStepUi();
+    var qm = document.getElementById('m2aQtyModal');
+    if (qm) qm.removeAttribute('hidden');
+  }
+
+  function cancelQtyStepModal() {
+    var standalone = m2aQtyStandaloneMode;
+    pendingQtyDraft = null;
+    m2aQtyStandaloneMode = false;
+    m2aChecklistEditRowKey = null;
+    setM2aQtyModalTitle('选择份数');
+    closeQtyStepModalUi();
+    if (standalone) m2aUnlockOverlayScroll();
+    else if (m2aQtyFollowsPackagePick) showM2PackagePickModalOnly();
+    else showDaysModalOnly();
+  }
+
+  function confirmQtyStepModal() {
+    var draft = pendingQtyDraft;
+    if (!draft || !draft.car_id) {
+      cancelQtyStepModal();
+      return;
+    }
+    var entry = {
+      car_id: draft.car_id,
+      car_name: draft.car_name,
+      model_name: draft.model_name,
+      rent_price: draft.rent_price,
+      days: draft.days,
+      qty: m2aQtyCurrent,
+    };
+    if (draft.pkg_lines && draft.pkg_lines.length) {
+      entry.pkg_lines = draft.pkg_lines.slice();
+    }
+    var map = readChecklistMap();
+    var editKey = m2aChecklistEditRowKey;
+    if (editKey) {
+      var tgt = map[editKey];
+      if (!tgt) {
+        m2aChecklistEditRowKey = null;
+        cancelQtyStepModal();
+        return;
+      }
+      tgt.qty = Math.min(99, Math.max(1, m2aQtyCurrent));
+      if (!writeChecklistMap(map)) {
+        showMessageModal('保存清单失败，请在浏览器中允许网页存储数据');
+        return;
+      }
+      renderPanel();
+      m2aChecklistEditRowKey = null;
+      pendingQtyDraft = null;
+      m2aQtyStandaloneMode = false;
+      m2aQtyFollowsPackagePick = false;
+      closeQtyStepModalUi();
+      setM2aQtyModalTitle('选择份数');
+      m2aUnlockOverlayScroll();
+      showM2aAddSuccessToast();
+      return;
+    }
+    var isPkgEntry = entry.pkg_lines && entry.pkg_lines.length;
+    if (isPkgEntry) {
+      var pkgKey = m2aPackageRowStorageKey(entry.car_id);
+      var prevPkg = map[pkgKey];
+      if (prevPkg && prevPkg.pkg_lines && prevPkg.pkg_lines.length) {
+        var sumP = getItemQty(prevPkg) + getItemQty(entry);
+        prevPkg.qty = Math.min(99, sumP);
+        prevPkg.rent_price = entry.rent_price;
+        prevPkg.car_name = entry.car_name;
+        prevPkg.model_name = entry.model_name;
+        prevPkg.days = entry.days;
+        prevPkg.pkg_lines = entry.pkg_lines.slice();
+      } else {
+        map[pkgKey] = entry;
+      }
+    } else {
+      var rowKey = m2aVehicleRowStorageKey(entry.car_id, entry.days);
+      var prev = map[rowKey];
+      if (prev && !prev.pkg_lines) {
+        var sum = getItemQty(prev) + getItemQty(entry);
+        prev.qty = Math.min(99, sum);
+        prev.rent_price = entry.rent_price;
+        prev.car_name = entry.car_name;
+        prev.model_name = entry.model_name;
+      } else {
+        map[rowKey] = entry;
+      }
+    }
+    if (!writeChecklistMap(map)) {
+      showMessageModal('保存清单失败，请在浏览器中允许网页存储数据');
+      return;
+    }
+    renderPanel();
+    var standalone = m2aQtyStandaloneMode;
+    var pkgFollow = m2aQtyFollowsPackagePick;
+    m2aQtyFollowsPackagePick = false;
+    pendingQtyDraft = null;
+    m2aQtyStandaloneMode = false;
+    closeQtyStepModalUi();
+    if (standalone) {
+      m2aUnlockOverlayScroll();
+      pendingCarItem = null;
+    } else if (pkgFollow) {
+      m2aUnlockOverlayScroll();
+    } else {
+      closeDaysModal();
+    }
+    showM2aAddSuccessToast();
+  }
+
+  /** 详情页 #m2Pricing 四档租用天数点击入口（与清单字段 days 文案一致） */
+  function m2aOpenQtyFromDetailPricingLine(lineKey) {
+    var map = {
+      '1': '单日 (24小时)',
+      '2': '一周 (7天)',
+      '3': '半月 (15天)',
+      '4': '整月 (30天)',
+    };
+    var daysText = map[String(lineKey)];
+    if (!daysText) return;
+    var dm = document.getElementById('m2aDaysModal');
+    if (dm && !dm.hasAttribute('hidden')) closeDaysModal();
+    var car = window.m2CurrentCar;
+    if (!car || !car.car_id) {
+      showMessageModal('页面未就绪，请稍后再试');
+      return;
+    }
+    openQtyStepModal(
+      {
+        car_id: car.car_id,
+        car_name: car.car_name,
+        model_name: car.model_name,
+        rent_price: car.rent_price,
+        days: daysText,
+      },
+      true
+    );
+  }
+
+  try {
+    window.m2aOpenQtyFromDetailPricingLine = m2aOpenQtyFromDetailPricingLine;
+    window.m2aOpenQtyStepModalForChecklistEdit = openQtyStepModalForChecklistEdit;
+  } catch (eM2aQtyExp) {}
+
   function openDaysModal(item, rentPrice) {
+    closeQtyStepModalUi();
+    pendingQtyDraft = null;
+    m2aQtyStandaloneMode = false;
+    m2aQtyFollowsPackagePick = false;
+    m2aChecklistEditRowKey = null;
+    setM2aQtyModalTitle('选择份数');
     pendingCarItem = item;
     var price = parseInt(String(rentPrice || 0), 10) || 0;
     var cfg = window.mangoPricingConfig || { day7: { multiplier: 6.5, divisor: 7 }, day15: { multiplier: 13, divisor: 15 }, day30: { multiplier: 23, divisor: 30 } };
@@ -683,34 +1277,54 @@
             var src = pendingCarItem;
             if (!src || !src.car_id) return;
             var daysText = String(rowBtn.getAttribute('data-days') || '').trim() || '单日 (24小时)';
-            var entry = {
+            openQtyStepModal({
               car_id: src.car_id,
               car_name: src.car_name,
               model_name: src.model_name,
               rent_price: src.rent_price,
               days: daysText,
-            };
-            var map = readChecklistMap();
-            map[entry.car_id] = entry;
-            writeChecklistMap(map);
-            renderPanel();
-            closeDaysModal();
+            });
           });
         })(rowBtns[bi]);
       }
     }
     var modal = document.getElementById('m2aDaysModal');
-    if (modal) modal.removeAttribute('hidden');
+    if (modal) {
+      var opening = modal.hasAttribute('hidden');
+      if (opening) m2aLockOverlayScroll();
+      modal.removeAttribute('hidden');
+    }
   }
   function closeDaysModal() {
+    m2aQtyStandaloneMode = false;
+    m2aQtyFollowsPackagePick = false;
+    m2aChecklistEditRowKey = null;
+    setM2aQtyModalTitle('选择份数');
+    var flowActive = pendingCarItem != null || pendingQtyDraft != null;
+    closeQtyStepModalUi();
+    pendingQtyDraft = null;
     var modal = document.getElementById('m2aDaysModal');
     if (modal) modal.setAttribute('hidden', '');
     pendingCarItem = null;
+    if (flowActive) m2aUnlockOverlayScroll();
+  }
+
+  function hideM2PackagePickModalOnly() {
+    var m = document.getElementById('m2aPackagePickModal');
+    if (m) m.setAttribute('hidden', '');
+  }
+
+  function showM2PackagePickModalOnly() {
+    var m = document.getElementById('m2aPackagePickModal');
+    if (m) m.removeAttribute('hidden');
   }
 
   function closeM2PackagePickModal() {
     var m = document.getElementById('m2aPackagePickModal');
-    if (m) m.setAttribute('hidden', '');
+    if (!m || m.hasAttribute('hidden')) return;
+    m.setAttribute('hidden', '');
+    m2aQtyFollowsPackagePick = false;
+    m2aUnlockOverlayScroll();
   }
 
   function openM2PackagePickModal() {
@@ -743,6 +1357,8 @@
         '<button type="button" class="m2a-days-confirm" data-m2a-pkg-idx="' + idx + '">确认</button>' +
         '</div>';
     }).join('');
+    var pkgOpening = modal.hasAttribute('hidden');
+    if (pkgOpening) m2aLockOverlayScroll();
     modal.removeAttribute('hidden');
     var pkgBtns = opts.querySelectorAll('[data-m2a-pkg-idx]');
     for (var pi = 0; pi < pkgBtns.length; pi++) {
@@ -767,10 +1383,34 @@
       showMessageModal('无法读取套餐信息');
       return;
     }
-    var mapP = readChecklistMap();
-    if (mapP[pkg.car_id]) {
-      closeM2PackagePickModal();
-      showMessageModal('该套餐已在用车清单中');
+    var pkgEntry = {
+      car_id: pkg.car_id,
+      car_name: pkg.car_name,
+      model_name: pkg.model_name,
+      rent_price: Math.max(0, parseInt(String(pkg.rent_price), 10) || 0),
+      days: String(pkg.days || '套餐'),
+    };
+    if (pkg.pkg_lines && pkg.pkg_lines.length) {
+      pkgEntry.pkg_lines = pkg.pkg_lines.slice();
+    }
+    hideM2PackagePickModalOnly();
+    m2aQtyFollowsPackagePick = true;
+    openQtyStepModal(pkgEntry, false);
+  }
+
+  /** 套餐详情页：点击轨道上的套餐卡片直接进入「选择份数」（与档位弹窗内确认后逻辑一致，standalone 打开） */
+  function m2aOpenPackageQtyForPlanIndex(idx) {
+    if (!document.body.classList.contains('m2-package')) return;
+    var n = parseInt(String(idx), 10);
+    if (!isFinite(n) || n < 0) return;
+    var fn = window.m2BuildPackageChecklistItemAtIndex;
+    if (typeof fn !== 'function') {
+      showMessageModal('页面未就绪，请刷新重试');
+      return;
+    }
+    var pkg = fn(n);
+    if (!pkg || !pkg.car_id) {
+      showMessageModal('无法读取套餐信息');
       return;
     }
     var pkgEntry = {
@@ -783,14 +1423,18 @@
     if (pkg.pkg_lines && pkg.pkg_lines.length) {
       pkgEntry.pkg_lines = pkg.pkg_lines.slice();
     }
-    mapP[pkg.car_id] = pkgEntry;
-    if (!writeChecklistMap(mapP)) {
-      showMessageModal('保存清单失败，请在 UC 中关闭「无痕/省流加速」或改用系统浏览器');
-      return;
+    var pm = document.getElementById('m2aPackagePickModal');
+    if (pm && !pm.hasAttribute('hidden')) {
+      closeM2PackagePickModal();
     }
-    renderPanel();
-    closeM2PackagePickModal();
+    m2aQtyFollowsPackagePick = false;
+    m2aChecklistEditRowKey = null;
+    openQtyStepModal(pkgEntry, true);
   }
+
+  try {
+    window.m2aOpenPackageQtyForPlanIndex = m2aOpenPackageQtyForPlanIndex;
+  } catch (ePkgCardQty) {}
 
   /* ── Add to checklist ── */
   function handleAddChecklist() {
@@ -810,16 +1454,7 @@
     }
     var car = window.m2CurrentCar;
     if (!car || !car.car_id) { showMessageModal('请先选择车辆'); return; }
-    var map = readChecklistMap();
-    if (map[car.car_id]) {
-      delete map[car.car_id];
-      if (!writeChecklistMap(map)) {
-        showMessageModal('保存清单失败，请在浏览器中允许网页存储数据');
-        return;
-      }
-      renderPanel();
-      return;
-    }
+    /* 已有该车租期时再点「加入清单」也应进入选天数/份数流程，便于同档位合并份数 */
     openDaysModal({
       car_id: car.car_id,
       car_name: car.car_name,
@@ -841,7 +1476,30 @@
     var packages = [];
     var valueAdd = [];
     var vehicleSubtotal = 0;
+    var vehicleGroups = m2aVehicleGroupsFromMap(map);
+    for (var vgi = 0; vgi < vehicleGroups.length; vgi++) {
+      var vg = vehicleGroups[vgi];
+      var subDays = 0;
+      var subMoney = 0;
+      for (var vr = 0; vr < vg.rows.length; vr++) {
+        var vrRow = vg.rows[vr];
+        var vit = vrRow.item;
+        var vn = String(vit.model_name || vit.car_name || vg.carId).trim();
+        var vd = String(vit.days || '单日 (24小时)').trim();
+        var vt = Math.round(calcItemTotal(vit));
+        vehicleSubtotal += vt;
+        subDays += getDaysMultiplier(vit.days) * getItemQty(vit);
+        subMoney += vt;
+        var qPart = getItemQty(vit) > 1 ? ' ×' + getItemQty(vit) + '份' : '';
+        pushTrim(vehicles, vn + '（' + vd + '）' + qPart + ' ¥' + vt);
+      }
+      pushTrim(
+        vehicles,
+        '　└ 本车合计：' + subDays + ' 天 · ¥' + Math.round(subMoney)
+      );
+    }
     ids.forEach(function (id) {
+      if (id.indexOf('row:') === 0) return;
       var item = map[id] || {};
       var pl = item.pkg_lines;
       if (id.indexOf('service:') === 0) {
@@ -856,11 +1514,12 @@
         var pt = Math.round(calcItemTotal(item));
         pushTrim(packages, pn + '（' + pd + '） ¥' + pt);
       } else {
-        var vn = String(item.model_name || item.car_name || id).trim();
-        var vd = String(item.days || '单日 (24小时)').trim();
-        var vt = Math.round(calcItemTotal(item));
-        vehicleSubtotal += vt;
-        pushTrim(vehicles, vn + '（' + vd + '） ¥' + vt);
+        var vn2 = String(item.model_name || item.car_name || id).trim();
+        var vd2 = String(item.days || '单日 (24小时)').trim();
+        var vt2 = Math.round(calcItemTotal(item));
+        vehicleSubtotal += vt2;
+        var qPart2 = getItemQty(item) > 1 ? ' ×' + getItemQty(item) + '份' : '';
+        pushTrim(vehicles, vn2 + '（' + vd2 + '）' + qPart2 + ' ¥' + vt2);
       }
     });
     if (vehicles.length) {
@@ -881,17 +1540,26 @@
           /* 必须同时关掉清单全屏遮罩，否则点「确定」后只剩 blur、无面板 */
           closeChecklistPanel();
           var suc = document.getElementById('m2aSuccessModal');
-          if (suc) suc.removeAttribute('hidden');
+          if (suc) {
+            m2aLockOverlayScroll();
+            suc.removeAttribute('hidden');
+          }
         } else {
           closeChecklistPanel();
           var fail = document.getElementById('m2aFailModal');
-          if (fail) fail.removeAttribute('hidden');
+          if (fail) {
+            m2aLockOverlayScroll();
+            fail.removeAttribute('hidden');
+          }
         }
       })
       .catch(function () {
         closeChecklistPanel();
         var fail = document.getElementById('m2aFailModal');
-        if (fail) fail.removeAttribute('hidden');
+        if (fail) {
+          m2aLockOverlayScroll();
+          fail.removeAttribute('hidden');
+        }
       });
   }
 
@@ -928,16 +1596,18 @@
   function openConsultModal() {
     var modal = document.getElementById('m2aConsultModal');
     if (!modal) return;
+    var opening = modal.hasAttribute('hidden');
+    if (opening) m2aLockOverlayScroll();
     modal.removeAttribute('hidden');
-    document.body.style.overflow = 'hidden';
     ensureConsultWelcome();
     var input = document.getElementById('m2aConsultInput');
     if (input) input.focus();
   }
   function closeConsultModal() {
     var modal = document.getElementById('m2aConsultModal');
-    if (modal) modal.setAttribute('hidden', '');
-    document.body.style.overflow = '';
+    if (!modal || modal.hasAttribute('hidden')) return;
+    modal.setAttribute('hidden', '');
+    m2aUnlockOverlayScroll();
   }
   function sendConsultQuestion() {
     if (consultBusy) return;
@@ -1038,6 +1708,31 @@
       closeDaysModal();
     });
 
+    var qtyModal = document.getElementById('m2aQtyModal');
+    if (qtyModal) {
+      qtyModal.addEventListener('click', function (e) {
+        if (e.target === qtyModal) cancelQtyStepModal();
+      });
+    }
+    var qtyCloseBtn = document.getElementById('m2aQtyCloseBtn');
+    if (qtyCloseBtn) m2ArmTap(qtyCloseBtn, cancelQtyStepModal);
+    var qtyCancelBtn = document.getElementById('m2aQtyCancelBtn');
+    if (qtyCancelBtn) m2ArmTap(qtyCancelBtn, cancelQtyStepModal);
+    var qtyConfirmBtn = document.getElementById('m2aQtyConfirmBtn');
+    if (qtyConfirmBtn) m2ArmTap(qtyConfirmBtn, confirmQtyStepModal);
+    var qtyMinus = document.getElementById('m2aQtyMinus');
+    if (qtyMinus)
+      m2ArmTap(qtyMinus, function () {
+        m2aQtyCurrent = Math.max(1, m2aQtyCurrent - 1);
+        syncQtyStepUi();
+      });
+    var qtyPlus = document.getElementById('m2aQtyPlus');
+    if (qtyPlus)
+      m2ArmTap(qtyPlus, function () {
+        m2aQtyCurrent = Math.min(99, m2aQtyCurrent + 1);
+        syncQtyStepUi();
+      });
+
     var pkgPickModal = document.getElementById('m2aPackagePickModal');
     if (pkgPickModal) {
       pkgPickModal.addEventListener('click', function (e) {
@@ -1063,6 +1758,8 @@
       }
       var phoneModal = document.getElementById('m2aPhoneModal');
       if (phoneModal) {
+        var openingPhone = phoneModal.hasAttribute('hidden');
+        if (openingPhone) m2aLockOverlayScroll();
         phoneModal.removeAttribute('hidden');
         var phoneInput = document.getElementById('m2aPhoneInput');
         if (phoneInput) { phoneInput.value = ''; phoneInput.focus(); }
@@ -1074,11 +1771,19 @@
     /* phone modal */
     var phoneCancelBtn = document.getElementById('m2aPhoneCancelBtn');
     if (phoneCancelBtn) phoneCancelBtn.addEventListener('click', function () {
-      var m = document.getElementById('m2aPhoneModal'); if (m) m.setAttribute('hidden', '');
+      var m = document.getElementById('m2aPhoneModal');
+      if (m && !m.hasAttribute('hidden')) {
+        m.setAttribute('hidden', '');
+        m2aUnlockOverlayScroll();
+      }
     });
     var phoneBackdrop = document.getElementById('m2aPhoneBackdrop');
     if (phoneBackdrop) phoneBackdrop.addEventListener('click', function () {
-      var m = document.getElementById('m2aPhoneModal'); if (m) m.setAttribute('hidden', '');
+      var m = document.getElementById('m2aPhoneModal');
+      if (m && !m.hasAttribute('hidden')) {
+        m.setAttribute('hidden', '');
+        m2aUnlockOverlayScroll();
+      }
     });
     var phoneSubmitBtn = document.getElementById('m2aPhoneSubmitBtn');
     if (phoneSubmitBtn) phoneSubmitBtn.addEventListener('click', function () {
@@ -1088,7 +1793,10 @@
       var phone = phoneInput ? String(phoneInput.value || '').replace(/\s+/g, '') : '';
       if (!/^1\d{10}$/.test(phone)) { if (phoneError) phoneError.removeAttribute('hidden'); return; }
       if (phoneError) phoneError.setAttribute('hidden', '');
-      if (phoneModal) phoneModal.setAttribute('hidden', '');
+      if (phoneModal && !phoneModal.hasAttribute('hidden')) {
+        phoneModal.setAttribute('hidden', '');
+        m2aUnlockOverlayScroll();
+      }
       sendChecklist(phone);
     });
     var phoneInput = document.getElementById('m2aPhoneInput');
@@ -1104,11 +1812,19 @@
     /* success / fail modals */
     var successOkBtn = document.getElementById('m2aSuccessOkBtn');
     if (successOkBtn) successOkBtn.addEventListener('click', function () {
-      var m = document.getElementById('m2aSuccessModal'); if (m) m.setAttribute('hidden', '');
+      var m = document.getElementById('m2aSuccessModal');
+      if (m && !m.hasAttribute('hidden')) {
+        m.setAttribute('hidden', '');
+        m2aUnlockOverlayScroll();
+      }
     });
     var failOkBtn = document.getElementById('m2aFailOkBtn');
     if (failOkBtn) failOkBtn.addEventListener('click', function () {
-      var m = document.getElementById('m2aFailModal'); if (m) m.setAttribute('hidden', '');
+      var m = document.getElementById('m2aFailModal');
+      if (m && !m.hasAttribute('hidden')) {
+        m.setAttribute('hidden', '');
+        m2aUnlockOverlayScroll();
+      }
     });
 
     var messageOkBtn = document.getElementById('m2aMessageOkBtn');

@@ -2,6 +2,8 @@ document.addEventListener('DOMContentLoaded', function() {
   const CAR_FILTER_STORAGE_KEY = 'mangoCarFilterState';
   const CAR_FILTER_OWNER_KEY = 'mango_filter_saved_for_driver';
   const CAR_CHECKLIST_STORAGE_KEY = 'mangoCarChecklist';
+  /** 清单内「修改份数」弹窗当前编辑的行 key（row:… / pkg:…） */
+  var carChecklistQtyEditRowKey = null;
   /** 从详情返回选车页时恢复列表滚动位置（与 sessionStorage 配合） */
   const CAR_LIST_SCROLL_KEY = 'mango_car_list_scroll_y';
 
@@ -699,11 +701,127 @@ document.addEventListener('DOMContentLoaded', function() {
     return text;
   }
 
+  function mangoVehicleRowStorageKey(carId, daysText) {
+    return (
+      'row:' +
+      encodeURIComponent(String(carId || '')) +
+      ':' +
+      encodeURIComponent(String(daysText || '单日 (24小时)'))
+    );
+  }
+  function mangoPackageRowStorageKey(carId) {
+    return 'pkg:' + encodeURIComponent(String(carId || ''));
+  }
+  function mangoChecklistNeedsKeyMigration(map) {
+    if (!map || typeof map !== 'object') return false;
+    for (var k in map) {
+      if (!Object.prototype.hasOwnProperty.call(map, k)) continue;
+      if (k.indexOf('row:') === 0 || k.indexOf('pkg:') === 0 || k.indexOf('service:') === 0) continue;
+      return true;
+    }
+    return false;
+  }
+  function mangoMigrateLegacyChecklistKeys(map) {
+    if (!mangoChecklistNeedsKeyMigration(map)) return false;
+    var snap = {};
+    try {
+      snap = JSON.parse(JSON.stringify(map));
+    } catch (eM) {
+      return false;
+    }
+    var next = {};
+    Object.keys(snap).forEach(function (k) {
+      var item = snap[k];
+      if (!item || typeof item !== 'object') return;
+      if (k.indexOf('service:') === 0) {
+        next[k] = item;
+        return;
+      }
+      if (k.indexOf('row:') === 0 || k.indexOf('pkg:') === 0) {
+        next[k] = item;
+        return;
+      }
+      var nk =
+        item.pkg_lines && item.pkg_lines.length
+          ? mangoPackageRowStorageKey(item.car_id || k)
+          : mangoVehicleRowStorageKey(item.car_id || k, item.days || '单日 (24小时)');
+      if (next[nk] && nk.indexOf('row:') === 0) {
+        var q1 = parseInt(String(next[nk].qty != null ? next[nk].qty : 1), 10) || 1;
+        var q2 = parseInt(String(item.qty != null ? item.qty : 1), 10) || 1;
+        if (q1 < 1) q1 = 1;
+        if (q2 < 1) q2 = 1;
+        next[nk].qty = Math.min(99, q1 + q2);
+      } else {
+        next[nk] = item;
+      }
+    });
+    Object.keys(map).forEach(function (kd) {
+      delete map[kd];
+    });
+    Object.keys(next).forEach(function (kn) {
+      map[kn] = next[kn];
+    });
+    return true;
+  }
+  function mangoCarHasChecklistRows(map, carId) {
+    var enc = encodeURIComponent(String(carId || ''));
+    var pfx = 'row:' + enc + ':';
+    var pk = mangoPackageRowStorageKey(carId);
+    for (var k in map) {
+      if (!Object.prototype.hasOwnProperty.call(map, k)) continue;
+      if (k.indexOf(pfx) === 0 || k === pk) return true;
+    }
+    return false;
+  }
+  function mangoRemoveAllCarChecklistRows(map, carId) {
+    var enc = encodeURIComponent(String(carId || ''));
+    var pfx = 'row:' + enc + ':';
+    var pk = mangoPackageRowStorageKey(carId);
+    var dels = [];
+    for (var k in map) {
+      if (!Object.prototype.hasOwnProperty.call(map, k)) continue;
+      if (k.indexOf(pfx) === 0 || k === pk) dels.push(k);
+    }
+    for (var i = 0; i < dels.length; i++) delete map[dels[i]];
+  }
+  function mangoVehicleGroupsFromMap(map) {
+    var rowIds = [];
+    Object.keys(map || {}).forEach(function (id) {
+      if (id.indexOf('row:') === 0 && map[id]) rowIds.push(id);
+    });
+    var groupIdx = {};
+    var groups = [];
+    for (var ri = 0; ri < rowIds.length; ri++) {
+      var rid = rowIds[ri];
+      var item = map[rid];
+      var cid = String(item.car_id || '');
+      var gi = groupIdx[cid];
+      if (gi == null) {
+        groupIdx[cid] = groups.length;
+        groups.push({ carId: cid, rows: [{ id: rid, item: item }] });
+      } else {
+        groups[gi].rows.push({ id: rid, item: item });
+      }
+    }
+    return groups;
+  }
+  function mangoOtherChecklistIdsInKeyOrder(map) {
+    var out = [];
+    Object.keys(map || {}).forEach(function (id) {
+      if (id.indexOf('row:') !== 0) out.push(id);
+    });
+    return out;
+  }
+
   function readChecklistMap() {
     try {
       var raw = localStorage.getItem(CAR_CHECKLIST_STORAGE_KEY) || '{}';
       var obj = JSON.parse(raw);
-      return obj && typeof obj === 'object' ? obj : {};
+      var map = obj && typeof obj === 'object' ? obj : {};
+      if (mangoMigrateLegacyChecklistKeys(map)) {
+        writeChecklistMap(map);
+      }
+      return map;
     } catch (e) {
       return {};
     }
@@ -734,11 +852,83 @@ document.addEventListener('DOMContentLoaded', function() {
     var picked = map || readChecklistMap();
     document.querySelectorAll('.car-checklist-toggle').forEach(function (el) {
       var id = String(el.getAttribute('data-car-id') || '').trim();
-      var isPicked = !!(id && picked[id]);
+      var isPicked = !!(id && mangoCarHasChecklistRows(picked, id));
       el.classList.toggle('is-picked', isPicked);
-      el.textContent = isPicked ? '已加入' : '加入清单';
+      el.textContent = isPicked ? '继续添加' : '加入清单';
       el.setAttribute('aria-pressed', isPicked ? 'true' : 'false');
     });
+  }
+
+  function carChecklistRowActionsHtml(rowId) {
+    var eid = escHtml(rowId);
+    return (
+      '<button type="button" class="car-checklist-edit-qty" data-car-checklist-edit-qty="' +
+      eid +
+      '">修改</button>' +
+      '<button type="button" class="car-checklist-item__remove" data-remove-car-id="' +
+      eid +
+      '">移除</button>'
+    );
+  }
+
+  function syncCarChecklistQtyModalUi() {
+    var valEl = document.getElementById('carChecklistQtyValue');
+    var minusBtn = document.getElementById('carChecklistQtyMinus');
+    var plusBtn = document.getElementById('carChecklistQtyPlus');
+    var totalDaysEl = document.getElementById('carChecklistQtyTotalDays');
+    if (!valEl || !carChecklistQtyEditRowKey) return;
+    var map = readChecklistMap();
+    var item = map[carChecklistQtyEditRowKey];
+    var q = parseInt(String(valEl.textContent || '1'), 10);
+    if (!isFinite(q)) q = 1;
+    if (q < 1) q = 1;
+    if (q > 99) q = 99;
+    valEl.textContent = String(q);
+    if (minusBtn) minusBtn.disabled = q <= 1;
+    if (plusBtn) plusBtn.disabled = q >= 99;
+    var dm = getDaysMultiplier(item && item.days);
+    if (totalDaysEl) totalDaysEl.textContent = '合计 ' + dm * q + ' 天';
+  }
+
+  function closeCarChecklistQtyModal() {
+    carChecklistQtyEditRowKey = null;
+    var modal = document.getElementById('carChecklistQtyModal');
+    if (modal) modal.hidden = true;
+  }
+
+  function openCarChecklistQtyModal(rowKey) {
+    var modal = document.getElementById('carChecklistQtyModal');
+    var valEl = document.getElementById('carChecklistQtyValue');
+    if (!modal || !valEl || !rowKey) return;
+    var map = readChecklistMap();
+    var item = map[rowKey];
+    if (!item) return;
+    carChecklistQtyEditRowKey = rowKey;
+    valEl.textContent = String(getChecklistItemQty(item));
+    modal.hidden = false;
+    syncCarChecklistQtyModalUi();
+  }
+
+  function confirmCarChecklistQtyModal() {
+    if (!carChecklistQtyEditRowKey) return;
+    var valEl = document.getElementById('carChecklistQtyValue');
+    if (!valEl) return;
+    var map = readChecklistMap();
+    var item = map[carChecklistQtyEditRowKey];
+    if (!item) {
+      closeCarChecklistQtyModal();
+      return;
+    }
+    var q = parseInt(String(valEl.textContent || '1'), 10);
+    if (!isFinite(q)) q = 1;
+    if (q < 1) q = 1;
+    if (q > 99) q = 99;
+    item.qty = q;
+    writeChecklistMap(map);
+    syncChecklistButtonCount(map);
+    syncCardChecklistToggleStates(map);
+    renderChecklistPanel(map);
+    closeCarChecklistQtyModal();
   }
 
   function renderChecklistPanel(map) {
@@ -748,33 +938,116 @@ document.addEventListener('DOMContentLoaded', function() {
     var originalEl = document.getElementById('carChecklistOriginal');
     var totalEl = document.getElementById('carChecklistTotal');
     if (!listEl || !emptyEl || !originalEl || !totalEl) return;
-    var ids = Object.keys(picked);
     var originalTotal = 0;
     var total = 0;
-    listEl.innerHTML = ids
-      .map(function (id) {
-        var item = picked[id] || {};
-        var name = escHtml(String(item.model_name || item.car_name || id));
-        var daysText = item.days ? (' - ' + escHtml(item.days)) : '';
-        originalTotal += calcChecklistItemOriginal(item);
-        total += calcChecklistItemTotal(item);
-        return (
-          '<li class="car-checklist-item" data-car-id="' +
-          escHtml(id) +
+    var htmlParts = [];
+
+    var groups = mangoVehicleGroupsFromMap(picked);
+    for (var gi = 0; gi < groups.length; gi++) {
+      var g = groups[gi];
+      var title = escHtml(String(g.rows[0].item.model_name || g.rows[0].item.car_name || g.carId));
+      var subDays = 0;
+      var subMoney = 0;
+      var inner = '';
+      for (var ri = 0; ri < g.rows.length; ri++) {
+        var r = g.rows[ri];
+        var item = r.item;
+        var vd = String(item.days || '').trim();
+        var qNow = getChecklistItemQty(item);
+        var lt = calcChecklistItemTotal(item);
+        var lo = calcChecklistItemOriginal(item);
+        originalTotal += lo;
+        total += lt;
+        subDays += getDaysMultiplier(item.days) * qNow;
+        subMoney += lt;
+        var pricePart = lt <= 0 ? '' : '¥' + Math.round(lt).toLocaleString('zh-CN');
+        var qtyPart = qNow > 1 ? ' ×' + qNow + '份' : '';
+        inner +=
+          '<li class="car-checklist-subrow">' +
+          '<div class="car-checklist-subrow__main">' +
+          '<span class="car-checklist-subrow__label">' +
+          escHtml(vd) +
+          qtyPart +
+          (pricePart ? ' · ' + pricePart : '') +
+          '</span>' +
+          '<div class="car-checklist-subrow__actions">' +
+          carChecklistRowActionsHtml(r.id) +
+          '</div></div></li>';
+      }
+      htmlParts.push(
+        '<li class="car-checklist-group">' +
+          '<div class="car-checklist-group__title">' +
+          title +
+          '</div>' +
+          '<ul class="car-checklist-sublist">' +
+          inner +
+          '<li class="car-checklist-subtotal">本车合计 · ' +
+          subDays +
+          ' 天 · ¥' +
+          Math.round(subMoney).toLocaleString('zh-CN') +
+          '</li></ul></li>'
+      );
+    }
+
+    var otherIds = mangoOtherChecklistIdsInKeyOrder(picked);
+    for (var oi = 0; oi < otherIds.length; oi++) {
+      var oid = otherIds[oi];
+      var oitem = picked[oid] || {};
+      var oname = escHtml(String(oitem.model_name || oitem.car_name || oid));
+      var daysText = oitem.days ? ' - ' + escHtml(oitem.days) : '';
+      var showQty = oid.indexOf('service:') !== 0;
+      originalTotal += calcChecklistItemOriginal(oitem);
+      total += calcChecklistItemTotal(oitem);
+      if (showQty) {
+        var qf = getChecklistItemQty(oitem);
+        var flatQtyPart = qf > 1 ? ' ×' + qf + '份' : '';
+        htmlParts.push(
+          '<li class="car-checklist-item car-checklist-item--qty" data-car-id="' +
+          escHtml(oid) +
           '">' +
           '<div class="car-checklist-item__name">' +
-          name + daysText +
+          oname +
+          daysText +
+          flatQtyPart +
+          '</div>' +
+          '<div class="car-checklist-item__actions">' +
+          carChecklistRowActionsHtml(oid) +
+          '</div>' +
+          '</li>'
+        );
+      } else {
+        htmlParts.push(
+          '<li class="car-checklist-item" data-car-id="' +
+          escHtml(oid) +
+          '">' +
+          '<div class="car-checklist-item__name">' +
+          oname +
+          daysText +
           '</div>' +
           '<button type="button" class="car-checklist-item__remove" data-remove-car-id="' +
-          escHtml(id) +
+          escHtml(oid) +
           '">移除</button>' +
           '</li>'
         );
-      })
-      .join('');
+      }
+    }
+
+    listEl.innerHTML = htmlParts.join('');
+    var ids = Object.keys(picked || {});
     emptyEl.style.display = ids.length ? 'none' : '';
     originalEl.textContent = '原价：¥' + Math.round(originalTotal).toLocaleString('zh-CN');
     totalEl.textContent = '总价：¥' + Math.round(total).toLocaleString('zh-CN');
+  }
+
+  function getChecklistItemQty(item) {
+    if (!item) return 1;
+    var raw = item.qty;
+    if (raw == null || raw === '') return 1;
+    var q = parseInt(String(raw), 10);
+    if (!isFinite(q)) return 1;
+    if (q < 1) q = 1;
+    if (q > 99) q = 99;
+    return q;
   }
 
   function getDaysMultiplier(daysText) {
@@ -803,25 +1076,46 @@ document.addEventListener('DOMContentLoaded', function() {
     var it = item || {};
     var unit = getDailyUnitPrice(it.rent_price, it.days);
     var days = getDaysMultiplier(it.days);
-    return unit * days;
+    return unit * days * getChecklistItemQty(it);
   }
 
   function calcChecklistItemOriginal(item) {
     var it = item || {};
     var p = parseInt(String(it.rent_price), 10);
     if (isNaN(p) || p <= 0) return 0;
-    return p * getDaysMultiplier(it.days);
+    return p * getDaysMultiplier(it.days) * getChecklistItemQty(it);
   }
 
   function buildChecklistPayload(map, phone) {
     var picked = map || {};
-    var ids = Object.keys(picked);
-    var lines = ids.map(function (id) {
+    var lines = [];
+    mangoVehicleGroupsFromMap(picked).forEach(function (g) {
+      var subDays = 0;
+      var subMoney = 0;
+      g.rows.forEach(function (r) {
+        var item = r.item;
+        var name = String(item.model_name || item.car_name || g.carId || '').trim();
+        var days = String(item.days || '单日 (24小时)').trim();
+        var lineTot = Math.round(calcChecklistItemTotal(item));
+        subDays += getDaysMultiplier(item.days) * getChecklistItemQty(item);
+        subMoney += lineTot;
+        var qPart = getChecklistItemQty(item) > 1 ? ' ×' + getChecklistItemQty(item) + '份' : '';
+        lines.push(name + '（' + days + '）' + qPart + ' ¥' + lineTot.toLocaleString('zh-CN'));
+      });
+      lines.push(
+        '　└ 本车合计：' +
+          subDays +
+          ' 天 · ¥' +
+          Math.round(subMoney).toLocaleString('zh-CN')
+      );
+    });
+    mangoOtherChecklistIdsInKeyOrder(picked).forEach(function (id) {
       var item = picked[id] || {};
       var name = String(item.model_name || item.car_name || id || '').trim();
       var days = String(item.days || '单日 (24小时)').trim();
-      var total = Math.round(calcChecklistItemTotal(item));
-      return name + '（' + days + '） ¥' + total.toLocaleString('zh-CN');
+      var tot = Math.round(calcChecklistItemTotal(item));
+      var qPart = getChecklistItemQty(item) > 1 ? ' ×' + getChecklistItemQty(item) + '份' : '';
+      lines.push(name + '（' + days + '）' + qPart + ' ¥' + tot.toLocaleString('zh-CN'));
     });
     return {
       user: String(sessionStorage.getItem('mango_driver_name') || '未登录用户'),
@@ -935,9 +1229,24 @@ document.addEventListener('DOMContentLoaded', function() {
         var days = e.target.getAttribute('data-days');
         if (currentPendingCarItem) {
           currentPendingCarItem.days = days;
-          
           var map = readChecklistMap();
-          map[currentPendingCarItem.car_id] = currentPendingCarItem;
+          var rowKey = mangoVehicleRowStorageKey(currentPendingCarItem.car_id, days);
+          var prev = map[rowKey];
+          if (prev && !prev.pkg_lines) {
+            var qx = parseInt(String(prev.qty != null ? prev.qty : 1), 10) || 1;
+            if (qx < 1) qx = 1;
+            prev.qty = Math.min(99, qx + 1);
+            prev.rent_price = parseInt(String(currentPendingCarItem.rent_price || prev.rent_price || 0), 10) || prev.rent_price;
+          } else {
+            map[rowKey] = {
+              car_id: currentPendingCarItem.car_id,
+              car_name: currentPendingCarItem.car_name,
+              model_name: currentPendingCarItem.model_name,
+              rent_price: parseInt(String(currentPendingCarItem.rent_price || 0), 10) || 0,
+              days: days,
+              qty: 1,
+            };
+          }
           writeChecklistMap(map);
           syncChecklistButtonCount(map);
           syncCardChecklistToggleStates(map);
@@ -951,19 +1260,8 @@ document.addEventListener('DOMContentLoaded', function() {
   function toggleChecklistCar(item, rentPrice) {
     if (!item || !item.car_id) return;
     item.rent_price = parseInt(String(rentPrice || item.rent_price || 0), 10) || 0;
-    var map = readChecklistMap();
-    
-    // 如果已经在清单中，则移除
-    if (map[item.car_id]) {
-      delete map[item.car_id];
-      writeChecklistMap(map);
-      syncChecklistButtonCount(map);
-      syncCardChecklistToggleStates(map);
-      renderChecklistPanel(map);
-    } else {
-      // 否则不直接加入，而是弹出天数选择框
-      openDaysSelectModal(item, rentPrice);
-    }
+    /* 已有该车任意租期时再次点击也应打开选天数，便于同一档位合并份数（见天数确认逻辑 qty+1） */
+    openDaysSelectModal(item, rentPrice);
   }
 
   /** 车型目录名归一化：数据库/历史文案变更时，静态资源目录仍可命中 */
@@ -2424,6 +2722,32 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 
+  (function bindCarChecklistQtyModal() {
+    var minusBtn = document.getElementById('carChecklistQtyMinus');
+    var plusBtn = document.getElementById('carChecklistQtyPlus');
+    var cancelBtn = document.getElementById('carChecklistQtyCancelBtn');
+    var confirmBtn = document.getElementById('carChecklistQtyConfirmBtn');
+    var closeBtn = document.getElementById('carChecklistQtyCloseBtn');
+    var valEl = document.getElementById('carChecklistQtyValue');
+    if (minusBtn && valEl) {
+      minusBtn.addEventListener('click', function () {
+        var q = parseInt(String(valEl.textContent || '1'), 10) || 1;
+        valEl.textContent = String(Math.max(1, q - 1));
+        syncCarChecklistQtyModalUi();
+      });
+    }
+    if (plusBtn && valEl) {
+      plusBtn.addEventListener('click', function () {
+        var q = parseInt(String(valEl.textContent || '1'), 10) || 1;
+        valEl.textContent = String(Math.min(99, q + 1));
+        syncCarChecklistQtyModalUi();
+      });
+    }
+    if (cancelBtn) cancelBtn.addEventListener('click', closeCarChecklistQtyModal);
+    if (closeBtn) closeBtn.addEventListener('click', closeCarChecklistQtyModal);
+    if (confirmBtn) confirmBtn.addEventListener('click', confirmCarChecklistQtyModal);
+  })();
+
   document.addEventListener('click', function (e) {
     var toggle = e.target.closest && e.target.closest('.car-checklist-toggle');
     if (toggle) {
@@ -2438,6 +2762,14 @@ document.addEventListener('DOMContentLoaded', function() {
         car_name: carName,
         model_name: modelName || carName,
       }, rentPrice);
+      return;
+    }
+    var editQtyBtn = e.target.closest && e.target.closest('[data-car-checklist-edit-qty]');
+    if (editQtyBtn) {
+      e.preventDefault();
+      var rk = String(editQtyBtn.getAttribute('data-car-checklist-edit-qty') || '').trim();
+      if (!rk) return;
+      openCarChecklistQtyModal(rk);
       return;
     }
     var removeBtn = e.target.closest && e.target.closest('[data-remove-car-id]');

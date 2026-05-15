@@ -33,6 +33,16 @@
 
   remapGalleryAndFeatures();
 
+  /** m2-actions 弹窗层打开时对 html/body 添加（首页滚动容器为 .m2-home 不加）；暂停详情全屏翻页与轮播滑动手势 */
+  function m2DetailOverlayConsumesGestures() {
+    try {
+      var root = document.documentElement;
+      return !!(root && root.classList.contains('m2a-overlay-scroll-lock'));
+    } catch (e) {
+      return false;
+    }
+  }
+
   function ensureDetailScrollHint() {
     if (document.querySelector('.m2-detail-scroll-hint')) return;
     var hint = document.createElement('div');
@@ -91,6 +101,7 @@
     }, { passive: true });
 
     areaEl.addEventListener('touchend', function (e) {
+      if (m2DetailOverlayConsumesGestures()) return;
       var t = (e.changedTouches && e.changedTouches[0]) ? e.changedTouches[0] : null;
       if (!t) return;
       var dx = t.clientX - startX;
@@ -140,6 +151,7 @@
     zone.addEventListener(
       'touchend',
       function (e) {
+        if (m2DetailOverlayConsumesGestures()) return;
         var t = e.changedTouches && e.changedTouches[0];
         if (!t) return;
         var dx = t.clientX - startX;
@@ -349,26 +361,31 @@
     }
 
     function onWheel(e) {
+      if (m2DetailOverlayConsumesGestures()) return;
       e.preventDefault();
       if (e.deltaY > 0) nextSection();
       else if (e.deltaY < 0) prevSection();
     }
 
     function onTouchStart(e) {
+      if (!e.touches || !e.touches[0]) return;
       touchStartX = e.touches[0].clientX;
       touchEndX = touchStartX;
       touchStartY = e.touches[0].clientY;
       touchEndY = touchStartY;
       touchMoved = false;
+      if (m2DetailOverlayConsumesGestures()) return;
     }
 
     function onTouchMove(e) {
+      if (m2DetailOverlayConsumesGestures()) return;
       touchEndX = e.touches[0].clientX;
       touchEndY = e.touches[0].clientY;
       touchMoved = true;
     }
 
     function onTouchEnd() {
+      if (m2DetailOverlayConsumesGestures()) return;
       if (!touchMoved) return;
       var deltaX = touchStartX - touchEndX;
       var deltaY = touchStartY - touchEndY;
@@ -380,6 +397,7 @@
     }
 
     function onKeydown(e) {
+      if (m2DetailOverlayConsumesGestures()) return;
       switch (e.key) {
         case 'ArrowDown':
         case 'ArrowRight':
@@ -539,6 +557,75 @@
     var c = ev.detail && ev.detail.car;
     applyM2CurrentCar(c || null);
   });
+
+  /** 详情页价格区（含封面价卡）点击四档租期 → 打开份数弹窗（与清单 days 文案一致） */
+  function initDetailPricingQtyPick() {
+    if (document.documentElement.__m2PricingQtyBound) return;
+    if (!String(document.body.getAttribute('data-car-display-name') || '').trim())
+      return;
+
+    function callOpenQtyLine(lineKey) {
+      var fn = window.m2aOpenQtyFromDetailPricingLine;
+      if (typeof fn === 'function') {
+        fn(lineKey);
+        return;
+      }
+      if (window.__m2ActionsQtyPricingLoading) return;
+      window.__m2ActionsQtyPricingLoading = true;
+      var s = document.createElement('script');
+      s.src = '../../m2-actions.js';
+      s.onload = function () {
+        window.__m2ActionsQtyPricingLoading = false;
+        var fn2 = window.m2aOpenQtyFromDetailPricingLine;
+        if (typeof fn2 === 'function') fn2(lineKey);
+      };
+      s.onerror = function () {
+        window.__m2ActionsQtyPricingLoading = false;
+      };
+      document.body.appendChild(s);
+    }
+
+    var pricing = document.getElementById('m2Pricing');
+    if (pricing && !pricing.__m2PricingQtyDelegated) {
+      pricing.__m2PricingQtyDelegated = true;
+      pricing.addEventListener('click', function (ev) {
+        var row = ev.target && ev.target.closest
+          ? ev.target.closest('.m2-car__pricing-row[data-pricing-line]')
+          : null;
+        if (!row || !pricing.contains(row)) return;
+        var line = String(row.getAttribute('data-pricing-line') || '').trim();
+        if (line !== '1' && line !== '2' && line !== '3' && line !== '4') return;
+        ev.preventDefault();
+        callOpenQtyLine(line);
+      });
+    }
+
+    var coverRoot = document.querySelector('.m2-cover-wrapper');
+    if (coverRoot && !coverRoot.__m2CoverPricingQtyDelegated) {
+      coverRoot.__m2CoverPricingQtyDelegated = true;
+      coverRoot.addEventListener('click', function (ev) {
+        var line = null;
+        var t = ev.target;
+        if (!t || !t.closest) return;
+        if (t.closest('.m2-cover-price__day')) line = '1';
+        else {
+          var item = t.closest('.m2-cover-price__item');
+          if (!item || !coverRoot.contains(item)) return;
+          var priced = item.querySelector('[data-cover-price]');
+          var key = priced ? String(priced.getAttribute('data-cover-price') || '') : '';
+          var map = { week: '2', half: '3', month: '4' };
+          line = map[key] || null;
+        }
+        if (!line) return;
+        ev.preventDefault();
+        callOpenQtyLine(line);
+      });
+    }
+
+    document.documentElement.__m2PricingQtyBound = true;
+  }
+
+  initDetailPricingQtyPick();
 
   var rail = document.getElementById('m2CarRail');
   var peek = document.getElementById('m2CarRailPeek');

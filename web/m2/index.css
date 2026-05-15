@@ -49,6 +49,12 @@ body {
   display: none;
 }
 
+/* 弹窗打开时锁住首页纵向翻动（滚动发生在 .m2-home 而非 body） */
+.m2-home.m2-scroll-lock {
+  overflow: hidden !important;
+  overscroll-behavior: none;
+}
+
 .m2-home__hero {
   position: relative;
   display: flex;
@@ -1334,7 +1340,7 @@ a.m2-chooser__bottom-btn {
   position: absolute;
   inset: 0;
   background-color: #05070d;
-  background-image: url('../media-webp/photos/index/m2/关于.webp?v=1778764916558');
+  background-image: url('../media-webp/photos/index/m2/关于.webp?v=1778852221250');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;

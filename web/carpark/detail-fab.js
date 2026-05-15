@@ -118,11 +118,127 @@
       .replace(/"/g, '&quot;');
   }
 
+  function mangoVehicleRowStorageKey(carId, daysText) {
+    return (
+      'row:' +
+      encodeURIComponent(String(carId || '')) +
+      ':' +
+      encodeURIComponent(String(daysText || '单日 (24小时)'))
+    );
+  }
+  function mangoPackageRowStorageKey(carId) {
+    return 'pkg:' + encodeURIComponent(String(carId || ''));
+  }
+  function mangoChecklistNeedsKeyMigration(map) {
+    if (!map || typeof map !== 'object') return false;
+    for (var k in map) {
+      if (!Object.prototype.hasOwnProperty.call(map, k)) continue;
+      if (k.indexOf('row:') === 0 || k.indexOf('pkg:') === 0 || k.indexOf('service:') === 0) continue;
+      return true;
+    }
+    return false;
+  }
+  function mangoMigrateLegacyChecklistKeys(map) {
+    if (!mangoChecklistNeedsKeyMigration(map)) return false;
+    var snap = {};
+    try {
+      snap = JSON.parse(JSON.stringify(map));
+    } catch (eM) {
+      return false;
+    }
+    var next = {};
+    Object.keys(snap).forEach(function (k) {
+      var item = snap[k];
+      if (!item || typeof item !== 'object') return;
+      if (k.indexOf('service:') === 0) {
+        next[k] = item;
+        return;
+      }
+      if (k.indexOf('row:') === 0 || k.indexOf('pkg:') === 0) {
+        next[k] = item;
+        return;
+      }
+      var nk =
+        item.pkg_lines && item.pkg_lines.length
+          ? mangoPackageRowStorageKey(item.car_id || k)
+          : mangoVehicleRowStorageKey(item.car_id || k, item.days || '单日 (24小时)');
+      if (next[nk] && nk.indexOf('row:') === 0) {
+        var q1 = parseInt(String(next[nk].qty != null ? next[nk].qty : 1), 10) || 1;
+        var q2 = parseInt(String(item.qty != null ? item.qty : 1), 10) || 1;
+        if (q1 < 1) q1 = 1;
+        if (q2 < 1) q2 = 1;
+        next[nk].qty = Math.min(99, q1 + q2);
+      } else {
+        next[nk] = item;
+      }
+    });
+    Object.keys(map).forEach(function (kd) {
+      delete map[kd];
+    });
+    Object.keys(next).forEach(function (kn) {
+      map[kn] = next[kn];
+    });
+    return true;
+  }
+  function mangoCarHasChecklistRows(map, carId) {
+    var enc = encodeURIComponent(String(carId || ''));
+    var pfx = 'row:' + enc + ':';
+    var pk = mangoPackageRowStorageKey(carId);
+    for (var k in map) {
+      if (!Object.prototype.hasOwnProperty.call(map, k)) continue;
+      if (k.indexOf(pfx) === 0 || k === pk) return true;
+    }
+    return false;
+  }
+  function mangoRemoveAllCarChecklistRows(map, carId) {
+    var enc = encodeURIComponent(String(carId || ''));
+    var pfx = 'row:' + enc + ':';
+    var pk = mangoPackageRowStorageKey(carId);
+    var dels = [];
+    for (var k in map) {
+      if (!Object.prototype.hasOwnProperty.call(map, k)) continue;
+      if (k.indexOf(pfx) === 0 || k === pk) dels.push(k);
+    }
+    for (var i = 0; i < dels.length; i++) delete map[dels[i]];
+  }
+  function mangoVehicleGroupsFromMap(map) {
+    var rowIds = [];
+    Object.keys(map || {}).forEach(function (id) {
+      if (id.indexOf('row:') === 0 && map[id]) rowIds.push(id);
+    });
+    var groupIdx = {};
+    var groups = [];
+    for (var ri = 0; ri < rowIds.length; ri++) {
+      var rid = rowIds[ri];
+      var item = map[rid];
+      var cid = String(item.car_id || '');
+      var gi = groupIdx[cid];
+      if (gi == null) {
+        groupIdx[cid] = groups.length;
+        groups.push({ carId: cid, rows: [{ id: rid, item: item }] });
+      } else {
+        groups[gi].rows.push({ id: rid, item: item });
+      }
+    }
+    return groups;
+  }
+  function mangoOtherChecklistIdsInKeyOrder(map) {
+    var out = [];
+    Object.keys(map || {}).forEach(function (id) {
+      if (id.indexOf('row:') !== 0) out.push(id);
+    });
+    return out;
+  }
+
   function readChecklistMap() {
     try {
       var raw = localStorage.getItem(STORAGE_KEY) || '{}';
       var obj = JSON.parse(raw);
-      return obj && typeof obj === 'object' ? obj : {};
+      var map = obj && typeof obj === 'object' ? obj : {};
+      if (mangoMigrateLegacyChecklistKeys(map)) {
+        writeChecklistMap(map);
+      }
+      return map;
     } catch (e) {
       return {};
     }
@@ -153,6 +269,24 @@
       '.detail-checklist-panel__close{border:none;background:transparent;color:#fff;font-size:22px;line-height:1;cursor:pointer}' +
       '.detail-checklist-panel__body{padding:12px 14px 14px;max-height:calc(min(70vh,680px) - 60px);overflow:auto}' +
       '.detail-checklist-list{list-style:none;margin:0;padding:0;display:grid;gap:8px}' +
+      '.detail-checklist-group{list-style:none;margin:0;padding:10px 10px 8px;border-radius:10px;background:rgba(255,255,255,.04)}' +
+      '.detail-checklist-group__title{font-size:15px;font-weight:700;color:rgba(246,247,251,.96);margin-bottom:6px}' +
+      '.detail-checklist-sublist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px}' +
+      '.detail-checklist-subrow{list-style:none}' +
+      '.detail-checklist-subrow__main{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;padding:4px 0 4px 4px}' +
+      '.detail-checklist-subrow__label{font-size:14px;color:rgba(255,255,255,.88);line-height:1.35}' +
+      '.detail-checklist-subtotal{list-style:none;font-size:13px;font-weight:600;color:rgba(255,255,255,.62);padding:8px 4px 2px;margin-top:4px;border-top:1px dashed rgba(255,255,255,.14)}' +
+      '.detail-checklist-subrow__actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}' +
+      '.detail-checklist-edit-qty{border:1px solid rgba(255,255,255,.22);border-radius:999px;padding:6px 12px;background:rgba(255,255,255,.08);color:rgba(255,255,255,.92);font-size:13px;font-weight:600;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent}' +
+      '.detail-checklist-qty-step{display:flex;align-items:center;justify-content:center;gap:clamp(20px,6vw,36px);padding:20px 16px 8px}' +
+      '.detail-checklist-qty-modal-btn{width:44px;height:44px;border-radius:50%;border:1px solid rgba(255,107,53,.35);background:linear-gradient(135deg,#ff6b35 0%,#ff8c42 100%);color:#fff;font-size:22px;font-weight:500;line-height:1;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;touch-action:manipulation;-webkit-tap-highlight-color:transparent}' +
+      '.detail-checklist-qty-modal-btn:disabled{opacity:.35;cursor:default}' +
+      '.detail-checklist-qty-modal-val{font-size:26px;font-weight:700;color:#333;min-width:48px;text-align:center}' +
+      '.detail-checklist-qty-total{margin:0;padding:4px 16px 8px;text-align:center;font-size:14px;color:#666}' +
+      '.detail-checklist-qty-actions{display:flex;gap:12px;justify-content:center;padding:8px 16px 20px}' +
+      '.detail-checklist-qty-cancel{opacity:.9;background:rgba(0,0,0,.06)!important;color:#444!important;border-color:rgba(0,0,0,.12)!important}' +
+      '.detail-checklist-item--qty{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px}' +
+      '.detail-checklist-item__actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}' +
       '.detail-checklist-item{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;padding:8px 10px;border-radius:10px;background:rgba(255,255,255,.04)}' +
       '.detail-checklist-item__name{font-size:15px;color:rgba(255,255,255,.9)}' +
       '.detail-checklist-item__remove,.detail-checklist-panel__toggle-current{border:1px solid rgba(255,255,255,.22);border-radius:999px;padding:6px 10px;background:transparent;color:rgba(255,255,255,.9);font-size:13px;cursor:pointer}' +
@@ -336,6 +470,26 @@
 
     document.body.appendChild(panel);
     document.body.appendChild(modal);
+    var checklistQtyModal = document.createElement('div');
+    checklistQtyModal.id = 'detailChecklistQtyModal';
+    checklistQtyModal.className = 'days-select-modal';
+    checklistQtyModal.setAttribute('hidden', '');
+    checklistQtyModal.innerHTML =
+      '<div class="days-select-content">' +
+      '<div class="days-select-header" id="detailChecklistQtyTitle">修改份数</div>' +
+      '<div class="detail-checklist-qty-step">' +
+      '<button type="button" class="detail-checklist-qty-modal-btn" id="detailChecklistQtyMinus" aria-label="减少份数">−</button>' +
+      '<span class="detail-checklist-qty-modal-val" id="detailChecklistQtyValue">1</span>' +
+      '<button type="button" class="detail-checklist-qty-modal-btn" id="detailChecklistQtyPlus" aria-label="增加份数">+</button>' +
+      '</div>' +
+      '<p class="detail-checklist-qty-total" id="detailChecklistQtyTotalDays" aria-live="polite"></p>' +
+      '<div class="detail-checklist-qty-actions">' +
+      '<button type="button" class="days-confirm-btn detail-checklist-qty-cancel" id="detailChecklistQtyCancelBtn">取消</button>' +
+      '<button type="button" class="days-confirm-btn" id="detailChecklistQtyConfirmBtn">确认</button>' +
+      '</div>' +
+      '<button type="button" class="days-select-close" id="detailChecklistQtyCloseBtn" aria-label="关闭">×</button>' +
+      '</div>';
+    document.body.appendChild(checklistQtyModal);
     document.body.appendChild(phoneModal);
     document.body.appendChild(successModal);
     document.body.appendChild(failModal);
@@ -348,6 +502,7 @@
       successModal: successModal,
       failModal: failModal,
       consultModal: consultModal,
+      checklistQtyModal: checklistQtyModal,
       mountDetailChecklistBtn: mountDetailChecklistBtn,
     };
   }
@@ -439,12 +594,12 @@
 
     function syncCurrentBtn(map) {
       if (!currentCarId) return;
-      var picked = !!(map && map[currentCarId]);
+      var picked = mangoCarHasChecklistRows(map, currentCarId);
       if (toggleCurrentBtn) {
-        toggleCurrentBtn.textContent = picked ? '移出当前车辆' : '加入当前车辆';
+        toggleCurrentBtn.textContent = picked ? '继续添加' : '加入当前车辆';
       }
       if (detailFabAddBtn) {
-        detailFabAddBtn.textContent = picked ? '移出清单' : '加入清单';
+        detailFabAddBtn.textContent = picked ? '继续添加' : '加入清单';
       }
     }
 
@@ -472,26 +627,209 @@
       }
     }
 
+    var detailChecklistQtyEditRowKey = null;
+
+    function getChecklistItemQtyFab(item) {
+      if (!item) return 1;
+      var raw = item.qty;
+      if (raw == null || raw === '') return 1;
+      var q = parseInt(String(raw), 10);
+      if (!isFinite(q)) return 1;
+      if (q < 1) q = 1;
+      if (q > 99) q = 99;
+      return q;
+    }
+
+    function detailChecklistRowActionsHtml(rowId) {
+      var eid = escHtml(rowId);
+      return (
+        '<button type="button" class="detail-checklist-edit-qty" data-detail-checklist-edit-qty="' +
+        eid +
+        '">修改</button>' +
+        '<button type="button" class="detail-checklist-item__remove" data-remove-car-id="' +
+        eid +
+        '">移除</button>'
+      );
+    }
+
+    function syncDetailChecklistQtyModalUi() {
+      var valEl = document.getElementById('detailChecklistQtyValue');
+      var minusBtn = document.getElementById('detailChecklistQtyMinus');
+      var plusBtn = document.getElementById('detailChecklistQtyPlus');
+      var totalDaysEl = document.getElementById('detailChecklistQtyTotalDays');
+      if (!valEl || !detailChecklistQtyEditRowKey) return;
+      var map = readChecklistMap();
+      var item = map[detailChecklistQtyEditRowKey];
+      var q = parseInt(String(valEl.textContent || '1'), 10);
+      if (!isFinite(q)) q = 1;
+      if (q < 1) q = 1;
+      if (q > 99) q = 99;
+      valEl.textContent = String(q);
+      if (minusBtn) minusBtn.disabled = q <= 1;
+      if (plusBtn) plusBtn.disabled = q >= 99;
+      var dm = getDaysMultiplier(item && item.days);
+      if (totalDaysEl) totalDaysEl.textContent = '合计 ' + dm * q + ' 天';
+    }
+
+    function closeDetailChecklistQtyModal() {
+      detailChecklistQtyEditRowKey = null;
+      var m = document.getElementById('detailChecklistQtyModal');
+      if (m) m.setAttribute('hidden', '');
+    }
+
+    function openDetailChecklistQtyModal(rowKey) {
+      var modal = document.getElementById('detailChecklistQtyModal');
+      var valEl = document.getElementById('detailChecklistQtyValue');
+      if (!modal || !valEl || !rowKey) return;
+      var map = readChecklistMap();
+      var item = map[rowKey];
+      if (!item) return;
+      detailChecklistQtyEditRowKey = rowKey;
+      valEl.textContent = String(getChecklistItemQtyFab(item));
+      modal.removeAttribute('hidden');
+      syncDetailChecklistQtyModalUi();
+    }
+
+    function confirmDetailChecklistQtyModal() {
+      if (!detailChecklistQtyEditRowKey) return;
+      var valEl = document.getElementById('detailChecklistQtyValue');
+      if (!valEl) return;
+      var map = readChecklistMap();
+      var item = map[detailChecklistQtyEditRowKey];
+      if (!item) {
+        closeDetailChecklistQtyModal();
+        return;
+      }
+      var q = parseInt(String(valEl.textContent || '1'), 10);
+      if (!isFinite(q)) q = 1;
+      if (q < 1) q = 1;
+      if (q > 99) q = 99;
+      item.qty = q;
+      writeChecklistMap(map);
+      renderList(map);
+      closeDetailChecklistQtyModal();
+    }
+
+    (function bindDetailChecklistQtyModal() {
+      var minusBtn = document.getElementById('detailChecklistQtyMinus');
+      var plusBtn = document.getElementById('detailChecklistQtyPlus');
+      var cancelBtn = document.getElementById('detailChecklistQtyCancelBtn');
+      var confirmBtn = document.getElementById('detailChecklistQtyConfirmBtn');
+      var closeBtn = document.getElementById('detailChecklistQtyCloseBtn');
+      var valEl = document.getElementById('detailChecklistQtyValue');
+      if (minusBtn && valEl) {
+        minusBtn.addEventListener('click', function () {
+          var q = parseInt(String(valEl.textContent || '1'), 10) || 1;
+          valEl.textContent = String(Math.max(1, q - 1));
+          syncDetailChecklistQtyModalUi();
+        });
+      }
+      if (plusBtn && valEl) {
+        plusBtn.addEventListener('click', function () {
+          var q = parseInt(String(valEl.textContent || '1'), 10) || 1;
+          valEl.textContent = String(Math.min(99, q + 1));
+          syncDetailChecklistQtyModalUi();
+        });
+      }
+      if (cancelBtn) cancelBtn.addEventListener('click', closeDetailChecklistQtyModal);
+      if (closeBtn) closeBtn.addEventListener('click', closeDetailChecklistQtyModal);
+      if (confirmBtn) confirmBtn.addEventListener('click', confirmDetailChecklistQtyModal);
+    })();
+
     function renderList(map) {
       var m = map || {};
-      var ids = Object.keys(m);
       var originalTotal = 0;
       var total = 0;
-      listEl.innerHTML = ids
-        .map(function (id) {
-          var item = m[id] || {};
-          var name = escHtml(String(item.model_name || item.car_name || id));
-          var daysText = item.days ? (' - ' + escHtml(item.days)) : '';
-          originalTotal += calcItemOriginal(item);
-          total += calcItemTotal(item);
-          return (
-            '<li class="detail-checklist-item">' +
-            '<div class="detail-checklist-item__name">' + name + daysText + '</div>' +
-            '<button type="button" class="detail-checklist-item__remove" data-remove-car-id="' + escHtml(id) + '">移除</button>' +
+      var htmlParts = [];
+
+      var groups = mangoVehicleGroupsFromMap(m);
+      for (var gi = 0; gi < groups.length; gi++) {
+        var g = groups[gi];
+        var title = escHtml(String(g.rows[0].item.model_name || g.rows[0].item.car_name || g.carId));
+        var subDays = 0;
+        var subMoney = 0;
+        var inner = '';
+        for (var ri = 0; ri < g.rows.length; ri++) {
+          var r = g.rows[ri];
+          var item = r.item;
+          var vd = String(item.days || '').trim();
+          var qNow = getChecklistItemQtyFab(item);
+          var lt = calcItemTotal(item);
+          var lo = calcItemOriginal(item);
+          originalTotal += lo;
+          total += lt;
+          subDays += getDaysMultiplier(item.days) * qNow;
+          subMoney += lt;
+          var pricePart = lt <= 0 ? '' : '¥' + Math.round(lt).toLocaleString('zh-CN');
+          var qtyPart = qNow > 1 ? ' ×' + qNow + '份' : '';
+          inner +=
+            '<li class="detail-checklist-subrow">' +
+            '<div class="detail-checklist-subrow__main">' +
+            '<span class="detail-checklist-subrow__label">' +
+            escHtml(vd) +
+            qtyPart +
+            (pricePart ? ' · ' + pricePart : '') +
+            '</span>' +
+            '<div class="detail-checklist-subrow__actions">' +
+            detailChecklistRowActionsHtml(r.id) +
+            '</div></div></li>';
+        }
+        htmlParts.push(
+          '<li class="detail-checklist-group">' +
+            '<div class="detail-checklist-group__title">' +
+            title +
+            '</div>' +
+            '<ul class="detail-checklist-sublist">' +
+            inner +
+            '<li class="detail-checklist-subtotal">本车合计 · ' +
+            subDays +
+            ' 天 · ¥' +
+            Math.round(subMoney).toLocaleString('zh-CN') +
+            '</li></ul></li>'
+        );
+      }
+
+      var otherIds = mangoOtherChecklistIdsInKeyOrder(m);
+      for (var oi = 0; oi < otherIds.length; oi++) {
+        var oid = otherIds[oi];
+        var oitem = m[oid] || {};
+        var oname = escHtml(String(oitem.model_name || oitem.car_name || oid));
+        var daysText = oitem.days ? ' - ' + escHtml(oitem.days) : '';
+        var showQty = oid.indexOf('service:') !== 0;
+        originalTotal += calcItemOriginal(oitem);
+        total += calcItemTotal(oitem);
+        if (showQty) {
+          var qf = getChecklistItemQtyFab(oitem);
+          var flatQtyPart = qf > 1 ? ' ×' + qf + '份' : '';
+          htmlParts.push(
+            '<li class="detail-checklist-item detail-checklist-item--qty">' +
+            '<div class="detail-checklist-item__name">' +
+            oname +
+            daysText +
+            flatQtyPart +
+            '</div>' +
+            '<div class="detail-checklist-item__actions">' +
+            detailChecklistRowActionsHtml(oid) +
+            '</div>' +
             '</li>'
           );
-        })
-        .join('');
+        } else {
+          htmlParts.push(
+            '<li class="detail-checklist-item">' +
+            '<div class="detail-checklist-item__name">' +
+            oname +
+            daysText +
+            '</div>' +
+            '<button type="button" class="detail-checklist-item__remove" data-remove-car-id="' +
+            escHtml(oid) +
+            '">移除</button>' +
+            '</li>'
+          );
+        }
+      }
+
+      listEl.innerHTML = htmlParts.join('');
+      var ids = Object.keys(m || {});
       emptyEl.style.display = ids.length ? 'none' : '';
       if (originalEl) originalEl.textContent = '原价：¥' + Math.round(originalTotal).toLocaleString('zh-CN');
       if (totalEl) totalEl.textContent = '总价：¥' + Math.round(total).toLocaleString('zh-CN');
@@ -525,14 +863,14 @@
       var it = item || {};
       var unit = getDailyUnitPrice(it.rent_price, it.days);
       var days = getDaysMultiplier(it.days);
-      return unit * days;
+      return unit * days * getChecklistItemQtyFab(it);
     }
 
     function calcItemOriginal(item) {
       var it = item || {};
       var p = parseInt(String(it.rent_price), 10);
       if (isNaN(p) || p <= 0) return 0;
-      return p * getDaysMultiplier(it.days);
+      return p * getDaysMultiplier(it.days) * getChecklistItemQtyFab(it);
     }
 
     /** 与 m2/m2-actions.js 一致：静态页与 member_api 不同端口时可回退到 8765/8787 */
@@ -604,13 +942,35 @@
 
     function buildPayload(map, phone) {
       var m = map || {};
-      var ids = Object.keys(m);
-      var lines = ids.map(function (id) {
+      var lines = [];
+      mangoVehicleGroupsFromMap(m).forEach(function (g) {
+        var subDays = 0;
+        var subMoney = 0;
+        g.rows.forEach(function (r) {
+          var item = r.item;
+          var name = String(item.model_name || item.car_name || g.carId || '').trim();
+          var days = String(item.days || '单日 (24小时)').trim();
+          var lineTot = Math.round(calcItemTotal(item));
+          subDays += getDaysMultiplier(item.days) * getChecklistItemQtyFab(item);
+          subMoney += lineTot;
+          var qPart =
+            getChecklistItemQtyFab(item) > 1 ? ' ×' + getChecklistItemQtyFab(item) + '份' : '';
+          lines.push(name + '（' + days + '）' + qPart + ' ¥' + lineTot.toLocaleString('zh-CN'));
+        });
+        lines.push(
+          '　└ 本车合计：' +
+            subDays +
+            ' 天 · ¥' +
+            Math.round(subMoney).toLocaleString('zh-CN')
+        );
+      });
+      mangoOtherChecklistIdsInKeyOrder(m).forEach(function (id) {
         var item = m[id] || {};
         var name = String(item.model_name || item.car_name || id || '').trim();
         var days = String(item.days || '单日 (24小时)').trim();
-        var total = Math.round(calcItemTotal(item));
-        return name + '（' + days + '） ¥' + total.toLocaleString('zh-CN');
+        var tot = Math.round(calcItemTotal(item));
+        var qPart = getChecklistItemQtyFab(item) > 1 ? ' ×' + getChecklistItemQtyFab(item) + '份' : '';
+        lines.push(name + '（' + days + '）' + qPart + ' ¥' + tot.toLocaleString('zh-CN'));
       });
       return {
         user: String(sessionStorage.getItem('mango_driver_name') || '未登录用户'),
@@ -699,7 +1059,22 @@
         if (currentPendingCarItem) {
           currentPendingCarItem.days = days;
           var map = readChecklistMap();
-          map[currentPendingCarItem.car_id] = currentPendingCarItem;
+          var rowKey = mangoVehicleRowStorageKey(currentPendingCarItem.car_id, days);
+          var prev = map[rowKey];
+          if (prev && !prev.pkg_lines) {
+            var qx = parseInt(String(prev.qty != null ? prev.qty : 1), 10) || 1;
+            if (qx < 1) qx = 1;
+            prev.qty = Math.min(99, qx + 1);
+          } else {
+            map[rowKey] = {
+              car_id: currentPendingCarItem.car_id,
+              car_name: currentPendingCarItem.car_name,
+              model_name: currentPendingCarItem.model_name,
+              rent_price: parseInt(String(currentPendingCarItem.rent_price || 0), 10) || 0,
+              days: days,
+              qty: 1,
+            };
+          }
           writeChecklistMap(map);
           renderList(map);
         }
@@ -709,31 +1084,21 @@
 
     function toggleCurrentCar() {
       if (!currentCarId) return;
-      var map = readChecklistMap();
-      if (map[currentCarId]) {
-        delete map[currentCarId];
-        writeChecklistMap(map);
-        renderList(map);
+      var priceEl = document.querySelector('.hero-detail__price-num');
+      var rentPrice = 0;
+      if (priceEl) {
+        rentPrice = priceEl.textContent.replace(/[^0-9]/g, '') || 0;
       } else {
-        // 从页面上获取租金信息
-        var priceEl = document.querySelector('.hero-detail__price-num');
-        var rentPrice = 0;
-        
-        if (priceEl) {
-          rentPrice = priceEl.textContent.replace(/[^0-9]/g, '') || 0;
-        } else {
-          // 如果页面没有价格元素，尝试从 body 的 data-daily-price 获取
-          rentPrice = document.body.getAttribute('data-daily-price') || 0;
-        }
-        
-        var item = {
-          car_id: currentCarId,
-          car_name: currentCarName,
-          model_name: currentCarName,
-          rent_price: parseInt(String(rentPrice || 0), 10) || 0,
-        };
-        openDaysSelectModal(item, rentPrice);
+        rentPrice = document.body.getAttribute('data-daily-price') || 0;
       }
+      var item = {
+        car_id: currentCarId,
+        car_name: currentCarName,
+        model_name: currentCarName,
+        rent_price: parseInt(String(rentPrice || 0), 10) || 0,
+      };
+      /* 与选车页一致：已有该车租期时再点也打开选天数，相同档位合并份数 */
+      openDaysSelectModal(item, rentPrice);
     }
 
     btn.addEventListener('click', function () {
@@ -935,6 +1300,13 @@
       });
     }, 800); // 把延迟加长到 800ms，确保在其他脚本（比如某些直接绑定 onclick 的情况）之后执行
     panel.addEventListener('click', function (e) {
+      var editQty = e.target.closest && e.target.closest('[data-detail-checklist-edit-qty]');
+      if (editQty) {
+        e.preventDefault();
+        var ek = String(editQty.getAttribute('data-detail-checklist-edit-qty') || '').trim();
+        if (ek) openDetailChecklistQtyModal(ek);
+        return;
+      }
       var removeBtn = e.target.closest && e.target.closest('[data-remove-car-id]');
       if (!removeBtn) return;
       var id = String(removeBtn.getAttribute('data-remove-car-id') || '').trim();

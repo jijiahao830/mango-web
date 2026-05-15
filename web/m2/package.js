@@ -6,6 +6,16 @@
     drive: '自驾',
   };
 
+  /** m2-actions 弹窗打开时 html 会带此类；暂停套餐页全屏翻页与轨道滑动手势 */
+  function m2PackageOverlayConsumesGestures() {
+    try {
+      var root = document.documentElement;
+      return !!(root && root.classList.contains('m2a-overlay-scroll-lock'));
+    } catch (e) {
+      return false;
+    }
+  }
+
   function parseYuan(el) {
     if (!el) return 0;
     return parseInt(String(el.textContent || '').replace(/[^\d]/g, ''), 10) || 0;
@@ -170,23 +180,29 @@
     }
 
     function onWheel(e) {
+      if (m2PackageOverlayConsumesGestures()) return;
       e.preventDefault();
       if (e.deltaY > 0) nextSection();
       else if (e.deltaY < 0) prevSection();
     }
 
     function onTouchStart(e) {
+      if (!e.touches || !e.touches[0]) return;
       touchStartY = e.touches[0].clientY;
       touchEndY = touchStartY;
       touchMoved = false;
+      if (m2PackageOverlayConsumesGestures()) return;
     }
 
     function onTouchMove(e) {
+      if (m2PackageOverlayConsumesGestures()) return;
+      if (!e.touches || !e.touches[0]) return;
       touchEndY = e.touches[0].clientY;
       touchMoved = true;
     }
 
     function onTouchEnd() {
+      if (m2PackageOverlayConsumesGestures()) return;
       if (!touchMoved) return;
       var deltaY = touchStartY - touchEndY;
       if (Math.abs(deltaY) > 50) {
@@ -196,6 +212,7 @@
     }
 
     function onKeydown(e) {
+      if (m2PackageOverlayConsumesGestures()) return;
       switch (e.key) {
         case 'ArrowDown':
         case 'ArrowRight':
@@ -310,6 +327,7 @@
     }, { passive: true });
 
     track.addEventListener('touchend', function (e) {
+      if (m2PackageOverlayConsumesGestures()) return;
       var t = (e.changedTouches && e.changedTouches[0]) ? e.changedTouches[0] : null;
       if (!t) return;
       var dx = t.clientX - touchStartX;
@@ -335,6 +353,21 @@
         publishPackageChecklistItem(track, cards);
       }, 70);
     }, { passive: true });
+
+    Array.prototype.forEach.call(cards, function (card) {
+      card.style.cursor = 'pointer';
+      card.addEventListener('click', function () {
+        if (m2PackageOverlayConsumesGestures()) return;
+        var idx = Array.prototype.indexOf.call(cards, card);
+        if (!isFinite(idx) || idx < 0) return;
+        scrollToCardIndex(idx, 'smooth');
+        setActiveByIndex(idx);
+        publishPackageChecklistItem(track, cards);
+        if (typeof window.m2aOpenPackageQtyForPlanIndex === 'function') {
+          window.m2aOpenPackageQtyForPlanIndex(idx);
+        }
+      });
+    });
 
     scrollToCardIndex(0);
     setActiveByIndex(0);

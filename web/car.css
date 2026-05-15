@@ -2188,6 +2188,157 @@ a.btn-primary {
   gap: 8px;
 }
 
+.car-checklist-group {
+  list-style: none;
+  margin: 0;
+  padding: 10px 10px 8px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.car-checklist-group__title {
+  font-size: 15px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.96);
+  margin-bottom: 6px;
+}
+
+.car-checklist-sublist {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.car-checklist-subrow {
+  list-style: none;
+}
+
+.car-checklist-subrow__main {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+  align-items: center;
+  padding: 4px 0 4px 4px;
+}
+
+.car-checklist-subrow__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.car-checklist-edit-qty {
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 999px;
+  padding: 6px 12px;
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.car-checklist-qty-step {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(20px, 6vw, 36px);
+  padding: 20px 16px 8px;
+}
+
+.car-checklist-qty-modal-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 107, 53, 0.35);
+  background: linear-gradient(135deg, #ff6b35 0%, #ff8c42 100%);
+  color: #fff;
+  font-size: 22px;
+  font-weight: 500;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.car-checklist-qty-modal-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.car-checklist-qty-modal-val {
+  font-size: 26px;
+  font-weight: 700;
+  color: #333;
+  min-width: 48px;
+  text-align: center;
+}
+
+.car-checklist-qty-total {
+  margin: 0;
+  padding: 4px 16px 8px;
+  text-align: center;
+  font-size: 14px;
+  color: #666;
+}
+
+.car-checklist-qty-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  padding: 8px 16px 20px;
+}
+
+.car-checklist-qty-cancel {
+  opacity: 0.9;
+  background: rgba(0, 0, 0, 0.06) !important;
+  color: #444 !important;
+  border-color: rgba(0, 0, 0, 0.12) !important;
+}
+
+.car-checklist-item--qty {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.car-checklist-item__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.car-checklist-subrow__label {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.88);
+  line-height: 1.35;
+}
+
+.car-checklist-subtotal {
+  list-style: none;
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.62);
+  padding: 8px 4px 2px;
+  margin-top: 4px;
+  border-top: 1px dashed rgba(255, 255, 255, 0.14);
+}
+
 .car-checklist-item {
   display: grid;
   grid-template-columns: 1fr auto;

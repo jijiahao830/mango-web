@@ -206,6 +206,11 @@ body.m2-package {
   display: flex;
   flex-direction: column;
   border: 1px solid rgba(255, 255, 255, 0.22);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.m2p-plan__card * {
+  -webkit-tap-highlight-color: transparent;
 }
 
 .m2p-plan__card-head {

@@ -7,6 +7,16 @@ document.addEventListener('DOMContentLoaded', function() {
   let touchEndY = 0;
   let touchMoved = false;
 
+  /** m2-actions 弹窗打开时 html 会带此类；暂停全屏服务轮播手势（不影响未使用该类的页面） */
+  function overlayConsumesGestures() {
+    try {
+      const root = document.documentElement;
+      return !!(root && root.classList.contains('m2a-overlay-scroll-lock'));
+    } catch (e) {
+      return false;
+    }
+  }
+
   /** m2/services：仅在最后一帧展示备案 footer */
   function updateM2LegalFooterVisibility() {
     const footer = document.querySelector(
@@ -81,6 +91,7 @@ document.addEventListener('DOMContentLoaded', function() {
   // 鼠标滚轮事件
   let wheelTimeout;
   function handleWheel(e) {
+    if (overlayConsumesGestures()) return;
     e.preventDefault();
     
     // 防抖处理，避免滚动过快
@@ -98,17 +109,22 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // 触摸事件（移动端）
   function handleTouchStart(e) {
+    if (!e.touches || !e.touches[0]) return;
     touchStartY = e.touches[0].clientY;
     touchEndY = touchStartY;
     touchMoved = false;
+    if (overlayConsumesGestures()) return;
   }
 
   function handleTouchMove(e) {
+    if (overlayConsumesGestures()) return;
+    if (!e.touches || !e.touches[0]) return;
     touchEndY = e.touches[0].clientY;
     touchMoved = true;
   }
 
   function handleTouchEnd() {
+    if (overlayConsumesGestures()) return;
     if (!touchMoved) return;
     const deltaY = touchStartY - touchEndY;
     
@@ -126,6 +142,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // 键盘事件
   function handleKeydown(e) {
+    if (overlayConsumesGestures()) return;
     switch(e.key) {
       case 'ArrowDown':
       case 'ArrowRight':
