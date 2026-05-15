@@ -12,7 +12,7 @@ html {
 body.m2-activity-page {
   margin: 0;
   min-height: 100dvh;
-  height: 100dvh;
+  height: auto;
   display: flex;
   flex-direction: column;
   /* 与套餐详情页 .m2p-section 同款底图（package.css） */
@@ -23,7 +23,8 @@ body.m2-activity-page {
   background-repeat: no-repeat;
   color: rgba(255, 255, 255, 0.92);
   font-family: "PingFang SC", "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 .m2-activity-dates {
@@ -165,7 +166,7 @@ body.m2-activity-page {
   width: min(318px, calc(100vw - 24px));
   padding: 14px 14px 16px;
   border-radius: 16px;
-  background: linear-gradient(165deg, rgba(22, 28, 42, 0.98), rgba(10, 14, 24, 0.98));
+  background: #4a4a4a;
   border: 1px solid rgba(255, 255, 255, 0.12);
   box-shadow: 0 18px 48px rgba(0, 0, 0, 0.55);
   backdrop-filter: blur(20px) saturate(160%);
@@ -322,12 +323,12 @@ body.m2-activity-page {
 
 /* 占满除日期栏(20vh)、备案(7vh)外的剩余高度 */
 .m2-activity-scroll {
-  flex: 1 1 auto;
-  min-height: 0;
+  flex: 0 0 auto;
+  min-height: auto;
   height: auto;
   width: 100vw;
   overflow-x: hidden;
-  overflow-y: auto;
+  overflow-y: visible;
   -webkit-overflow-scrolling: touch;
   padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
 }
@@ -372,10 +373,9 @@ body.m2-activity-page {
 .m2-activity-car-cover {
   display: block;
   width: 100%;
-  height: 40vh;
+  height: 34vh;
   object-fit: cover;
-  /* cover 纵向溢出：上下被裁区域按约 40% : 60%（上 : 下）；垂直对齐取图高 40% 位置 */
-  object-position: center 75%;
+  object-position: center 70%;
   flex-shrink: 0;
   background: rgba(7, 12, 22, 0.45);
 }
@@ -471,16 +471,16 @@ body.m2-activity-page {
 
 /* 备案：活动页单独压缩高度为 7vh（详情页仍按 m2-legal-foot.css） */
 footer.m2-activity-footer.m2-same-price__record-zone {
-  flex: 0 0 7vh;
-  height: 7vh;
+  flex: 0 0 auto;
+  height: auto;
   min-height: 7vh;
-  max-height: 7vh;
+  max-height: none;
   width: 100vw;
   margin: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: hidden;
+  overflow: visible;
   box-sizing: border-box;
 }
 
