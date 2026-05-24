@@ -47,7 +47,6 @@
       '<div class="m2-share-modal__qr-wrap">' +
       '<div class="m2-share-modal__qr-box">' +
       '<img class="m2-share-modal__qr" alt="当前页面二维码">' +
-      '<img class="m2-share-modal__qr-logo" alt="芒果标识">' +
       '</div>' +
       '<div class="m2-share-modal__qr-tips">' +
       '<p class="m2-share-modal__qr-tip">1、保存图片到相册</p>' +
@@ -63,7 +62,6 @@
     var brandEl = modal.querySelector('.m2-share-modal__brand');
     var modelEl = modal.querySelector('.m2-share-modal__model');
     var qr = modal.querySelector('.m2-share-modal__qr');
-    var qrLogo = modal.querySelector('.m2-share-modal__qr-logo');
     var saveBtn = modal.querySelector('#m2ShareSaveBtn');
     var locked = false;
 
@@ -84,17 +82,9 @@
 
     function qrUrl(text) {
       return (
-        'https://api.qrserver.com/v1/create-qr-code/?size=360x360&margin=12&ecc=H&data=' +
+        'https://api.qrserver.com/v1/create-qr-code/?size=360x360&margin=12&ecc=M&data=' +
         encodeURIComponent(text)
       );
-    }
-
-    function qrLogoUrl() {
-      try {
-        return new URL('../../../media-webp/photos/index/logo/logo2.webp', location.href).href;
-      } catch (e) {
-        return '../../../media-webp/photos/index/logo/logo2.webp';
-      }
     }
 
     function escFilename(name) {
@@ -215,7 +205,6 @@
         coverWrap.setAttribute('hidden', '');
       }
       if (qr) qr.src = qrUrl(url);
-      if (qrLogo) qrLogo.src = qrLogoUrl();
       modal.removeAttribute('hidden');
       lockScroll();
     }
@@ -416,7 +405,6 @@
       var wrapEl = modal.querySelector('.m2-share-modal__cover-wrap');
       var metaEl = modal.querySelector('.m2-share-modal__meta');
       var qrWrapEl = modal.querySelector('.m2-share-modal__qr-wrap');
-      var qrLogoEl = modal.querySelector('.m2-share-modal__qr-logo');
       var tips = modal.querySelectorAll('.m2-share-modal__qr-tip');
       if (!wrapEl || !metaEl || !qrWrapEl || !brandEl || !modelEl || !qr) {
         throw new Error('分享布局未就绪');
@@ -459,12 +447,9 @@
         return 0.5;
       }
 
-      var qrLogoSrc = qrLogoEl && qrLogoEl.getAttribute('src') ? qrLogoEl.getAttribute('src') : '';
-      var logoPromise = qrLogoSrc ? loadImg(qrLogoSrc).catch(function () { return null; }) : Promise.resolve(null);
-      return Promise.all([loadImg(coverSrc), loadImg(qrSrc), logoPromise]).then(function (imgs) {
+      return Promise.all([loadImg(coverSrc), loadImg(qrSrc)]).then(function (imgs) {
         var coverImg = imgs[0];
         var qrImg = imgs[1];
-        var logoImg = imgs[2];
 
         var wrapRect = wrapEl.getBoundingClientRect();
         var metaRect = metaEl.getBoundingClientRect();
@@ -472,7 +457,6 @@
         var modelRect = modelEl.getBoundingClientRect();
         var qrWrapRect = qrWrapEl.getBoundingClientRect();
         var qrRect = qr.getBoundingClientRect();
-        var qrLogoRect = qrLogoEl ? qrLogoEl.getBoundingClientRect() : null;
         var tip1Rect = tips[0] ? tips[0].getBoundingClientRect() : null;
         var tip2Rect = tips[1] ? tips[1].getBoundingClientRect() : null;
 
@@ -528,17 +512,6 @@
 
         var qrRel = relRect(qrRect, wrapRect);
         ctx.drawImage(qrImg, s(qrRel.x), s(qrRel.y), s(qrRel.w), s(qrRel.h));
-        if (logoImg && qrLogoRect) {
-          var logoRel = relRect(qrLogoRect, wrapRect);
-          var cx = s(logoRel.x + logoRel.w * 0.5);
-          var cy = s(logoRel.y + logoRel.h * 0.5);
-          var r = s(Math.min(logoRel.w, logoRel.h) * 0.5 + 0.6);
-          ctx.beginPath();
-          ctx.arc(cx, cy, r, 0, Math.PI * 2);
-          ctx.fillStyle = '#fff';
-          ctx.fill();
-          ctx.drawImage(logoImg, s(logoRel.x), s(logoRel.y), s(logoRel.w), s(logoRel.h));
-        }
 
         if (tips[0] && tip1Rect) {
           var tip1Rel = relRect(tip1Rect, wrapRect);

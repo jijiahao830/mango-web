@@ -377,20 +377,6 @@
   display: block;
 }
 
-.m2-share-modal__qr-logo {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 18%;
-  height: 18%;
-  transform: translate(-50%, -50%);
-  border-radius: 50%;
-  background: #fff;
-  object-fit: cover;
-  padding: 2px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.22);
-}
-
 .m2-share-modal__qr-tips {
   min-width: 0;
   flex: 1 1 auto;
