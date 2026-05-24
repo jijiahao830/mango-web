@@ -1082,7 +1082,7 @@ a.m2-chooser__bottom-btn {
   border-radius: 10px;
   background: rgba(255, 255, 255, 0.08);
   color: #fff;
-  font-size: 14px;
+  font-size: 16px;
   outline: none;
   -webkit-appearance: none;
 }
@@ -1342,7 +1342,7 @@ a.m2-chooser__bottom-btn {
   position: absolute;
   inset: 0;
   background-color: #05070d;
-  background-image: url('../media-webp/photos/index/m2/关于.webp?v=1779612928937');
+  background-image: url('../media-webp/photos/index/m2/关于.webp?v=1779613146953');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
