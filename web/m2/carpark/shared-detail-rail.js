@@ -1,5 +1,198 @@
 /* 详情页右侧快捷栏（公共） */
 (function () {
+  function initShareQr() {
+    if (document.querySelector('.m2-car__share')) return;
+    var back = document.querySelector('.m2-car__back');
+    if (!back || !back.parentNode) return;
+
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'm2-car__share';
+    btn.setAttribute('aria-label', '分享当前车辆');
+    btn.innerHTML =
+      '<svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+      '<circle cx="18" cy="5" r="3"></circle>' +
+      '<circle cx="6" cy="12" r="3"></circle>' +
+      '<circle cx="18" cy="19" r="3"></circle>' +
+      '<path d="M8.6 10.6 15.4 6.4"></path>' +
+      '<path d="M8.6 13.4 15.4 17.6"></path>' +
+      '</svg>';
+    back.parentNode.insertBefore(btn, back.nextSibling);
+
+    var modal = document.createElement('div');
+    modal.className = 'm2-share-modal';
+    modal.setAttribute('hidden', '');
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+    modal.setAttribute('aria-label', '分享二维码');
+    modal.innerHTML =
+      '<div class="m2-share-modal__backdrop" data-m2-share-close></div>' +
+      '<div class="m2-share-modal__panel">' +
+      '<div class="m2-share-modal__head">' +
+      '<button type="button" class="m2-share-modal__close" data-m2-share-close aria-label="关闭">×</button>' +
+      '</div>' +
+      '<div class="m2-share-modal__cover-wrap">' +
+      '<img class="m2-share-modal__cover" alt="">' +
+      '<div class="m2-share-modal__meta">' +
+      '<p class="m2-share-modal__brand"></p>' +
+      '<p class="m2-share-modal__model"></p>' +
+      '</div>' +
+      '<div class="m2-share-modal__qr-wrap">' +
+      '<img class="m2-share-modal__qr" alt="当前页面二维码">' +
+      '<div class="m2-share-modal__qr-tips">' +
+      '<p class="m2-share-modal__qr-tip">1、保存图片到相册</p>' +
+      '<p class="m2-share-modal__qr-tip">2、扫描二维码</p>' +
+      '</div>' +
+      '</div>' +
+      '</div>' +
+      '</div>';
+    document.body.appendChild(modal);
+
+    var cover = modal.querySelector('.m2-share-modal__cover');
+    var coverWrap = modal.querySelector('.m2-share-modal__cover-wrap');
+    var brandEl = modal.querySelector('.m2-share-modal__brand');
+    var modelEl = modal.querySelector('.m2-share-modal__model');
+    var qr = modal.querySelector('.m2-share-modal__qr');
+    var locked = false;
+
+    function currentShareUrl() {
+      try {
+        return new URL(location.href).href;
+      } catch (e) {
+        return String(location.href || '');
+      }
+    }
+
+    function qrUrl(text) {
+      return (
+        'https://api.qrserver.com/v1/create-qr-code/?size=360x360&margin=12&data=' +
+        encodeURIComponent(text)
+      );
+    }
+
+    function splitBrandModel(rawName) {
+      var name = String(rawName || '').trim();
+      if (!name) return { brand: '', model: '' };
+      var brands = [
+        '阿斯顿马丁',
+        '兰博基尼',
+        '劳斯莱斯',
+        '玛莎拉蒂',
+        '迈凯伦',
+        '保时捷',
+        '法拉利',
+        '迈巴赫',
+        '广汽传祺',
+        '路虎',
+        '路特斯',
+        '特斯拉',
+        '奔驰',
+        '宝马',
+        '奥迪',
+        '宾利',
+        '丰田',
+        '日产',
+        '理想',
+        '腾势',
+        '问界',
+        '岚图',
+        '小米',
+        '坦克',
+        '福特',
+        '别克',
+        '道奇',
+        '五菱',
+      ];
+      for (var i = 0; i < brands.length; i++) {
+        var b = brands[i];
+        if (name.indexOf(b) === 0) {
+          return {
+            brand: b,
+            model: String(name.slice(b.length)).trim() || name,
+          };
+        }
+      }
+      var parts = name.split(/\s+/);
+      if (parts.length <= 1) return { brand: name, model: name };
+      return {
+        brand: parts[0],
+        model: String(name.slice(parts[0].length)).trim() || name,
+      };
+    }
+
+    function lockScroll() {
+      if (locked) return;
+      locked = true;
+      try {
+        if (typeof window.m2aLockOverlayScroll === 'function') {
+          window.m2aLockOverlayScroll();
+          return;
+        }
+      } catch (eLock) {}
+      try {
+        document.documentElement.classList.add('m2a-overlay-scroll-lock');
+        document.body.classList.add('m2a-overlay-scroll-lock');
+      } catch (eFallbackLock) {}
+    }
+
+    function unlockScroll() {
+      if (!locked) return;
+      locked = false;
+      try {
+        if (typeof window.m2aUnlockOverlayScroll === 'function') {
+          window.m2aUnlockOverlayScroll();
+          return;
+        }
+      } catch (eUnlock) {}
+      try {
+        document.documentElement.classList.remove('m2a-overlay-scroll-lock');
+        document.body.classList.remove('m2a-overlay-scroll-lock');
+      } catch (eFallbackUnlock) {}
+    }
+
+    function openShare() {
+      var url = currentShareUrl();
+      var displayName = String(document.body.getAttribute('data-car-display-name') || '').trim();
+      var bm = splitBrandModel(displayName);
+      if (brandEl) brandEl.textContent = bm.brand || displayName || '';
+      if (modelEl) modelEl.textContent = bm.model || displayName || '';
+      var mainImg = document.querySelector('.m2-car__bg');
+      if (mainImg && mainImg.getAttribute('src')) {
+        if (cover) {
+          cover.src = mainImg.getAttribute('src');
+          cover.alt =
+            mainImg.getAttribute('alt') ||
+            String(document.body.getAttribute('data-car-display-name') || '车辆主图');
+        }
+        if (coverWrap) coverWrap.removeAttribute('hidden');
+      } else if (coverWrap) {
+        coverWrap.setAttribute('hidden', '');
+      }
+      if (qr) qr.src = qrUrl(url);
+      modal.removeAttribute('hidden');
+      lockScroll();
+    }
+
+    function closeShare() {
+      if (modal.hasAttribute('hidden')) return;
+      modal.setAttribute('hidden', '');
+      unlockScroll();
+    }
+
+    btn.addEventListener('click', openShare);
+    modal.addEventListener('click', function (e) {
+      if (e.target && e.target.closest && e.target.closest('[data-m2-share-close]')) {
+        closeShare();
+      }
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') closeShare();
+    });
+    window.addEventListener('pagehide', closeShare);
+  }
+
+  initShareQr();
+
   function remapGalleryAndFeatures() {
     var features = document.getElementById('m2Features');
     var gallery = document.getElementById('m2Gallery');

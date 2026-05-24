@@ -400,6 +400,37 @@
     var closeBtn = document.getElementById('m2ChooserAdClose');
     if (!ad || !closeBtn || !adImg || !adCta) return;
     var KEY = 'm2ChooserAdDismissed';
+    var adScrollLocked = false;
+
+    function lockAdScroll() {
+      if (adScrollLocked) return;
+      adScrollLocked = true;
+      try {
+        if (typeof window.m2aLockOverlayScroll === 'function') {
+          window.m2aLockOverlayScroll();
+          return;
+        }
+      } catch (eLock) {}
+      try {
+        var home = document.querySelector('.m2-home');
+        if (home) home.classList.add('m2-scroll-lock');
+      } catch (eHomeLock) {}
+    }
+
+    function unlockAdScroll() {
+      if (!adScrollLocked) return;
+      adScrollLocked = false;
+      try {
+        if (typeof window.m2aUnlockOverlayScroll === 'function') {
+          window.m2aUnlockOverlayScroll();
+          return;
+        }
+      } catch (eUnlock) {}
+      try {
+        var home = document.querySelector('.m2-home');
+        if (home) home.classList.remove('m2-scroll-lock');
+      } catch (eHomeUnlock) {}
+    }
 
     function navType() {
       try {
@@ -462,7 +493,11 @@
       } catch (e) {}
     }
 
-    if (dismissed) ad.classList.add('is-hidden');
+    if (dismissed) {
+      ad.classList.add('is-hidden');
+    } else {
+      lockAdScroll();
+    }
 
     function dismissAd() {
       if (dismissed) return;
@@ -471,6 +506,7 @@
         sessionStorage.setItem(KEY, '1');
       } catch (e) {}
       ad.classList.add('is-hidden');
+      unlockAdScroll();
     }
 
     closeBtn.addEventListener('click', function (e) {
@@ -484,7 +520,14 @@
 
     window.addEventListener('pageshow', function () {
       try {
-        if (sessionStorage.getItem(KEY) === '1') ad.classList.add('is-hidden');
+        if (sessionStorage.getItem(KEY) === '1') {
+          dismissed = true;
+          ad.classList.add('is-hidden');
+          unlockAdScroll();
+        } else if (!ad.classList.contains('is-hidden')) {
+          dismissed = false;
+          lockAdScroll();
+        }
       } catch (e) {}
     });
   })();

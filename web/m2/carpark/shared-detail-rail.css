@@ -199,6 +199,195 @@
   50% { transform: translateX(-50%) translateY(3px); }
 }
 
+/* 顶部分享按钮与二维码弹层 */
+.m2-car__share {
+  position: fixed;
+  top: calc(env(safe-area-inset-top) + 16px);
+  right: 16px;
+  z-index: 10;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(16px) saturate(160%);
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.2s ease;
+}
+
+.m2-car__share:active {
+  background: rgba(255, 255, 255, 0.32);
+}
+
+.m2-share-modal[hidden] {
+  display: none !important;
+}
+
+.m2-share-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 9200;
+}
+
+.m2-share-modal__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.58);
+  backdrop-filter: blur(12px) saturate(112%);
+  -webkit-backdrop-filter: blur(12px) saturate(112%);
+}
+
+.m2-share-modal__panel {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: min(96vw, 460px);
+  max-height: min(86dvh, 620px);
+  border-radius: 16px;
+  padding: 10px 14px 16px;
+  background: rgba(18, 20, 28, 0.86);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.42);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.m2-share-modal__head {
+  width: 100%;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.m2-share-modal__close {
+  width: 28px;
+  height: 28px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: #fff;
+  font-size: 24px;
+  line-height: 1;
+  padding: 0;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.m2-share-modal__cover-wrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  border-radius: 12px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.m2-share-modal__cover-wrap[hidden] {
+  display: none !important;
+}
+
+.m2-share-modal__cover {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 80%;
+  display: block;
+}
+
+.m2-share-modal__meta {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  padding: 28px 14px 32px 40px;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.58) 0%, rgba(0, 0, 0, 0.24) 56%, rgba(0, 0, 0, 0) 100%);
+  pointer-events: none;
+}
+
+.m2-share-modal__brand,
+.m2-share-modal__model {
+  margin: 0;
+  color: #fff;
+  letter-spacing: 0;
+  line-height: 1.2;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.45);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.m2-share-modal__brand {
+  font-size: clamp(22px, 5.8vw, 32px);
+  font-weight: 500;
+  opacity: 0.92;
+}
+
+.m2-share-modal__model {
+  margin-top: 4px;
+  font-size: clamp(36px, 9.6vw, 52px);
+  font-weight: 700;
+}
+
+.m2-share-modal__qr-wrap {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  min-width: 0;
+  height: min(32vw, 138px);
+  padding: 8px 12px 8px 40px;
+  border-radius: 0;
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(10px) saturate(112%);
+  -webkit-backdrop-filter: blur(10px) saturate(112%);
+  border: 0.0625rem solid rgba(255, 255, 255, 0.16);
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 28px;
+  box-shadow: none;
+}
+
+.m2-share-modal__qr {
+  width: auto;
+  height: 100%;
+  max-height: calc(100% - 16px);
+  aspect-ratio: 1 / 1;
+  object-fit: contain;
+  display: block;
+  flex: 0 0 auto;
+}
+
+.m2-share-modal__qr-tips {
+  min-width: 0;
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 10px;
+}
+
+.m2-share-modal__qr-tip {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: clamp(13px, 3vw, 15px);
+  line-height: 1.35;
+  letter-spacing: 0;
+}
+
 /* 详情页底部下滑提示（所有车型页共用） */
 .m2-detail-scroll-hint {
   position: fixed;

@@ -275,6 +275,8 @@ body {
   align-items: center;
   justify-content: center;
   overflow: hidden;
+  overscroll-behavior: contain;
+  touch-action: none;
 }
 
 .m2-chooser__ad-visual-bg {
