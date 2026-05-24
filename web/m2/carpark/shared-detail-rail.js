@@ -245,58 +245,6 @@
       a.remove();
     }
 
-    function canvasToBlob(canvas) {
-      return new Promise(function (resolve, reject) {
-        try {
-          canvas.toBlob(function (blob) {
-            if (blob) resolve(blob);
-            else reject(new Error('blob_empty'));
-          }, 'image/png');
-        } catch (e) {
-          reject(e);
-        }
-      });
-    }
-
-    function isLikelyIOS() {
-      var ua = String(navigator.userAgent || '');
-      var isIOS = /iPad|iPhone|iPod/i.test(ua);
-      var isMacTouch = /Macintosh/i.test(ua) && navigator.maxTouchPoints > 1;
-      return isIOS || isMacTouch;
-    }
-
-    function shareOrDownloadCanvas(canvas, filename, opts) {
-      opts = opts || {};
-      var preferAlbum = !!opts.preferAlbum;
-      return canvasToBlob(canvas).then(function (blob) {
-        var file = new File([blob], filename + '.png', { type: 'image/png' });
-        var canShareFile =
-          typeof navigator !== 'undefined' &&
-          typeof navigator.share === 'function' &&
-          typeof navigator.canShare === 'function' &&
-          navigator.canShare({ files: [file] });
-
-        if (preferAlbum && canShareFile && isLikelyIOS()) {
-          return navigator
-            .share({
-              title: filename,
-              files: [file],
-            })
-            .catch(function (err) {
-              var msg = String((err && err.name) || '');
-              if (msg === 'AbortError') return;
-              downloadCanvas(canvas, filename);
-            });
-        }
-
-        if (preferAlbum && (!canShareFile || !isLikelyIOS())) {
-          window.alert('当前环境不支持直接保存到相册，将为你下载文件。');
-        }
-
-        downloadCanvas(canvas, filename);
-      });
-    }
-
     function createSharePoster() {
       var displayName = String(document.body.getAttribute('data-car-display-name') || '').trim() || '芒果超跑';
       var bm = splitBrandModel(displayName);
@@ -441,10 +389,7 @@
         createSharePoster()
           .then(function (canvas) {
             var name = escFilename(document.body.getAttribute('data-car-display-name') || 'mango-share');
-            var preferAlbum = window.confirm(
-              '是否保存到相册？\n确定：打开系统分享，可选择“存储图像”\n取消：直接下载文件'
-            );
-            return shareOrDownloadCanvas(canvas, name + '-分享', { preferAlbum: preferAlbum });
+            downloadCanvas(canvas, name + '-分享');
           })
           .catch(function () {
             window.alert('生成失败，请稍后重试');
