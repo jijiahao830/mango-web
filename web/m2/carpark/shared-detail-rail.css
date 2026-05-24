@@ -362,14 +362,33 @@
   box-shadow: none;
 }
 
-.m2-share-modal__qr {
-  width: auto;
+.m2-share-modal__qr-box {
+  position: relative;
   height: 100%;
   max-height: calc(100% - 16px);
   aspect-ratio: 1 / 1;
+  flex: 0 0 auto;
+}
+
+.m2-share-modal__qr {
+  width: 100%;
+  height: 100%;
   object-fit: contain;
   display: block;
-  flex: 0 0 auto;
+}
+
+.m2-share-modal__qr-logo {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 24%;
+  height: 24%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: #fff;
+  object-fit: cover;
+  padding: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.22);
 }
 
 .m2-share-modal__qr-tips {
