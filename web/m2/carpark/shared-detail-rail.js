@@ -84,7 +84,7 @@
 
     function qrUrl(text) {
       return (
-        'https://api.qrserver.com/v1/create-qr-code/?size=360x360&margin=12&data=' +
+        'https://api.qrserver.com/v1/create-qr-code/?size=360x360&margin=12&ecc=H&data=' +
         encodeURIComponent(text)
       );
     }
@@ -532,7 +532,7 @@
           var logoRel = relRect(qrLogoRect, wrapRect);
           var cx = s(logoRel.x + logoRel.w * 0.5);
           var cy = s(logoRel.y + logoRel.h * 0.5);
-          var r = s(Math.min(logoRel.w, logoRel.h) * 0.5 + 2);
+          var r = s(Math.min(logoRel.w, logoRel.h) * 0.5 + 0.6);
           ctx.beginPath();
           ctx.arc(cx, cy, r, 0, Math.PI * 2);
           ctx.fillStyle = '#fff';
