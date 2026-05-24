@@ -29,6 +29,13 @@
       '<div class="m2-share-modal__backdrop" data-m2-share-close></div>' +
       '<div class="m2-share-modal__panel">' +
       '<div class="m2-share-modal__head">' +
+      '<button type="button" class="m2-share-modal__save m2-share-modal__save--head" id="m2ShareSaveBtn" aria-label="下载分享图">' +
+      '<svg class="m2-share-modal__save-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+      '<path d="M12 3v11"></path>' +
+      '<path d="m7.5 10.5 4.5 4.5 4.5-4.5"></path>' +
+      '<path d="M4 18.5h16"></path>' +
+      '</svg>' +
+      '</button>' +
       '<button type="button" class="m2-share-modal__close" data-m2-share-close aria-label="关闭">×</button>' +
       '</div>' +
       '<div class="m2-share-modal__cover-wrap">' +
@@ -53,6 +60,7 @@
     var brandEl = modal.querySelector('.m2-share-modal__brand');
     var modelEl = modal.querySelector('.m2-share-modal__model');
     var qr = modal.querySelector('.m2-share-modal__qr');
+    var saveBtn = modal.querySelector('#m2ShareSaveBtn');
     var locked = false;
 
     function currentShareUrl() {
@@ -68,6 +76,25 @@
         'https://api.qrserver.com/v1/create-qr-code/?size=360x360&margin=12&data=' +
         encodeURIComponent(text)
       );
+    }
+
+    function escFilename(name) {
+      return String(name || 'mango-share')
+        .replace(/[\\/:*?"<>|]/g, '_')
+        .replace(/\s+/g, ' ')
+        .trim();
+    }
+
+    function loadImg(src) {
+      return new Promise(function (resolve, reject) {
+        var img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = function () {
+          resolve(img);
+        };
+        img.onerror = reject;
+        img.src = src;
+      });
     }
 
     function splitBrandModel(rawName) {
@@ -179,7 +206,200 @@
       unlockScroll();
     }
 
+    function drawRoundedRect(ctx, x, y, w, h, r) {
+      var rr = Math.min(r, w / 2, h / 2);
+      ctx.beginPath();
+      ctx.moveTo(x + rr, y);
+      ctx.arcTo(x + w, y, x + w, y + h, rr);
+      ctx.arcTo(x + w, y + h, x, y + h, rr);
+      ctx.arcTo(x, y + h, x, y, rr);
+      ctx.arcTo(x, y, x + w, y, rr);
+      ctx.closePath();
+    }
+
+    function drawCoverImageCrop(ctx, img, x, y, w, h, objectPosY) {
+      var srcW = img.naturalWidth || img.width;
+      var srcH = img.naturalHeight || img.height;
+      if (!srcW || !srcH) return;
+      var targetRatio = w / h;
+      var srcRatio = srcW / srcH;
+      var cropW = srcW;
+      var cropH = srcH;
+      if (srcRatio > targetRatio) {
+        cropW = srcH * targetRatio;
+      } else {
+        cropH = srcW / targetRatio;
+      }
+      var sx = (srcW - cropW) * 0.5;
+      var posY = Math.max(0, Math.min(1, objectPosY));
+      var sy = (srcH - cropH) * posY;
+      ctx.drawImage(img, sx, sy, cropW, cropH, x, y, w, h);
+    }
+
+    function downloadCanvas(canvas, filename) {
+      var a = document.createElement('a');
+      a.href = canvas.toDataURL('image/png');
+      a.download = filename + '.png';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    }
+
+    function createSharePoster() {
+      var displayName = String(document.body.getAttribute('data-car-display-name') || '').trim() || '芒果超跑';
+      var bm = splitBrandModel(displayName);
+      var coverSrc = cover && cover.getAttribute('src') ? cover.getAttribute('src') : '';
+      var qrSrc = qr && qr.getAttribute('src') ? qr.getAttribute('src') : '';
+      if (!coverSrc || !qrSrc) throw new Error('分享素材未就绪');
+      var wrapEl = modal.querySelector('.m2-share-modal__cover-wrap');
+      var metaEl = modal.querySelector('.m2-share-modal__meta');
+      var qrWrapEl = modal.querySelector('.m2-share-modal__qr-wrap');
+      var tips = modal.querySelectorAll('.m2-share-modal__qr-tip');
+      if (!wrapEl || !metaEl || !qrWrapEl || !brandEl || !modelEl || !qr) {
+        throw new Error('分享布局未就绪');
+      }
+
+      function relRect(childRect, parentRect) {
+        return {
+          x: childRect.left - parentRect.left,
+          y: childRect.top - parentRect.top,
+          w: childRect.width,
+          h: childRect.height,
+        };
+      }
+
+      function toCanvasFont(el, scale) {
+        var st = window.getComputedStyle(el);
+        var size = parseFloat(st.fontSize || '16') * scale;
+        var weight = st.fontWeight || '400';
+        var family = st.fontFamily || '"PingFang SC","Microsoft YaHei",sans-serif';
+        return String(weight) + ' ' + Math.max(1, size).toFixed(1) + 'px ' + family;
+      }
+
+      function toCanvasColor(el, fallback) {
+        var st = window.getComputedStyle(el);
+        return st.color || fallback;
+      }
+
+      function parseObjectPosY(val) {
+        var raw = String(val || '').trim();
+        if (!raw) return 0.5;
+        var parts = raw.split(/\s+/);
+        var y = parts.length >= 2 ? parts[1] : parts[0];
+        if (y === 'top') return 0;
+        if (y === 'center') return 0.5;
+        if (y === 'bottom') return 1;
+        if (/%$/.test(y)) {
+          var n = parseFloat(y);
+          if (isFinite(n)) return Math.max(0, Math.min(1, n / 100));
+        }
+        return 0.5;
+      }
+
+      return Promise.all([loadImg(coverSrc), loadImg(qrSrc)]).then(function (imgs) {
+        var coverImg = imgs[0];
+        var qrImg = imgs[1];
+
+        var wrapRect = wrapEl.getBoundingClientRect();
+        var metaRect = metaEl.getBoundingClientRect();
+        var brandRect = brandEl.getBoundingClientRect();
+        var modelRect = modelEl.getBoundingClientRect();
+        var qrWrapRect = qrWrapEl.getBoundingClientRect();
+        var qrRect = qr.getBoundingClientRect();
+        var tip1Rect = tips[0] ? tips[0].getBoundingClientRect() : null;
+        var tip2Rect = tips[1] ? tips[1].getBoundingClientRect() : null;
+
+        var scale = Math.max(2, Math.min(3, (window.devicePixelRatio || 1) * 2));
+        var W = Math.max(1, Math.round(wrapRect.width * scale));
+        var H = Math.max(1, Math.round(wrapRect.height * scale));
+        var canvas = document.createElement('canvas');
+        canvas.width = W;
+        canvas.height = H;
+        var ctx = canvas.getContext('2d');
+        if (!ctx) throw new Error('无法创建画布');
+
+        function s(v) {
+          return v * scale;
+        }
+
+        var radius = parseFloat(window.getComputedStyle(wrapEl).borderTopLeftRadius || '0') || 0;
+        drawRoundedRect(ctx, 0, 0, W, H, s(radius));
+        ctx.save();
+        ctx.clip();
+
+        var posY = parseObjectPosY(window.getComputedStyle(cover).objectPosition);
+        drawCoverImageCrop(ctx, coverImg, 0, 0, W, H, posY);
+
+        var metaRel = relRect(metaRect, wrapRect);
+        var grd = ctx.createLinearGradient(0, s(metaRel.y), 0, s(metaRel.y + metaRel.h));
+        grd.addColorStop(0, 'rgba(0,0,0,0.58)');
+        grd.addColorStop(0.56, 'rgba(0,0,0,0.24)');
+        grd.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = grd;
+        ctx.fillRect(s(metaRel.x), s(metaRel.y), s(metaRel.w), s(metaRel.h));
+
+        var brandRel = relRect(brandRect, wrapRect);
+        ctx.textBaseline = 'top';
+        ctx.shadowColor = 'rgba(0,0,0,0.45)';
+        ctx.shadowBlur = s(4);
+        ctx.fillStyle = toCanvasColor(brandEl, '#fff');
+        ctx.font = toCanvasFont(brandEl, scale);
+        ctx.fillText(brandEl.textContent || bm.brand || displayName, s(brandRel.x), s(brandRel.y));
+
+        var modelRel = relRect(modelRect, wrapRect);
+        ctx.fillStyle = toCanvasColor(modelEl, '#fff');
+        ctx.font = toCanvasFont(modelEl, scale);
+        ctx.fillText(modelEl.textContent || bm.model || displayName, s(modelRel.x), s(modelRel.y));
+        ctx.shadowBlur = 0;
+
+        var qrWrapRel = relRect(qrWrapRect, wrapRect);
+        ctx.fillStyle = 'rgba(255,255,255,0.06)';
+        ctx.fillRect(s(qrWrapRel.x), s(qrWrapRel.y), s(qrWrapRel.w), s(qrWrapRel.h));
+        ctx.strokeStyle = 'rgba(255,255,255,0.16)';
+        ctx.lineWidth = Math.max(1, scale);
+        ctx.strokeRect(s(qrWrapRel.x) + 0.5, s(qrWrapRel.y) + 0.5, s(qrWrapRel.w) - 1, s(qrWrapRel.h) - 1);
+
+        var qrRel = relRect(qrRect, wrapRect);
+        ctx.drawImage(qrImg, s(qrRel.x), s(qrRel.y), s(qrRel.w), s(qrRel.h));
+
+        if (tips[0] && tip1Rect) {
+          var tip1Rel = relRect(tip1Rect, wrapRect);
+          ctx.fillStyle = toCanvasColor(tips[0], 'rgba(255,255,255,0.92)');
+          ctx.font = toCanvasFont(tips[0], scale);
+          ctx.fillText(tips[0].textContent || '1、保存图片到相册', s(tip1Rel.x), s(tip1Rel.y));
+        }
+        if (tips[1] && tip2Rect) {
+          var tip2Rel = relRect(tip2Rect, wrapRect);
+          ctx.fillStyle = toCanvasColor(tips[1], 'rgba(255,255,255,0.92)');
+          ctx.font = toCanvasFont(tips[1], scale);
+          ctx.fillText(tips[1].textContent || '2、扫描二维码', s(tip2Rel.x), s(tip2Rel.y));
+        }
+
+        ctx.restore();
+        return canvas;
+      });
+    }
+
     btn.addEventListener('click', openShare);
+    if (saveBtn) {
+      saveBtn.addEventListener('click', function () {
+        if (saveBtn.disabled) return;
+        saveBtn.disabled = true;
+        saveBtn.classList.add('is-loading');
+        createSharePoster()
+          .then(function (canvas) {
+            var name = escFilename(document.body.getAttribute('data-car-display-name') || 'mango-share');
+            downloadCanvas(canvas, name + '-分享');
+          })
+          .catch(function () {
+            window.alert('生成失败，请稍后重试');
+          })
+          .finally(function () {
+            saveBtn.disabled = false;
+            saveBtn.classList.remove('is-loading');
+          });
+      });
+    }
     modal.addEventListener('click', function (e) {
       if (e.target && e.target.closest && e.target.closest('[data-m2-share-close]')) {
         closeShare();
