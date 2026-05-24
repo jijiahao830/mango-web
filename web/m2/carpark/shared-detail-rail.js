@@ -245,6 +245,148 @@
       a.remove();
     }
 
+    function canvasToBlob(canvas) {
+      return new Promise(function (resolve, reject) {
+        try {
+          canvas.toBlob(function (blob) {
+            if (blob) resolve(blob);
+            else reject(new Error('blob_empty'));
+          }, 'image/png');
+        } catch (e) {
+          reject(e);
+        }
+      });
+    }
+
+    function isLikelyIOS() {
+      var ua = String(navigator.userAgent || '');
+      var isIOS = /iPad|iPhone|iPod/i.test(ua);
+      var isMacTouch = /Macintosh/i.test(ua) && navigator.maxTouchPoints > 1;
+      return isIOS || isMacTouch;
+    }
+
+    function showLongPressSaveSheet(imgSrc, dispose) {
+      var old = document.getElementById('m2ShareLongpressSheet');
+      if (old && old.parentNode) old.parentNode.removeChild(old);
+
+      var sheet = document.createElement('div');
+      sheet.id = 'm2ShareLongpressSheet';
+      sheet.className = 'm2-share-longpress';
+      sheet.innerHTML =
+        '<div class="m2-share-longpress__backdrop"></div>' +
+        '<div class="m2-share-longpress__card">' +
+        '<button type="button" class="m2-share-longpress__close" aria-label="关闭">×</button>' +
+        '<p class="m2-share-longpress__tip">长按图片，保存到相册</p>' +
+        '<img class="m2-share-longpress__img" alt="可保存图片">' +
+        '</div>';
+
+      var img = sheet.querySelector('.m2-share-longpress__img');
+      if (img) {
+        img.src = imgSrc;
+        img.setAttribute('draggable', 'false');
+      }
+
+      function closeSheet() {
+        if (typeof dispose === 'function') {
+          try {
+            dispose();
+          } catch (eDispose) {}
+        }
+        if (sheet.parentNode) sheet.parentNode.removeChild(sheet);
+      }
+
+      sheet.addEventListener('click', function (e) {
+        var t = e.target;
+        if (!t) return;
+        if (
+          t.classList.contains('m2-share-longpress__backdrop') ||
+          t.classList.contains('m2-share-longpress__close')
+        ) {
+          closeSheet();
+        }
+      });
+      document.body.appendChild(sheet);
+    }
+
+    function safeObjectUrlFromBlob(blob) {
+      try {
+        if (window.URL && typeof window.URL.createObjectURL === 'function') {
+          return window.URL.createObjectURL(blob);
+        }
+      } catch (e) {}
+      return '';
+    }
+
+    function revokeObjectUrl(url) {
+      if (!url) return;
+      try {
+        if (window.URL && typeof window.URL.revokeObjectURL === 'function') {
+          window.URL.revokeObjectURL(url);
+        }
+      } catch (e) {}
+    }
+
+    function shareOrSaveCanvas(canvas, filename) {
+      if (!isLikelyIOS()) {
+        downloadCanvas(canvas, filename);
+        return Promise.resolve();
+      }
+
+      return canvasToBlob(canvas)
+        .then(function (blob) {
+          var objectUrl = safeObjectUrlFromBlob(blob);
+          var dataUrl = '';
+          function ensureDataUrl() {
+            if (!dataUrl) dataUrl = canvas.toDataURL('image/png');
+            return dataUrl;
+          }
+          function showSheet() {
+            if (objectUrl) {
+              showLongPressSaveSheet(objectUrl, function () {
+                revokeObjectUrl(objectUrl);
+              });
+            } else {
+              showLongPressSaveSheet(ensureDataUrl());
+            }
+          }
+
+          var canUseShare =
+            typeof navigator !== 'undefined' &&
+            typeof navigator.share === 'function' &&
+            typeof File === 'function';
+          if (!canUseShare) {
+            showSheet();
+            return;
+          }
+
+          var file = new File([blob], filename + '.png', { type: 'image/png' });
+          var canShareFile = true;
+          try {
+            if (typeof navigator.canShare === 'function') {
+              canShareFile = navigator.canShare({ files: [file] });
+            }
+          } catch (eCanShare) {
+            canShareFile = false;
+          }
+          if (!canShareFile) {
+            showSheet();
+            return;
+          }
+
+          return navigator.share({ title: filename, files: [file] }).catch(function (err) {
+            var name = String((err && err.name) || '');
+            if (name === 'AbortError') {
+              revokeObjectUrl(objectUrl);
+              return;
+            }
+            showSheet();
+          });
+        })
+        .catch(function () {
+          showLongPressSaveSheet(canvas.toDataURL('image/png'));
+        });
+    }
+
     function createSharePoster() {
       var displayName = String(document.body.getAttribute('data-car-display-name') || '').trim() || '芒果超跑';
       var bm = splitBrandModel(displayName);
@@ -389,7 +531,7 @@
         createSharePoster()
           .then(function (canvas) {
             var name = escFilename(document.body.getAttribute('data-car-display-name') || 'mango-share');
-            downloadCanvas(canvas, name + '-分享');
+            return shareOrSaveCanvas(canvas, name + '-分享');
           })
           .catch(function () {
             window.alert('生成失败，请稍后重试');

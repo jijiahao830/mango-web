@@ -443,6 +443,71 @@
   opacity: 0.52;
 }
 
+.m2-share-longpress {
+  position: fixed;
+  inset: 0;
+  z-index: 9400;
+}
+
+.m2-share-longpress__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.m2-share-longpress__card {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: min(92vw, 420px);
+  max-height: min(88dvh, 760px);
+  border-radius: 16px;
+  background: rgba(18, 20, 28, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  padding: 12px 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.m2-share-longpress__close {
+  align-self: flex-end;
+  width: 30px;
+  height: 30px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: #fff;
+  font-size: 24px;
+  line-height: 1;
+  padding: 0;
+}
+
+.m2-share-longpress__tip {
+  margin: -2px 0 0;
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 14px;
+  line-height: 1.35;
+  text-align: center;
+}
+
+.m2-share-longpress__img {
+  width: 100%;
+  height: auto;
+  max-height: min(72dvh, 620px);
+  border-radius: 10px;
+  object-fit: contain;
+  display: block;
+  background: rgba(0, 0, 0, 0.25);
+  -webkit-touch-callout: default;
+  -webkit-user-select: auto;
+  user-select: auto;
+  touch-action: auto;
+}
+
 /* 详情页底部下滑提示（所有车型页共用） */
 .m2-detail-scroll-hint {
   position: fixed;
