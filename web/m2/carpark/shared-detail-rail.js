@@ -45,9 +45,7 @@
       '<p class="m2-share-modal__model"></p>' +
       '</div>' +
       '<div class="m2-share-modal__qr-wrap">' +
-      '<div class="m2-share-modal__qr-box">' +
       '<img class="m2-share-modal__qr" alt="当前页面二维码">' +
-      '</div>' +
       '<div class="m2-share-modal__qr-tips">' +
       '<p class="m2-share-modal__qr-tip">1、保存图片到相册</p>' +
       '<p class="m2-share-modal__qr-tip">2、扫描二维码</p>' +
@@ -82,7 +80,7 @@
 
     function qrUrl(text) {
       return (
-        'https://api.qrserver.com/v1/create-qr-code/?size=360x360&margin=12&ecc=M&data=' +
+        'https://api.qrserver.com/v1/create-qr-code/?size=360x360&margin=12&data=' +
         encodeURIComponent(text)
       );
     }
