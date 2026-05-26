@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="zh-CN">
 <head>
-  <script>window.__MANGO_ASSET_VERSION__='1779615654158';</script>
+  <script>window.__MANGO_ASSET_VERSION__='1779788449809';</script>
 
 
   <meta charset="utf-8">
@@ -10,32 +10,14 @@
   <link rel="icon" href="../favicon.ico" sizes="any">
   <link rel="icon" type="image/png" href="../favicon.png">
   <title>芒果超跑 · 尊享服务</title>
-  <link rel="stylesheet" href="../car.css?v=1779615654158">
-  <link rel="stylesheet" href="../services.css?v=1779615654158">
-  <link rel="stylesheet" href="./m2-legal-foot.css?v=1779615654158">
-  <link rel="stylesheet" href="./m2-side-rail.css?v=1779615654158">
+  <link rel="stylesheet" href="../car.css?v=1779788449809">
+  <link rel="stylesheet" href="../services.css?v=1779788449809.1">
+  <link rel="stylesheet" href="./m2-legal-foot.css?v=1779788449809">
+  <link rel="stylesheet" href="./m2-side-rail.css?v=1779788449809">
   <style>
+    body.page-services.page-services--m2 .fullscreen-carousel { opacity: 0; }
+    body.page-services.page-services--m2 .fullscreen-carousel.is-ready { opacity: 1; }
     /* 立享服务 / toast 的定位见 services.css（按是否显示备案区分 bottom） */
-    .m2-home-back {
-      position: fixed;
-      top: calc(env(safe-area-inset-top) + 16px);
-      left: 16px;
-      z-index: 50;
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      background: rgba(255, 255, 255, 0.18);
-      backdrop-filter: blur(16px) saturate(160%);
-      -webkit-backdrop-filter: blur(16px) saturate(160%);
-      border: 1px solid rgba(255, 255, 255, 0.22);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #fff;
-      text-decoration: none;
-      transition: background 0.2s ease;
-    }
-    .m2-home-back:active { background: rgba(255, 255, 255, 0.32); }
     .m2-service-toast {
       padding: 0;
       border-radius: 0;
@@ -50,12 +32,18 @@
   </style>
 </head>
 <body class="page-services page-services--m2">
-  <a class="m2-home-back" href="./index.html?v=1779615654158#m2Service" aria-label="返回首页服务区">
-    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 6 9 12 15 18"></polyline></svg>
-  </a>
+  <header class="m2-service-banner" aria-label="服务页导航">
+    <a class="m2-service-banner__back" href="./index.html?v=1779788449809#m2Service" aria-label="返回首页服务区">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 6 9 12 15 18"></polyline></svg>
+    </a>
+    <nav class="m2-service-banner__tabs" aria-label="服务内容切换">
+      <button type="button" class="m2-service-banner__tab is-active" data-service-tab-button="service">增值服务</button>
+      <button type="button" class="m2-service-banner__tab" data-service-tab-button="benefits">权益·流程</button>
+    </nav>
+  </header>
 
   <div class="fullscreen-carousel" id="carousel">
-    <div class="carousel-slide active">
+    <div class="carousel-slide active" data-service-tab="service">
       <picture>
         <source srcset="../media-webp/photos/index/m2/司机配备背景图.webp" type="image/webp">
         <img src="../media-webp/photos/index/m2/司机配备背景图.webp" alt="司机配备" class="slide-bg">
@@ -71,7 +59,7 @@
       </div>
     </div>
 
-    <div class="carousel-slide">
+    <div class="carousel-slide" data-service-tab="service">
       <picture>
         <source srcset="../media-webp/photos/index/m2/商务接待背景图.webp" type="image/webp">
         <img src="../media-webp/photos/index/m2/商务接待背景图.webp" alt="商务接送" class="slide-bg">
@@ -88,7 +76,7 @@
       </div>
     </div>
 
-    <div class="carousel-slide">
+    <div class="carousel-slide" data-service-tab="service">
       <picture>
         <source srcset="../media-webp/photos/index/m2/攻略定制背景图.webp" type="image/webp">
         <img src="../media-webp/photos/index/m2/攻略定制背景图.webp" alt="攻略定制" class="slide-bg">
@@ -105,7 +93,7 @@
       </div>
     </div>
 
-    <div class="carousel-slide">
+    <div class="carousel-slide" data-service-tab="service">
       <picture>
         <source srcset="../media-webp/photos/index/m2/婚庆装饰背景图.webp" type="image/webp">
         <img src="../media-webp/photos/index/m2/婚庆装饰背景图.webp" alt="婚庆装饰" class="slide-bg">
@@ -122,7 +110,7 @@
       </div>
     </div>
 
-    <div class="carousel-slide">
+    <div class="carousel-slide" data-service-tab="service">
       <picture>
         <source srcset="../media-webp/photos/index/m2/顾问陪同背景图.webp" type="image/webp">
         <img src="../media-webp/photos/index/m2/顾问陪同背景图.webp" alt="顾问陪同" class="slide-bg">
@@ -139,13 +127,48 @@
       </div>
     </div>
 
-    <div class="carousel-dots">
-      <button class="dot active" data-index="0" aria-label="第1张"></button>
-      <button class="dot" data-index="1" aria-label="第2张"></button>
-      <button class="dot" data-index="2" aria-label="第3张"></button>
-      <button class="dot" data-index="3" aria-label="第4张"></button>
-      <button class="dot" data-index="4" aria-label="第5张"></button>
+    <div class="carousel-slide" data-service-tab="benefits">
+      <picture>
+        <source srcset="../media-webp/photos/index/m2/定金.webp" type="image/webp">
+        <img src="../media-webp/photos/index/m2/定金.webp" alt="小刮小蹭不收钱" class="slide-bg">
+      </picture>
+      <div class="slide-content">
+        <div class="m2-benefits-cards" aria-label="权益流程卡片">
+          <article class="m2-benefits-card">
+            <h3 class="m2-benefits-card__title">定金锁车</h3>
+            <div class="m2-benefits-card__lines" aria-label="预留内容">
+              <p class="m2-benefits-card__line">昆明三环内，送车到手，专人提前到</p>
+              <p class="m2-benefits-card__line">别人降级我们升级，车到人到你说了算</p>
+              <p class="m2-benefits-card__line">节假日/旺季照样不涨价，差价我们退</p>
+            </div>
+          </article>
+          <article class="m2-benefits-card">
+            <h3 class="m2-benefits-card__title">出车</h3>
+            <div class="m2-benefits-card__lines" aria-label="预留内容">
+              <p class="m2-benefits-card__line">车况准新，60项检测出车</p>
+              <p class="m2-benefits-card__line">一口价，油费/代驾/清洁/服务全包，绝无加价</p>
+            </div>
+          </article>
+          <article class="m2-benefits-card">
+            <h3 class="m2-benefits-card__title">用车</h3>
+            <div class="m2-benefits-card__lines" aria-label="预留内容">
+              <p class="m2-benefits-card__line">保险全包，小剐小蹭全免</p>
+              <p class="m2-benefits-card__line">小磕小碰不追贵，客户免责我们全赔</p>
+              <p class="m2-benefits-card__line">24小时调度系统，车辆抛锚，非人为当天补车，当天坏当天赔</p>
+            </div>
+          </article>
+          <article class="m2-benefits-card">
+            <h3 class="m2-benefits-card__title">还车</h3>
+            <div class="m2-benefits-card__lines" aria-label="预留内容">
+              <p class="m2-benefits-card__line">还车秒速押金，不压一分钱，最快3分钟到账，无套路无等待</p>
+              <p class="m2-benefits-card__line">芒果会员福利，累计5次租车即享终身兔押</p>
+            </div>
+          </article>
+        </div>
+      </div>
     </div>
+
+    <div class="carousel-dots"></div>
     <button type="button" class="m2-service-add" id="m2ServiceAddBtn">立享服务</button>
     <div class="m2-service-toast" id="m2ServiceToast">已添加，可在用车清单中查看</div>
   </div>
@@ -185,8 +208,8 @@
     </div>
   </footer>
 
-  <script src="./m2-actions.js?v=1779615654158"></script>
-  <script src="../services.js?v=1779615654158"></script>
-  <script src="./m2-side-rail.js?v=1779615654158"></script>
+  <script src="./m2-actions.js?v=1779788449809"></script>
+  <script src="../services.js?v=1779788449809"></script>
+  <script src="./m2-side-rail.js?v=1779788449809"></script>
 </body>
 </html>

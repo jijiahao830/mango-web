@@ -252,6 +252,22 @@
       a.remove();
     }
 
+    function downloadBlob(blob, filename) {
+      var objectUrl = safeObjectUrlFromBlob(blob);
+      if (!objectUrl) throw new Error('object_url_unavailable');
+      var a = document.createElement('a');
+      a.href = objectUrl;
+      a.download = filename + '.png';
+      a.rel = 'noopener';
+      a.style.display = 'none';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(function () {
+        revokeObjectUrl(objectUrl);
+      }, 1200);
+    }
+
     function canvasToBlob(canvas) {
       return new Promise(function (resolve, reject) {
         try {
@@ -267,9 +283,25 @@
 
     function isLikelyIOS() {
       var ua = String(navigator.userAgent || '');
-      var isIOS = /iPad|iPhone|iPod/i.test(ua);
-      var isMacTouch = /Macintosh/i.test(ua) && navigator.maxTouchPoints > 1;
+      var platform = String(navigator.platform || '');
+      var isDesktopMac = /Mac/i.test(platform) && !/iPad|iPhone|iPod/i.test(platform);
+      var isIOS = /iPad|iPhone|iPod/i.test(ua) && !isDesktopMac;
+      var isMacTouch =
+        /Macintosh/i.test(ua) &&
+        /Mobile/i.test(ua) &&
+        navigator.maxTouchPoints > 1 &&
+        !isDesktopMac;
       return isIOS || isMacTouch;
+    }
+
+    function directDownloadCanvas(canvas, filename) {
+      return canvasToBlob(canvas)
+        .then(function (blob) {
+          downloadBlob(blob, filename);
+        })
+        .catch(function () {
+          downloadCanvas(canvas, filename);
+        });
     }
 
     function showLongPressSaveSheet(imgSrc, dispose) {
@@ -335,8 +367,7 @@
 
     function shareOrSaveCanvas(canvas, filename) {
       if (!isLikelyIOS()) {
-        downloadCanvas(canvas, filename);
-        return Promise.resolve();
+        return directDownloadCanvas(canvas, filename);
       }
 
       return canvasToBlob(canvas)
@@ -538,6 +569,9 @@
         createSharePoster()
           .then(function (canvas) {
             var name = escFilename(document.body.getAttribute('data-car-display-name') || 'mango-share');
+            if (!isLikelyIOS()) {
+              return directDownloadCanvas(canvas, name + '-分享');
+            }
             return shareOrSaveCanvas(canvas, name + '-分享');
           })
           .catch(function () {

@@ -16,6 +16,12 @@
   color: #fff;
 }
 
+:root {
+  --m2-beian-glass-bg: rgba(255, 255, 255, 0.05);
+  --m2-beian-glass-border: 1px solid rgba(255, 255, 255, 0.12);
+  --m2-beian-glass-blur: blur(18px) saturate(180%);
+}
+
 .m2-legal-foot__beian {
   display: flex;
   flex-wrap: nowrap;
@@ -110,9 +116,11 @@
   align-items: stretch;
   padding: clamp(12px, 3vw, 20px) 6%
     calc(env(safe-area-inset-bottom, 0px) + clamp(16px, 4vw, 28px));
-  background: #000;
+  background: var(--m2-beian-glass-bg);
+  backdrop-filter: var(--m2-beian-glass-blur);
+  -webkit-backdrop-filter: var(--m2-beian-glass-blur);
   color: #fff;
-  border-top: none;
+  border-top: var(--m2-beian-glass-border);
 }
 
 .m2-about__footer:not(.site-record-footer) {
@@ -132,11 +140,11 @@
 
 /* ── 车型详情页黑底区域内的备案块（内边距与首页 footer 对齐） ── */
 footer.m2-same-price__record-zone {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.26), rgba(255, 255, 255, 0.12));
-  backdrop-filter: blur(28px) saturate(180%);
-  -webkit-backdrop-filter: blur(28px) saturate(180%);
-  border-top: 1px solid rgba(255, 255, 255, 0.42);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.34);
+  background: var(--m2-beian-glass-bg);
+  backdrop-filter: var(--m2-beian-glass-blur);
+  -webkit-backdrop-filter: var(--m2-beian-glass-blur);
+  border-top: var(--m2-beian-glass-border);
+  box-shadow: none;
   color: #fff;
   height: auto;
   min-height: 0;

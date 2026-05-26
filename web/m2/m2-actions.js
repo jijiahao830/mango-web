@@ -1,6 +1,6 @@
 (function () {
   var STORAGE_KEY = 'mangoCarChecklist';
-  var m2FallbackAssetV = '1779615654158';
+  var m2FallbackAssetV = '1779788449809';
   function m2AssetV() {
     try {
       return (typeof window !== 'undefined' && window.__MANGO_ASSET_VERSION__) || m2FallbackAssetV;
@@ -482,6 +482,8 @@
       '.m2a-modal__actions{margin-top:14px;display:flex;gap:10px}',
       '.m2a-modal__actions--center{justify-content:center}',
       '.m2a-modal__actions--center .m2a-modal__btn{flex:0 1 auto;min-width:min(200px,70vw)}',
+      '.m2a-modal__actions--success{justify-content:center;gap:8px}',
+      '.m2a-modal__actions--success .m2a-modal__btn{flex:1 1 0;min-width:0;padding:0 8px;white-space:nowrap}',
       '.m2a-modal__btn{flex:1;border-radius:999px;border:1px solid rgba(255,255,255,.22);padding:0 12px;height:40px;box-sizing:border-box;font-size:13px;font-weight:500;letter-spacing:.02em;cursor:pointer;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);display:flex;align-items:center;justify-content:center}',
       '.m2a-modal__btn--ghost{background:rgba(255,255,255,.08);color:#fff}',
       '.m2a-modal__btn--primary{background:rgba(255,255,255,.12);color:#fff;border-color:rgba(255,255,255,.28)}',
@@ -612,9 +614,10 @@
     successModal.innerHTML =
       '<div class="m2a-modal__backdrop"></div>' +
       '<div class="m2a-modal__card">' +
-      '<h3 class="m2a-modal__title">客服已收到您的信息，请稍等</h3>' +
-      '<div class="m2a-modal__actions m2a-modal__actions--center">' +
-      '<button type="button" class="m2a-modal__btn m2a-modal__btn--primary" id="m2aSuccessOkBtn">确定</button>' +
+      '<h3 class="m2a-modal__title">感谢您选择芒果租车，您可以先查看芒果专属权益以及用车流程，稍后客服会联系您。</h3>' +
+      '<div class="m2a-modal__actions m2a-modal__actions--success">' +
+      '<button type="button" class="m2a-modal__btn m2a-modal__btn--ghost" id="m2aSuccessBenefitsBtn">权益·流程</button>' +
+      '<button type="button" class="m2a-modal__btn m2a-modal__btn--primary" id="m2aSuccessOkBtn">确认</button>' +
       '</div></div>';
 
     /* fail */
@@ -765,6 +768,26 @@
     if (!modal || modal.hasAttribute('hidden')) return;
     modal.setAttribute('hidden', '');
     m2aUnlockOverlayScroll();
+  }
+
+  function m2ServiceDetailHref(tab) {
+    try {
+      var url = new URL(m2aServicesPageUrl(), window.location.href);
+      if (tab) url.searchParams.set('tab', tab);
+      return url.href;
+    } catch (e) {
+      var sep = m2aServicesPageUrl().indexOf('?') === -1 ? '?' : '&';
+      return m2aServicesPageUrl() + (tab ? sep + 'tab=' + encodeURIComponent(tab) : '');
+    }
+  }
+
+  function goM2ServiceDetailTab(tab) {
+    var modal = document.getElementById('m2aSuccessModal');
+    if (modal && !modal.hasAttribute('hidden')) {
+      modal.setAttribute('hidden', '');
+      m2aUnlockOverlayScroll();
+    }
+    window.location.href = m2ServiceDetailHref(tab);
   }
 
   /** 是否至少有一辆已选车辆（不含仅增值服务）——「选择完成」校验用 */
@@ -1817,6 +1840,10 @@
         m.setAttribute('hidden', '');
         m2aUnlockOverlayScroll();
       }
+    });
+    var successBenefitsBtn = document.getElementById('m2aSuccessBenefitsBtn');
+    if (successBenefitsBtn) successBenefitsBtn.addEventListener('click', function () {
+      goM2ServiceDetailTab('benefits');
     });
     var failOkBtn = document.getElementById('m2aFailOkBtn');
     if (failOkBtn) failOkBtn.addEventListener('click', function () {

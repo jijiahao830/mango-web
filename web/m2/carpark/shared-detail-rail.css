@@ -4,10 +4,10 @@
 .m2-car-rail {
   --m2-car-rail-h: 226px;
   position: fixed;
-  right: 0;
+  right: -1px;
   top: 50%;
   transform: translateY(-50%);
-  z-index: 48;
+  z-index: 120;
   display: flex;
   align-items: center;
   pointer-events: none;
@@ -30,11 +30,13 @@
   padding: 15px 3px 8px;
   max-width: 80px;
   /* 白色毛玻璃 */
-  background: rgba(255, 255, 255, 0.38);
+  background: rgba(255, 255, 255, 0.05);
   backdrop-filter: blur(18px) saturate(180%);
   -webkit-backdrop-filter: blur(18px) saturate(180%);
   border-radius: 16px 0 0 16px;
-  border-left: 1px solid rgba(255, 255, 255, 0.55);
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+  border-left: 1px solid rgba(255, 255, 255, 0.12);
   height: var(--m2-car-rail-h);
   min-height: var(--m2-car-rail-h);
   box-sizing: border-box;
@@ -70,6 +72,7 @@
   height: 24px;
   object-fit: contain;
   display: block;
+  pointer-events: none;
 }
 
 .m2-car-rail__label {
@@ -128,10 +131,12 @@
   padding: 0 1px 0 0;
   border: none;
   border-radius: 14px 0 0 14px;
-  background: rgba(255, 255, 255, 0.42);
+  background: rgba(255, 255, 255, 0.10);
   backdrop-filter: blur(14px) saturate(170%);
   -webkit-backdrop-filter: blur(14px) saturate(170%);
-  border-left: 1px solid rgba(255, 255, 255, 0.6);
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+  border-left: 1px solid rgba(255, 255, 255, 0.12);
   color: #fff;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;

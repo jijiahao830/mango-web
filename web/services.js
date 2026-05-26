@@ -1,11 +1,24 @@
 document.addEventListener('DOMContentLoaded', function() {
-  const slides = document.querySelectorAll('.carousel-slide');
-  const dots = document.querySelectorAll('.dot');
+  const slides = Array.from(document.querySelectorAll('.carousel-slide'));
+  const dotsWrap = document.querySelector('.carousel-dots');
+  const tabButtons = Array.from(document.querySelectorAll('[data-service-tab-button]'));
+  const serviceAddBtn = document.getElementById('m2ServiceAddBtn');
+  const sideRail = document.getElementById('m2CarRail');
   let currentIndex = 0;
   let isAnimating = false;
   let touchStartY = 0;
   let touchEndY = 0;
   let touchMoved = false;
+  let activeTab = 'service';
+  let activeSlides = [];
+
+  function persistActiveTab(tab) {
+    try {
+      const url = new URL(window.location.href);
+      url.searchParams.set('tab', tab || 'service');
+      history.replaceState(null, '', url.toString());
+    } catch (e) {}
+  }
 
   /** m2-actions 弹窗打开时 html 会带此类；暂停全屏服务轮播手势（不影响未使用该类的页面） */
   function overlayConsumesGestures() {
@@ -17,19 +30,69 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
 
-  /** m2/services：仅在最后一帧展示备案 footer */
+  /** m2/services：在当前 tab 的最后一帧展示备案 footer（服务 / 权益 / 流程） */
   function updateM2LegalFooterVisibility() {
     const footer = document.querySelector(
       'body.page-services--m2 footer.site-record-footer.m2-about__footer'
     );
     if (!footer || !slides.length) return;
-    const isLast = currentIndex === slides.length - 1;
+    const isLast = currentIndex === activeSlides.length - 1;
     footer.classList.toggle('services-legal-foot--hidden', !isLast);
     footer.setAttribute('aria-hidden', isLast ? 'false' : 'true');
   }
 
+  function renderDots() {
+    if (!dotsWrap) return;
+    dotsWrap.innerHTML = '';
+    dotsWrap.hidden = activeSlides.length <= 1;
+    if (dotsWrap.hidden) return;
+    activeSlides.forEach((_, idx) => {
+      const dot = document.createElement('button');
+      dot.type = 'button';
+      dot.className = `dot${idx === currentIndex ? ' active' : ''}`;
+      dot.dataset.index = String(idx);
+      dot.setAttribute('aria-label', `第${idx + 1}张`);
+      dot.addEventListener('click', () => {
+        goToSlide(idx);
+      });
+      dotsWrap.appendChild(dot);
+    });
+  }
+
+  function syncSlideVisibility() {
+    slides.forEach((slide) => {
+      slide.classList.remove('active');
+      slide.hidden = true;
+    });
+    const slide = activeSlides[currentIndex];
+    if (slide) {
+      slide.hidden = false;
+      slide.classList.add('active');
+    }
+    if (serviceAddBtn) {
+      serviceAddBtn.style.display = activeTab === 'service' ? '' : 'none';
+    }
+    if (sideRail) {
+      sideRail.style.display = activeTab === 'service' ? '' : 'none';
+    }
+    renderDots();
+    updateM2LegalFooterVisibility();
+  }
+
+  function setActiveTab(tab) {
+    activeTab = tab || 'service';
+    persistActiveTab(activeTab);
+    activeSlides = slides.filter((slide) => (slide.dataset.serviceTab || 'service') === activeTab);
+    currentIndex = 0;
+    isAnimating = false;
+    tabButtons.forEach((btn) => {
+      btn.classList.toggle('is-active', btn.dataset.serviceTabButton === activeTab);
+    });
+    syncSlideVisibility();
+  }
+
   function applyInitialSlideByPackage() {
-    if (!slides.length || !dots.length) return;
+    if (!slides.length) return;
     let pkg = '';
     try {
       pkg = new URLSearchParams(window.location.search).get('package') || '';
@@ -43,32 +106,32 @@ document.addEventListener('DOMContentLoaded', function() {
     };
     if (!(pkg in packageStartIndexMap)) return;
     const target = packageStartIndexMap[pkg];
-    slides.forEach((slide, idx) => {
-      slide.classList.toggle('active', idx === target);
-    });
-    dots.forEach((dot, idx) => {
-      dot.classList.toggle('active', idx === target);
-    });
+    if (target >= activeSlides.length) return;
     currentIndex = target;
+    syncSlideVisibility();
+  }
+
+  function initialTabFromUrl() {
+    try {
+      const tab = String(new URLSearchParams(window.location.search).get('tab') || '').trim();
+      if (tab === 'benefits' || tab === 'service') return tab;
+    } catch (e) {}
+    try {
+      const hashTab = String(window.location.hash || '').replace(/^#/, '').trim();
+      if (hashTab === 'benefits' || hashTab === 'service') return hashTab;
+    } catch (e2) {}
+    return 'service';
   }
 
   // 切换到指定幻灯片
   function goToSlide(index) {
     if (isAnimating || index === currentIndex) return;
-    if (index < 0 || index >= slides.length) return;
+    if (index < 0 || index >= activeSlides.length) return;
 
     isAnimating = true;
 
-    // 移除当前激活状态
-    slides[currentIndex].classList.remove('active');
-    dots[currentIndex].classList.remove('active');
-
-    // 设置新的激活状态
     currentIndex = index;
-    slides[currentIndex].classList.add('active');
-    dots[currentIndex].classList.add('active');
-
-    updateM2LegalFooterVisibility();
+    syncSlideVisibility();
 
     // 800ms后允许下次切换
     setTimeout(() => {
@@ -78,13 +141,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // 下一张
   function nextSlide() {
-    const nextIndex = (currentIndex + 1) % slides.length;
+    if (activeSlides.length <= 1) return;
+    const nextIndex = (currentIndex + 1) % activeSlides.length;
     goToSlide(nextIndex);
   }
 
   // 上一张
   function prevSlide() {
-    const prevIndex = (currentIndex - 1 + slides.length) % slides.length;
+    if (activeSlides.length <= 1) return;
+    const prevIndex = (currentIndex - 1 + activeSlides.length) % activeSlides.length;
     goToSlide(prevIndex);
   }
 
@@ -167,10 +232,9 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
 
-  // 点击导航点
-  dots.forEach((dot, index) => {
-    dot.addEventListener('click', () => {
-      goToSlide(index);
+  tabButtons.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      setActiveTab(btn.dataset.serviceTabButton || 'service');
     });
   });
 
@@ -213,9 +277,11 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   });
 
-  applyInitialSlideByPackage();
+  setActiveTab(initialTabFromUrl());
+  if (activeTab === 'service') applyInitialSlideByPackage();
 
   updateM2LegalFooterVisibility();
+  if (carousel) carousel.classList.add('is-ready');
 
   // 初始化
   console.log('Services carousel initialized with', slides.length, 'slides');
