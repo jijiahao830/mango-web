@@ -257,9 +257,17 @@
 
   function carsInActiveBrand() {
     var inCat = carsInActiveCategory();
-    return inCat.filter(function (c) {
+    var cars = inCat.filter(function (c) {
       return String(c.brand || '').trim() === activeBrand;
     });
+    if (String(activeCategory || '').trim() === '超跑' && String(activeBrand || '').trim() === '兰博基尼') {
+      cars.sort(function (a, b) {
+        var aLp750 = String(a.car_name || a.model || '').indexOf('LP750') !== -1;
+        var bLp750 = String(b.car_name || b.model || '').indexOf('LP750') !== -1;
+        return (bLp750 ? 1 : 0) - (aLp750 ? 1 : 0);
+      });
+    }
+    return cars;
   }
 
   function renderCategories() {
@@ -308,6 +316,12 @@
       if (idxLambo !== -1 && idxAudi !== -1) {
         brands[idxLambo] = '奥迪';
         brands[idxAudi] = '兰博基尼';
+      }
+      idxLambo = brands.indexOf('兰博基尼');
+      var idxAston = brands.indexOf('阿斯顿马丁');
+      if (idxLambo !== -1 && idxAston !== -1) {
+        brands[idxLambo] = '阿斯顿马丁';
+        brands[idxAston] = '兰博基尼';
       }
     }
     if (!brands.length) {
