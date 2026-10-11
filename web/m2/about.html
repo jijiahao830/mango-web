@@ -13,7 +13,21 @@
   <link rel="stylesheet" href="./m2-legal-foot.css?v=1791719560438">
   <style>
     .page-about {
-      background: url('../media-webp/photos/index/m2/首页.webp') center / cover no-repeat fixed;
+      position: relative;
+      isolation: isolate;
+      background: #05070d;
+    }
+    .page-about::before {
+      content: "";
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: -1;
+      width: 100vw;
+      height: 100vh;
+      height: 100lvh;
+      background: url('../media-webp/photos/index/m2/首页.webp') center bottom / cover no-repeat;
+      pointer-events: none;
     }
     .page-header {
       padding: calc(env(safe-area-inset-top) + 84px) 20px 42px;
