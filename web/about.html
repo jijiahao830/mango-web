@@ -12,38 +12,49 @@
   <link rel="stylesheet" href="./car.css?v=1780645200477">
   <style>
     .page-header {
-      padding: 160px 20px 80px;
+      padding: 154px 24px 76px;
       text-align: center;
-      background: radial-gradient(ellipse at top, rgba(255, 107, 53, 0.15) 0%, transparent 70%);
+      background:
+        radial-gradient(circle at 50% 0%, rgba(255, 107, 53, 0.2), transparent 44%),
+        linear-gradient(180deg, rgba(255, 107, 53, 0.04), transparent);
+    }
+    .page-eyebrow,
+    .section-kicker {
+      color: var(--brand);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
     }
     .page-title {
-      font-size: clamp(36px, 5vw, 56px);
+      font-size: clamp(42px, 5vw, 68px);
       font-weight: 800;
-      margin-bottom: 20px;
+      line-height: 1.08;
+      margin: 14px 0 20px;
       font-family: 'Oswald', 'Impact', 'Arial Narrow', sans-serif;
-      letter-spacing: 2px;
+      letter-spacing: 0.04em;
       color: #fff;
     }
     .page-subtitle {
-      font-size: 18px;
+      font-size: 19px;
+      line-height: 1.85;
       color: var(--text-muted);
-      max-width: 600px;
+      max-width: 720px;
       margin: 0 auto;
     }
     .about-container {
-      max-width: 1000px;
+      max-width: 1180px;
       margin: 0 auto 100px;
-      padding: 0 20px;
+      padding: 0 24px;
     }
-    .about-card {
-      background: var(--surface);
-      border-radius: 20px;
-      padding: 60px;
+    .about-panel {
+      background: linear-gradient(145deg, rgba(255, 255, 255, 0.065), rgba(255, 255, 255, 0.025));
+      border-radius: 28px;
       border: 1px solid rgba(255, 255, 255, 0.05);
       position: relative;
       overflow: hidden;
     }
-    .about-card::before {
+    .about-panel::before {
       content: '';
       position: absolute;
       top: 0;
@@ -52,35 +63,348 @@
       height: 4px;
       background: linear-gradient(90deg, var(--brand), transparent);
     }
-    .about-text {
-      font-size: 18px;
-      line-height: 2;
-      color: var(--text-muted);
-      margin-bottom: 24px;
+    .intro-panel {
+      display: grid;
+      grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.35fr);
+      gap: 64px;
+      padding: 58px;
     }
-    .about-text strong {
+    .intro-title,
+    .section-title {
       color: #fff;
+      font-size: clamp(28px, 3vw, 42px);
+      line-height: 1.25;
+      margin: 14px 0 22px;
     }
-    .stats-row {
-      display: flex;
-      justify-content: space-around;
-      margin-top: 60px;
-      flex-wrap: wrap;
-      gap: 30px;
+    .intro-copy,
+    .section-copy,
+    .capability-card p,
+    .partner-copy {
+      color: var(--text-muted);
+      line-height: 1.9;
+    }
+    .intro-copy {
+      font-size: 17px;
+      margin: 0;
+    }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      align-content: center;
+      gap: 14px;
     }
     .stat-item {
-      text-align: center;
+      min-height: 132px;
+      padding: 24px 20px;
+      border-radius: 18px;
+      background: rgba(0, 0, 0, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.06);
     }
     .stat-num {
       font-family: 'Oswald', sans-serif;
-      font-size: 48px;
+      font-size: 38px;
+      line-height: 1;
       color: var(--brand);
       font-weight: 700;
-      margin-bottom: 8px;
+      margin-bottom: 12px;
     }
     .stat-label {
       color: #fff;
-      font-size: 16px;
+      font-size: 14px;
+      line-height: 1.55;
+    }
+    .strength-gallery {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+      margin-top: 18px;
+    }
+    .strength-media {
+      position: relative;
+      margin: 0;
+      aspect-ratio: 16 / 9;
+      overflow: hidden;
+      border-radius: 22px;
+      background: #111;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+    .strength-media--wide {
+      grid-column: 1 / -1;
+      aspect-ratio: 2.14 / 1;
+    }
+    .strength-media img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.6s ease;
+    }
+    .strength-media--screen img {
+      object-fit: contain;
+    }
+    .strength-media:hover img {
+      transform: scale(1.025);
+    }
+    .strength-media figcaption {
+      position: absolute;
+      inset: auto 0 0;
+      padding: 56px 24px 22px;
+      color: #fff;
+      background: linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.82));
+      pointer-events: none;
+    }
+    .strength-media figcaption strong {
+      display: block;
+      font-size: 18px;
+      margin-bottom: 5px;
+    }
+    .strength-media figcaption span {
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 13px;
+    }
+    .content-section {
+      margin-top: 84px;
+    }
+    .section-head {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 40px;
+      margin-bottom: 30px;
+    }
+    .section-head .section-title {
+      max-width: 620px;
+      margin-bottom: 0;
+    }
+    .section-copy {
+      max-width: 430px;
+      margin: 0;
+      font-size: 15px;
+    }
+    .capability-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+    }
+    .capability-card {
+      position: relative;
+      min-height: 250px;
+      padding: 34px;
+      border-radius: 22px;
+      background: var(--surface);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+    .capability-no {
+      color: var(--brand);
+      font-family: 'Oswald', sans-serif;
+      font-size: 14px;
+      letter-spacing: 0.18em;
+    }
+    .capability-card h3 {
+      color: #fff;
+      font-size: 23px;
+      margin: 24px 0 12px;
+    }
+    .capability-card p {
+      font-size: 15px;
+      margin: 0;
+    }
+    .scene-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      column-gap: 40px;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .scene-card {
+      display: grid;
+      grid-template-columns: 176px minmax(0, 1fr);
+      align-items: center;
+      min-height: 154px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .scene-card img {
+      display: block;
+      width: 176px;
+      height: 118px;
+      object-fit: cover;
+      border-radius: 2px;
+    }
+    .scene-body {
+      padding: 18px 0 18px 22px;
+    }
+    .scene-meta {
+      color: var(--brand);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.16em;
+    }
+    .scene-card h3 {
+      color: #fff;
+      font-size: 20px;
+      margin: 8px 0 7px;
+    }
+    .scene-card p {
+      color: var(--text-muted);
+      font-size: 13px;
+      line-height: 1.65;
+      margin: 0;
+    }
+    .tag-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 24px;
+    }
+    .tag-list span {
+      color: rgba(255, 255, 255, 0.76);
+      font-size: 12px;
+      padding: 7px 11px;
+      border-radius: 999px;
+      background: rgba(255, 107, 53, 0.09);
+      border: 1px solid rgba(255, 107, 53, 0.2);
+    }
+    .partner-panel {
+      display: grid;
+      grid-template-columns: minmax(260px, 0.65fr) minmax(0, 1.35fr);
+      gap: 64px;
+      padding: 52px 54px;
+    }
+    .partner-title {
+      color: #fff;
+      font-size: 30px;
+      line-height: 1.35;
+      margin: 12px 0 16px;
+    }
+    .partner-copy {
+      margin: 0;
+      font-size: 15px;
+    }
+    .partner-list {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      column-gap: 24px;
+      align-content: center;
+    }
+    .partner-item {
+      display: grid;
+      grid-template-columns: 112px minmax(0, 1fr);
+      align-items: center;
+      min-height: 112px;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .partner-item img {
+      display: block;
+      width: 112px;
+      height: 82px;
+      object-fit: cover;
+      border-radius: 2px;
+    }
+    .partner-item-copy {
+      padding: 14px 0 14px 16px;
+    }
+    .partner-item strong {
+      display: block;
+      color: #fff;
+      font-size: 14px;
+      margin-bottom: 6px;
+    }
+    .partner-item span {
+      color: var(--text-muted);
+      font-size: 11px;
+      line-height: 1.5;
+    }
+    .vision-panel {
+      margin-top: 24px;
+      padding: 46px 52px;
+      text-align: center;
+    }
+    .vision-panel .section-title {
+      margin-bottom: 16px;
+    }
+    .vision-panel .section-copy {
+      max-width: 720px;
+      margin: 0 auto;
+    }
+    .vision-links {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 12px 28px;
+      margin-top: 28px;
+      color: #fff;
+      font-size: 14px;
+    }
+    @media (max-width: 820px) {
+      .intro-panel,
+      .partner-panel {
+        grid-template-columns: 1fr;
+        gap: 36px;
+        padding: 38px 30px;
+      }
+      .stats-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+      .section-head {
+        display: block;
+      }
+      .section-copy {
+        margin-top: 16px;
+      }
+    }
+    @media (max-width: 620px) {
+      .page-header {
+        padding: 116px 20px 56px;
+      }
+      .page-subtitle {
+        font-size: 16px;
+      }
+      .about-container {
+        padding: 0 16px;
+      }
+      .capability-grid {
+        grid-template-columns: 1fr;
+      }
+      .scene-grid {
+        grid-template-columns: 1fr;
+      }
+      .scene-card {
+        grid-template-columns: 112px minmax(0, 1fr);
+        min-height: 120px;
+      }
+      .scene-card img {
+        width: 112px;
+        height: 88px;
+      }
+      .scene-body {
+        padding: 15px 0 15px 16px;
+      }
+      .partner-list {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 20px 12px;
+      }
+      .partner-item {
+        display: block;
+        min-height: 0;
+        border-top: 0;
+      }
+      .partner-item img {
+        width: 100%;
+        height: 92px;
+      }
+      .partner-item-copy {
+        padding: 11px 0 0;
+      }
+      .strength-gallery {
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+      .strength-media--wide {
+        grid-column: auto;
+        aspect-ratio: 16 / 9;
+      }
+      .vision-panel {
+        padding: 40px 24px;
+      }
     }
   </style>
 </head>
@@ -115,35 +439,161 @@
   </header>
 
   <div class="page-header">
-    <h1 class="page-title">ABOUT MANGO</h1>
-    <p class="page-subtitle">创立于2013年，致力于为您提供最纯粹的超跑文化与出行体验。</p>
+    <div class="page-eyebrow">MANGO · SINCE 2013</div>
+    <h1 class="page-title">始于2013，立足昆明</h1>
+    <p class="page-subtitle">从高端用车出发，以品牌影响力、车型资源与数字化运营，承接商务、文旅、婚礼、活动与影像等多元场景。</p>
   </div>
 
-  <div class="about-container">
-    <div class="about-card">
-      <p class="about-text">
-        <strong>芒果超跑（MANGO SUPERCAR）</strong> 成立于 2013 年，是一家专注于高端跑车租赁、商务接待、影视拍摄及豪车托管的综合性超跑俱乐部。
-      </p>
-      <p class="about-text">
-        我们始终秉持 <strong>"RACING COMFORTABLE"</strong> 的品牌理念，打破传统租车行业的壁垒，将顶级跑车的驾驶乐趣与管家式的尊贵服务完美结合。在这里，您不仅能体验到兰博基尼、法拉利、保时捷等世界顶级超跑的极致性能，更能感受到我们对每一处细节的极致追求。
-      </p>
-      
-      <div class="stats-row">
+  <main class="about-container">
+    <section class="about-panel intro-panel" aria-labelledby="aboutStrengthTitle">
+      <div>
+        <div class="section-kicker">品牌 · 资源 · 运营</div>
+        <h2 class="intro-title" id="aboutStrengthTitle">不止有车，更有把项目接住的能力。</h2>
+        <p class="intro-copy">芒果租车从昆明出发，把线上品牌影响力、多品牌车型阵容、高端酒店合作资源和自有数字化系统连接起来。从一次出行，到企业接待、品牌活动与长期合作，都有清晰的资源和运营能力支撑。</p>
+      </div>
+
+      <div class="stats-grid" aria-label="芒果实力数据">
         <div class="stat-item">
           <div class="stat-num">2013</div>
-          <div class="stat-label">创立年份</div>
+          <div class="stat-label">品牌创立年份</div>
         </div>
         <div class="stat-item">
-          <div class="stat-num">50+</div>
-          <div class="stat-label">顶级超跑</div>
+          <div class="stat-num">约77.1万</div>
+          <div class="stat-label">品牌账号合计粉丝</div>
         </div>
         <div class="stat-item">
-          <div class="stat-num">1000+</div>
-          <div class="stat-label">尊贵会员</div>
+          <div class="stat-num">昆明第1</div>
+          <div class="stat-label">抖音团购带货日榜</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-num">全国第3</div>
+          <div class="stat-label">抖音团购带货日榜</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-num">1.6万</div>
+          <div class="stat-label">品牌直播在线人数</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-num">2,728</div>
+          <div class="stat-label">条客户线索沉淀入库</div>
         </div>
       </div>
-    </div>
-  </div>
+    </section>
+
+    <section class="strength-gallery" aria-label="芒果车队、数字化与品牌空间">
+      <figure class="strength-media strength-media--wide">
+        <img src="assets/about/fleet-overview.webp" alt="芒果多品牌车型车队实拍" width="1536" height="716" decoding="async">
+        <figcaption><strong>多品牌车型阵容</strong><span>超跑、跑车、豪华轿车、SUV 与商务车型</span></figcaption>
+      </figure>
+      <figure class="strength-media strength-media--screen">
+        <img src="assets/about/digital-site.webp" alt="芒果自有品牌独立选车网站界面" width="1600" height="746" loading="lazy" decoding="async">
+        <figcaption><strong>自有品牌独立站</strong><span>集中展示品牌与车型资源</span></figcaption>
+      </figure>
+      <figure class="strength-media">
+        <img src="assets/about/brand-space.webp" alt="芒果新门店展示与接待空间设计效果图" width="1600" height="904" loading="lazy" decoding="async">
+        <figcaption><strong>品牌空间规划</strong><span>新门店展示与接待空间设计效果图</span></figcaption>
+      </figure>
+    </section>
+
+    <section class="content-section" aria-labelledby="capabilityTitle">
+      <div class="section-head">
+        <div>
+          <div class="section-kicker">CORE CAPABILITIES</div>
+          <h2 class="section-title" id="capabilityTitle">四项能力，组成芒果的项目承载力。</h2>
+        </div>
+        <p class="section-copy">从客户看见芒果，到车型匹配、档期调度、现场交付和持续运营，每一步都有对应能力承接。</p>
+      </div>
+
+      <div class="capability-grid">
+        <article class="capability-card">
+          <div class="capability-no">01 / BRAND</div>
+          <h3>品牌影响力</h3>
+          <p>以多账号内容矩阵、平台榜单、直播热度与门店口碑，持续连接车型内容、本地市场和真实服务场景。</p>
+          <div class="tag-list"><span>账号矩阵</span><span>平台榜单</span><span>直播热度</span><span>门店口碑</span></div>
+        </article>
+        <article class="capability-card">
+          <div class="capability-no">02 / RESOURCES</div>
+          <h3>车队与高端资源</h3>
+          <p>超跑、跑车、豪华轿车、SUV、商务 MPV 与房车共同组成多品牌阵容，并连接五星级酒店合作资源。</p>
+          <div class="tag-list"><span>多品牌车队</span><span>五星酒店</span><span>档期协调</span><span>组合用车</span></div>
+        </article>
+        <article class="capability-card">
+          <div class="capability-no">03 / DIGITAL</div>
+          <h3>数字化运营</h3>
+          <p>自有独立站、客户端与员工端小程序、芒果 OS 经营系统及 AI 工具，让客资、会员、车辆和团队协作进入统一视野。</p>
+          <div class="tag-list"><span>独立站</span><span>双端小程序</span><span>芒果 OS</span><span>AI 应用</span></div>
+        </article>
+        <article class="capability-card">
+          <div class="capability-no">04 / DELIVERY</div>
+          <h3>多场景项目交付</h3>
+          <p>根据不同项目匹配车型、档期与执行节点，覆盖商务接待、婚礼庆典、品牌摆展、自驾文旅及体验影像。</p>
+          <div class="tag-list"><span>商务接待</span><span>婚礼庆典</span><span>品牌摆展</span><span>自驾文旅</span></div>
+        </article>
+      </div>
+    </section>
+
+    <section class="content-section" aria-labelledby="sceneTitle">
+      <div class="section-head">
+        <div>
+          <div class="section-kicker">SERVICE SCENARIOS</div>
+          <h2 class="section-title" id="sceneTitle">从一辆车，到一整套场景服务。</h2>
+        </div>
+        <p class="section-copy">根据项目需求匹配车型组合、车辆档期与执行节点，让不同用车场景都有清楚的承接方案。</p>
+      </div>
+
+      <div class="scene-grid">
+        <article class="scene-card">
+          <img src="assets/about/scene-business.webp" alt="芒果商务接待用车场景" width="1200" height="727" loading="lazy" decoding="async">
+          <div class="scene-body"><div class="scene-meta">BUSINESS</div><h3>商务接待</h3><p>以豪华轿车与商务 MPV 资源，承接企业来访、商务会务与礼宾出行。</p></div>
+        </article>
+        <article class="scene-card">
+          <img src="assets/about/scene-wedding.webp" alt="芒果婚礼车队场景" width="1200" height="727" loading="lazy" decoding="async">
+          <div class="scene-body"><div class="scene-meta">WEDDING</div><h3>婚礼庆典</h3><p>以礼宾主车与车队组合，连接婚庆机构、婚礼车队及庆典项目合作。</p></div>
+        </article>
+        <article class="scene-card">
+          <img src="assets/about/scene-exhibition.webp" alt="芒果车辆品牌摆展场景" width="1200" height="727" loading="lazy" decoding="async">
+          <div class="scene-body"><div class="scene-meta">EXHIBITION</div><h3>品牌摆展</h3><p>以具有辨识度的车型阵容，为商业活动、品牌展示与影像创作提供车辆资源。</p></div>
+        </article>
+        <article class="scene-card">
+          <img src="assets/about/scene-roadtrip.webp" alt="芒果云南自驾文旅场景" width="1200" height="727" loading="lazy" decoding="async">
+          <div class="scene-body"><div class="scene-meta">ROAD TRIP</div><h3>自驾文旅</h3><p>以 SUV、轿车及跑车资源，连接云南自驾、度假出行与文旅项目。</p></div>
+        </article>
+      </div>
+    </section>
+
+    <section class="content-section about-panel partner-panel" aria-labelledby="partnerTitle">
+      <div>
+        <div class="section-kicker">HOTEL PARTNERS</div>
+        <h2 class="partner-title" id="partnerTitle">携手五星级酒店，拓展高端接待资源。</h2>
+        <p class="partner-copy">酒店协议价资源与芒果车辆阵容联动，为商务来访、重要宾客、品牌活动和文旅项目提供更完整的资源组合。</p>
+      </div>
+      <div class="partner-list">
+        <div class="partner-item">
+          <img src="assets/about/hotel-grand-hyatt.webp" alt="昆明君悦酒店高端房型" width="1200" height="593" loading="lazy" decoding="async">
+          <div class="partner-item-copy"><strong>昆明君悦酒店</strong><span>高规格商务接待资源</span></div>
+        </div>
+        <div class="partner-item">
+          <img src="assets/about/hotel-sofitel.webp" alt="昆明索菲特酒店" width="1200" height="592" loading="lazy" decoding="async">
+          <div class="partner-item-copy"><strong>昆明索菲特酒店</strong><span>城市高端接待资源</span></div>
+        </div>
+        <div class="partner-item">
+          <img src="assets/about/hotel-intercontinental.webp" alt="昆明洲际酒店" width="1200" height="822" loading="lazy" decoding="async">
+          <div class="partner-item-copy"><strong>昆明洲际酒店</strong><span>商务与文旅资源协同</span></div>
+        </div>
+        <div class="partner-item">
+          <img src="assets/about/hotel-hualuxe.webp" alt="昆明华邑酒店庭院泳池温泉别墅" width="1200" height="593" loading="lazy" decoding="async">
+          <div class="partner-item-copy"><strong>昆明华邑酒店</strong><span>高端文旅接待资源</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="about-panel vision-panel" aria-labelledby="visionTitle">
+      <div class="section-kicker">WORK WITH MANGO</div>
+      <h2 class="section-title" id="visionTitle">以品牌实力，连接合作机遇。</h2>
+      <p class="section-copy">围绕车辆供给、企业接待、活动执行与品牌合作，以清楚的资源、档期和交付标准推进项目。</p>
+      <div class="vision-links" aria-label="合作方向"><span>品牌合作</span><span>车源协同</span><span>企业用车</span><span>项目共创</span></div>
+    </section>
+  </main>
 
   <footer class="site-footer" style="text-align: center; padding: 40px; color: var(--text-muted); border-top: 1px solid rgba(255,255,255,0.05);">
     <p>
