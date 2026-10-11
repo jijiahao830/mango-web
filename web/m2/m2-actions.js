@@ -1,6 +1,6 @@
 (function () {
   var STORAGE_KEY = 'mangoCarChecklist';
-  var m2FallbackAssetV = '1780645200477';
+  var m2FallbackAssetV = '1791719319861';
   function m2AssetV() {
     try {
       return (typeof window !== 'undefined' && window.__MANGO_ASSET_VERSION__) || m2FallbackAssetV;
