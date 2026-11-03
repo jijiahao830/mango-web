@@ -363,8 +363,25 @@
 }
 
 @media (min-width: 1025px) {
-  /* cover + scale 会裁切车身；contain 在格子里完整显示（上下或左右可留白） */
+  .detail-header .dropdown-menu {
+    padding-bottom: 16px;
+  }
+
+  /* 保留 240px 图框中的车辆位置，只收回底部透明画布的占位。
+     窄卡片按宽度收回，最多 48px，给最高车型和 hover 放大留出余量。 */
+  .detail-header .dropdown-menu .dropdown-grid .car-card > picture {
+    display: block;
+    flex-shrink: 0;
+  }
+
+  /* 这两张沿用满画布构图，没有可收回的底部透明区，避免裁到轮胎。 */
+  .detail-header .dropdown-menu .dropdown-grid .car-card > picture:not(:has(img[alt="五菱宏光"], img[alt="兰博基尼大牛"])) {
+    margin-bottom: max(-48px, calc(12px - 25%));
+  }
+
+  /* contain 完整显示车身；不要缩短图框，否则 bottom 对齐会再次移动车辆。 */
   .detail-header .dropdown-menu .dropdown-grid .car-image {
+    display: block;
     height: 240px;
     width: 100%;
     object-fit: contain;
