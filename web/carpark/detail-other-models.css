@@ -364,19 +364,24 @@
 
 @media (min-width: 1025px) {
   .detail-header .dropdown-menu {
+    --other-model-card-height: 212px;
     padding-bottom: 16px;
   }
 
-  /* 保留 240px 图框中的车辆位置，只收回底部透明画布的占位。
-     窄卡片按宽度收回，最多 48px，给最高车型和 hover 放大留出余量。 */
+  /* 明确卡片高度，让 Grid 行高实际缩短；图片仍用原来的 240px 图框。
+     不用百分比负边距参与 Grid 的内容高度计算。 */
+  .detail-header .dropdown-menu .dropdown-grid .car-card {
+    height: var(--other-model-card-height);
+  }
+
   .detail-header .dropdown-menu .dropdown-grid .car-card > picture {
     display: block;
     flex-shrink: 0;
   }
 
   /* 这两张沿用满画布构图，没有可收回的底部透明区，避免裁到轮胎。 */
-  .detail-header .dropdown-menu .dropdown-grid .car-card > picture:not(:has(img[alt="五菱宏光"], img[alt="兰博基尼大牛"])) {
-    margin-bottom: max(-48px, calc(12px - 25%));
+  .detail-header .dropdown-menu .dropdown-grid .car-card:has(img[alt="五菱宏光"], img[alt="兰博基尼大牛"]) {
+    height: 240px;
   }
 
   /* contain 完整显示车身；不要缩短图框，否则 bottom 对齐会再次移动车辆。 */
@@ -392,6 +397,18 @@
 
   .detail-header .dropdown-menu .dropdown-grid .car-card:hover .car-image {
     transform: scale(1.03);
+  }
+}
+
+@media (min-width: 1280px) {
+  .detail-header .dropdown-menu {
+    --other-model-card-height: 200px;
+  }
+}
+
+@media (min-width: 1440px) {
+  .detail-header .dropdown-menu {
+    --other-model-card-height: 192px;
   }
 }
 
