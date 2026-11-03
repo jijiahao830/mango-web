@@ -73,3 +73,8 @@ by `carpark/detail-other-models.js`, `m2/index.js` and
   entry scripts above and the rebuilt `media-webp/photos/carpark/*/详情页-banner.webp`
   together. Invalidate cached entry scripts and image URLs when publishing; merely
   replacing image files does not install the display correction.
+- PC detail pages now reference `detail-other-models.js?v=20261103-banner-frame`.
+  Publish the updated `carpark/*/car.html` pages too: the previous script URL
+  can stay cached for 12 hours and that older script does not load the framing
+  helper. A successful direct request to the new script does not prove an
+  already-open browser has replaced its cached entry script.
