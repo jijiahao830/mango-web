@@ -1,3 +1,14 @@
+/* Shared banner framing for rebuilt vehicle cutouts. */
+(function () {
+  if (window.__mangoBannerLayoutLoading) return;
+  var entry = document.currentScript;
+  if (!entry) return;
+  window.__mangoBannerLayoutLoading = true;
+  var script = document.createElement('script');
+  script.src = new URL('../banner-layout.js?v=20261103', entry.src).href;
+  document.head.appendChild(script);
+})();
+
 /* file:// 预览时地址栏常丢 query，从详情页写入的 session 拼回（仅当是「回选车区」场景） */
 (function () {
   try {

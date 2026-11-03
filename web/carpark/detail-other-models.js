@@ -1,3 +1,14 @@
+/* Shared banner framing for rebuilt vehicle cutouts. */
+(function () {
+  if (window.__mangoBannerLayoutLoading) return;
+  var entry = document.currentScript;
+  if (!entry) return;
+  window.__mangoBannerLayoutLoading = true;
+  var script = document.createElement('script');
+  script.src = new URL('../banner-layout.js?v=20261103', entry.src).href;
+  document.head.appendChild(script);
+})();
+
 /**
  * 详情页顶栏「其他车型」：拉取 /api/cars-catalog，筛选与当前车同品牌（brand 规范化 + 车名前缀推断）、排除当前车，
  * 按 rent_price 降序，填入 .dropdown-grid。车型名仅展示接口字段 model；缩略图用各车「详情页-banner.webp」，失败用占位图。

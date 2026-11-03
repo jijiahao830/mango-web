@@ -48,3 +48,28 @@ When a banner is marked for rebuild, it must be regenerated as a clean vehicle c
 - Preserve the detail-page cutout composition: vehicle centered horizontally, with the visible vehicle bottom aligned to the canvas bottom edge.
 - Keep fully transparent pixels transparent.
 - Validate every output has alpha range `(0, 255)`.
+
+## Website display framing
+
+`banner-layout.js` aligns rebuilt banners to each vehicle's original display frame
+without changing the WebP files or the existing CSS/slide animations. It is loaded
+by `carpark/detail-other-models.js`, `m2/index.js` and
+`m2/carpark/shared-detail-rail.js`.
+
+- `banner-layout-profiles.json` records the largest opaque subject component in
+  the current image and its `_backup_before_rebuild` original. Detached dust is
+  excluded. The renderer preserves aspect ratio, horizontal centre and baseline.
+- The 118 vehicles with backups have individual profiles. The two without
+  backups (`兰博基尼大牛`, `五菱宏光`) retain their existing display.
+- Before correction, dimensions and the full alpha bounds must match the
+  profiled source. Old cached banners or unexpected replacements remain intact.
+- Canvas output is transparent PNG in memory, with an eight-image cache. An
+  unavailable manifest or canvas security error leaves the source image intact.
+  Preview via a same-origin HTTP server; `file://` may block fetch/canvas access.
+- Read-only profile generation: `python3 scripts/build_banner_layout_profiles.py`
+  prints JSON to stdout. Regenerate profiles after rebuilding source images.
+- Verification: `node --test scripts/banner-layout.test.cjs`.
+- Publish the new `banner-layout.js`, `banner-layout-profiles.json`, the three
+  entry scripts above and the rebuilt `media-webp/photos/carpark/*/详情页-banner.webp`
+  together. Invalidate cached entry scripts and image URLs when publishing; merely
+  replacing image files does not install the display correction.

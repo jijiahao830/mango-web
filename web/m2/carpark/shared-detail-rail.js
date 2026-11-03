@@ -1,3 +1,14 @@
+/* Shared banner framing for rebuilt vehicle cutouts. */
+(function () {
+  if (window.__mangoBannerLayoutLoading) return;
+  var entry = document.currentScript;
+  if (!entry) return;
+  window.__mangoBannerLayoutLoading = true;
+  var script = document.createElement('script');
+  script.src = new URL('../../banner-layout.js?v=20261103', entry.src).href;
+  document.head.appendChild(script);
+})();
+
 /* 详情页右侧快捷栏（公共） */
 (function () {
   function initShareQr() {
