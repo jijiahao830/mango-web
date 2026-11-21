@@ -1,14 +1,3 @@
-/* Shared banner framing for rebuilt vehicle cutouts. */
-(function () {
-  if (window.__mangoBannerLayoutLoading) return;
-  var entry = document.currentScript;
-  if (!entry) return;
-  window.__mangoBannerLayoutLoading = true;
-  var script = document.createElement('script');
-  script.src = new URL('../banner-layout.js?v=20261103', entry.src).href;
-  document.head.appendChild(script);
-})();
-
 /* file:// 预览时地址栏常丢 query，从详情页写入的 session 拼回（仅当是「回选车区」场景） */
 (function () {
   try {
@@ -44,6 +33,18 @@
   var detailBtn = document.getElementById('m2DetailBtn');
 
   if (!categoryRoot || !brandRoot || !titleEl || !bgImageEl) return;
+
+  var chooserEl = document.getElementById('m2Chooser');
+  var viewport = window.visualViewport;
+  if (chooserEl && viewport) {
+    var syncVisibleHeight = function () {
+      if (viewport.scale !== 1 || viewport.height <= 0) return;
+      chooserEl.style.setProperty('--m2-visible-viewport-height', Math.floor(viewport.height) + 'px');
+    };
+    syncVisibleHeight();
+    viewport.addEventListener('resize', syncVisibleHeight);
+    window.addEventListener('pageshow', syncVisibleHeight);
+  }
 
   var catalogCars = [];
   var activeCategory = '';
@@ -189,7 +190,8 @@
 
   function setChooserBgByCar(carName) {
     if (!carName) {
-      bgImageEl.src = '';
+      delete bgImageEl.dataset.fallbackList;
+      bgImageEl.removeAttribute('src');
       bgImageEl.style.visibility = 'hidden';
       return;
     }
@@ -201,41 +203,62 @@
     tryRevealChooserBannerAfterSrc();
   }
 
-  /** 自缓存 / bfcache 恢复时 WebKit 常不再触发 load，须同步判断 complete 或 decode() */
-  function tryRevealChooserBannerAfterSrc() {
-    try {
-      if (!bgImageEl.src || bgImageEl.src.endsWith('/')) return;
-      if (bgImageEl.complete && bgImageEl.naturalWidth > 0) {
-        bgImageEl.style.visibility = 'visible';
-        return;
-      }
-    } catch (e) {}
-    try {
-      if (typeof bgImageEl.decode === 'function') {
-        bgImageEl.decode().then(
-          function () {
-            if (bgImageEl.src && !bgImageEl.src.endsWith('/')) {
-              bgImageEl.style.visibility = 'visible';
-            }
-          },
-          function () {}
-        );
-      }
-    } catch (e2) {}
-    requestAnimationFrame(function () {
+  var framedBannerSrc = '';
+
+  /** 取车辆的可见范围，方形图的透明留白不参与居中和限高。 */
+  function frameChooserBanner() {
+    var width = bgImageEl.naturalWidth;
+    var height = bgImageEl.naturalHeight;
+    var centerX = 0.5;
+    var centerY = 0.5;
+    var fit = width / height;
+    if (bgImageEl.dataset.fallbackIndex === '0') {
+      var sample = document.createElement('canvas');
       try {
-        if (bgImageEl.complete && bgImageEl.naturalWidth > 0 && bgImageEl.src && !bgImageEl.src.endsWith('/')) {
-          bgImageEl.style.visibility = 'visible';
+        var scale = Math.min(1, 512 / Math.max(width, height));
+        var sw = sample.width = Math.max(1, Math.round(width * scale));
+        var sh = sample.height = Math.max(1, Math.round(height * scale));
+        var ctx = sample.getContext('2d', { willReadFrequently: true });
+        ctx.drawImage(bgImageEl, 0, 0, sw, sh);
+        var pixels = ctx.getImageData(0, 0, sw, sh).data;
+        var left = sw, top = sh, right = 0, bottom = 0;
+        for (var y = 0; y < sh; y++) {
+          for (var x = 0; x < sw; x++) {
+            if (pixels[(y * sw + x) * 4 + 3] < 24) continue;
+            left = Math.min(left, x);
+            top = Math.min(top, y);
+            right = Math.max(right, x + 1);
+            bottom = Math.max(bottom, y + 1);
+          }
         }
-      } catch (e3) {}
-    });
+        if (right > left && bottom > top) {
+          centerX = (left + right) / (2 * sw);
+          centerY = (top + bottom) / (2 * sh);
+          fit /= (bottom - top) / sh;
+        }
+      } catch (e) {
+        // 本地 file:// 等场景无法读取像素时，按整图比例在展示区内排布。
+      } finally {
+        sample.width = sample.height = 1;
+      }
+    }
+    bgImageEl.style.setProperty('--m2-banner-center-x', -centerX * 100 + '%');
+    bgImageEl.style.setProperty('--m2-banner-center-y', -centerY * 100 + '%');
+    bgImageEl.style.setProperty('--m2-banner-fit', fit);
   }
 
-  bgImageEl.addEventListener('load', function () {
-    if (bgImageEl.src && !bgImageEl.src.endsWith('/')) {
-      bgImageEl.style.visibility = 'visible';
+  /** 缓存命中立即显示，其余图片等 load 后再定位。 */
+  function tryRevealChooserBannerAfterSrc() {
+    if (!bgImageEl.complete || !bgImageEl.naturalWidth || !bgImageEl.naturalHeight || !bgImageEl.src) return;
+    if (bgImageEl.currentSrc && bgImageEl.currentSrc !== bgImageEl.src) return;
+    if (framedBannerSrc !== bgImageEl.src) {
+      frameChooserBanner();
+      framedBannerSrc = bgImageEl.src;
     }
-  });
+    bgImageEl.style.visibility = 'visible';
+  }
+
+  bgImageEl.addEventListener('load', tryRevealChooserBannerAfterSrc);
 
   bgImageEl.addEventListener('error', function () {
     var list = String(bgImageEl.dataset.fallbackList || '').split('|').filter(Boolean);

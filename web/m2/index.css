@@ -77,13 +77,15 @@ body {
 .m2-chooser {
   --m2-chooser-gap: 18px;
   --m2-chooser-intro-cut: clamp(108px, 16vh, 170px);
+  --m2-chooser-height: min(100dvh, var(--m2-visible-viewport-height, 100dvh));
+  --m2-banner-width: 72vw;
   position: relative;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
   width: 100%;
   flex-shrink: 0;
-  min-height: 100dvh;
+  min-height: var(--m2-chooser-height);
   padding: calc(env(safe-area-inset-top) + 16px) 16px calc(env(safe-area-inset-bottom) + 10px);
   background: #070c16;
 }
@@ -154,6 +156,14 @@ body {
   display: none;
 }
 
+.m2-chooser__stage {
+  position: relative;
+  flex: 1 0 auto;
+  align-self: stretch;
+  min-height: clamp(48px, calc(var(--m2-chooser-height) * 0.14), 88px);
+  container-type: size;
+}
+
 .m2-chooser__banner-wrap {
   position: absolute;
   inset: 0;
@@ -165,10 +175,11 @@ body {
 .m2-chooser__banner-image {
   position: absolute;
   left: 50%;
-  top: 56%;
-  transform: translate(-50%, -50%) translateX(0);
-  width: 72vw;
-  max-width: 72vw;
+  top: 50%;
+  translate: var(--m2-banner-center-x, -50%) var(--m2-banner-center-y, -50%);
+  transform: translateX(0);
+  width: var(--m2-banner-width);
+  max-width: calc(92cqh * var(--m2-banner-fit, 1));
   height: auto;
   object-fit: contain;
   object-position: center;
@@ -179,26 +190,26 @@ body {
 }
 
 .m2-chooser__banner-image.is-slide-out-left {
-  transform: translate(-50%, -50%) translateX(-100vw);
+  transform: translateX(-100vw);
 }
 
 .m2-chooser__banner-image.is-slide-out-right {
-  transform: translate(-50%, -50%) translateX(100vw);
+  transform: translateX(100vw);
 }
 
 .m2-chooser__banner-image.is-slide-in-from-right {
-  transform: translate(-50%, -50%) translateX(100vw);
+  transform: translateX(100vw);
   transition: none;
 }
 
 .m2-chooser__banner-image.is-slide-in-from-left {
-  transform: translate(-50%, -50%) translateX(-100vw);
+  transform: translateX(-100vw);
   transition: none;
 }
 
 .m2-chooser__banner-arrow {
   position: absolute;
-  top: 52%;
+  top: 50%;
   transform: translateY(-50%);
   width: 36px;
   height: 36px;
@@ -230,11 +241,11 @@ body {
 }
 
 .m2-chooser__banner-arrow--prev {
-  left: 4vw;
+  left: 0;
 }
 
 .m2-chooser__banner-arrow--next {
-  right: 4vw;
+  right: 0;
 }
 
 .m2-chooser__banner-arrow svg {
@@ -256,10 +267,10 @@ body {
 
 .m2-chooser__index-logo {
   position: absolute;
-  top: calc(env(safe-area-inset-top) + 36px);
+  top: calc(env(safe-area-inset-top) + clamp(14px, var(--m2-chooser-height) * 0.055, 36px));
   left: 50%;
   transform: translateX(-50%);
-  width: min(52vw, 250px);
+  width: min(52vw, 250px, var(--m2-chooser-height) * 0.5);
   height: auto;
   z-index: 3;
   pointer-events: none;
@@ -413,7 +424,7 @@ a.m2-chooser__ad-glass-btn {
   align-self: stretch;
   width: 100%;
   min-width: 0;
-  margin-top: clamp(64px, 11.5vh, 118px);
+  margin-top: clamp(46px, var(--m2-chooser-height) * 0.115, 118px);
 }
 
 .m2-chooser__tabs {
@@ -486,9 +497,8 @@ a.m2-chooser__ad-glass-btn {
   flex: 1 1 auto;
   flex-direction: column;
   align-items: center;
-  margin-top: calc(var(--m2-chooser-gap) + 2px);
+  margin-top: clamp(7px, var(--m2-chooser-height) * 0.025, 20px);
   margin-bottom: 0;
-  min-height: 0;
 }
 
 .m2-chooser__subtabs {
@@ -498,8 +508,8 @@ a.m2-chooser__ad-glass-btn {
   align-items: center;
   justify-content: flex-start;
   gap: var(--m2-chooser-gap);
-  margin-top: 18px;
-  margin-bottom: var(--m2-chooser-gap);
+  margin-top: clamp(4px, var(--m2-chooser-height) * 0.018, 18px);
+  margin-bottom: clamp(5px, var(--m2-chooser-height) * 0.018, 18px);
   padding-bottom: 14px;
   min-height: 28px;
   max-width: 100%;
@@ -554,8 +564,8 @@ a.m2-chooser__ad-glass-btn {
   align-items: center;
   justify-content: center;
   width: 100%;
-  margin: 34px 0 0;
-  min-height: calc(1.2em * 2);
+  margin: clamp(0px, (var(--m2-chooser-height) - 450px) * 0.08, 34px) 0 0;
+  min-height: clamp(1.2em, var(--m2-chooser-height) * 0.085, 2.4em);
   font-size: clamp(28px, 8vw, 40px);
   font-weight: 600;
   line-height: 1.2;
@@ -579,10 +589,10 @@ a.m2-chooser__ad-glass-btn {
   align-items: center;
   justify-content: center;
   text-decoration: none;
-  position: absolute;
-  left: 50%;
-  top: 74%;
-  transform: translate(-50%, -50%);
+  position: relative;
+  align-self: center;
+  flex: 0 0 auto;
+  margin: 8px 0 clamp(8px, var(--m2-chooser-height) * 0.028, 28px);
   z-index: 5;
   min-width: 190px;
   height: 38px;
@@ -622,14 +632,12 @@ a.m2-chooser__ad-glass-btn {
 
 .m2-chooser__bottom {
   flex: 0 0 auto;
-  height: 10vh;
-  min-height: 10vh;
+  min-height: max(56px, var(--m2-chooser-height) * 0.1);
   justify-content: space-between;
   align-items: center;
   gap: 2px;
   border-top: 1px solid rgba(255, 255, 255, 0.08);
   padding-top: 0;
-  padding-bottom: max(0px, env(safe-area-inset-bottom));
   background: linear-gradient(180deg, rgba(4, 9, 18, 0) 0%, rgba(4, 9, 18, 0.32) 100%);
 }
 
@@ -694,22 +702,35 @@ a.m2-chooser__bottom-btn {
   }
 
   /* 选车主视觉横幅略收窄，接近手机上的观感密度 */
-  .m2-chooser__banner-image {
-    width: min(72vw, 520px);
-    max-width: min(72vw, 520px);
+  .m2-chooser {
+    --m2-banner-width: min(72vw, 520px);
   }
 }
 
-/* Pad 横屏：车辆图宽度 60vw，详情按钮下移避免挤叠 */
+/* Pad 横屏：车辆宽度上限随屏幕宽度，实际尺寸仍受展示区高度限制。 */
 @media (min-width: 769px) and (max-width: 1366px) and (orientation: landscape) {
-  .m2-chooser__banner-image {
-    width: 60vw;
-    max-width: 60vw;
+  .m2-chooser {
+    --m2-banner-width: 60vw;
+  }
+}
+
+@media (max-height: 420px) and (orientation: landscape) {
+  .m2-chooser__index-logo {
+    top: calc(env(safe-area-inset-top) + 16px);
+    left: 16px;
+    width: 128px;
+    transform: none;
   }
 
-  .m2-chooser__detail-btn {
-    top: 84%;
+  .m2-chooser__top {
+    width: calc(100% - 144px);
+    margin: 0 0 0 auto;
   }
+
+  .m2-chooser__center { margin-top: 6px; }
+  .m2-chooser__subtabs { margin: 0 0 4px; }
+  .m2-chooser__title { font-size: 26px; }
+  .m2-chooser__bottom { min-height: 48px; }
 }
 
 .m2-home__overlay {
@@ -1342,7 +1363,7 @@ a.m2-chooser__bottom-btn {
   position: absolute;
   inset: 0;
   background-color: #05070d;
-  background-image: url('../media-webp/photos/index/m2/关于.webp?v=1791719560438');
+  background-image: url('../media-webp/photos/index/m2/关于.webp?v=1795243517325');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;

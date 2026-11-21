@@ -53,8 +53,9 @@ When a banner is marked for rebuild, it must be regenerated as a clean vehicle c
 
 `banner-layout.js` aligns rebuilt banners to each vehicle's original display frame
 without changing the WebP files or the existing CSS/slide animations. It is loaded
-by `carpark/detail-other-models.js`, `m2/index.js` and
-`m2/carpark/shared-detail-rail.js`.
+by `carpark/detail-other-models.js` and `m2/carpark/shared-detail-rail.js`.
+The chooser in `m2/index.js` centers the actual visible vehicle within its own
+stage, using the loaded file's alpha bounds.
 
 - `banner-layout-profiles.json` records the largest opaque subject component in
   the current image and its `_backup_before_rebuild` original. Detached dust is
@@ -69,7 +70,7 @@ by `carpark/detail-other-models.js`, `m2/index.js` and
 - Read-only profile generation: `python3 scripts/build_banner_layout_profiles.py`
   prints JSON to stdout. Regenerate profiles after rebuilding source images.
 - Verification: `node --test scripts/banner-layout.test.cjs`.
-- Publish the new `banner-layout.js`, `banner-layout-profiles.json`, the three
+- Publish the new `banner-layout.js`, `banner-layout-profiles.json`, the two
   entry scripts above and the rebuilt `media-webp/photos/carpark/*/详情页-banner.webp`
   together. Invalidate cached entry scripts and image URLs when publishing; merely
   replacing image files does not install the display correction.
