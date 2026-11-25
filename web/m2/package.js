@@ -123,7 +123,7 @@
         '<a class="m2-legal-foot__link" href="https://beian.miit.gov.cn/" target="_blank" rel="noopener noreferrer">滇ICP备2025055273号-3</a>' +
         '<span class="m2-legal-foot__sep" aria-hidden="true">|</span>' +
         '<a class="m2-legal-foot__link m2-legal-foot__mps" href="https://beian.mps.gov.cn/#/query/webSearch?code=53010002000314" rel="noreferrer" target="_blank">' +
-        '<img class="m2-legal-foot__mps-icon" src="../media-webp/photos/index/m2/备案图标.webp" alt="" width="18" height="20" decoding="async" loading="lazy">' +
+        '<img class="m2-legal-foot__mps-icon" src="https://static.mangov8.com/media-webp/photos/index/m2/备案图标.webp" alt="" width="18" height="20" decoding="async" loading="lazy">' +
         '<span>滇公网安备53010002000314号</span>' +
         '</a>' +
         '</div>' +

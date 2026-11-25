@@ -63,7 +63,7 @@ body {
   width: 100%;
   height: 100dvh;
   flex-shrink: 0;
-  background-image: url("../media-webp/photos/index/m2/首页.webp");
+  background-image: url("https://static.mangov8.com/media-webp/photos/index/m2/首页.webp");
   background-position: center bottom;
   background-size: cover;
   background-repeat: no-repeat;
@@ -301,7 +301,7 @@ body {
   position: absolute;
   inset: 0;
   background:
-    url("../media-webp/photos/index/m2/广告.webp") center / cover no-repeat;
+    url("https://static.mangov8.com/media-webp/photos/index/m2/广告.webp") center / cover no-repeat;
   filter: blur(5px) brightness(0.95);
   transform: scale(1.02);
 }
@@ -1363,7 +1363,7 @@ a.m2-chooser__bottom-btn {
   position: absolute;
   inset: 0;
   background-color: #05070d;
-  background-image: url('../media-webp/photos/index/m2/关于.webp?v=1795243517325');
+  background-image: url('https://static.mangov8.com/media-webp/photos/index/m2/关于.webp?v=1795243517325');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;

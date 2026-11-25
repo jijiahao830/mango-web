@@ -240,28 +240,28 @@
     var items = [
       {
         text: '单日 (24小时)',
-        iconSrc: '../../media-webp/photos/carpark/common/日.webp',
+        iconSrc: 'https://static.mangov8.com/media-webp/photos/carpark/common/日.webp',
         iconAlt: '日租',
         value: formatDayPrice(p1),
         label: '',
       },
       {
         text: '一周 (7天)',
-        iconSrc: '../../media-webp/photos/carpark/common/周.webp',
+        iconSrc: 'https://static.mangov8.com/media-webp/photos/carpark/common/周.webp',
         iconAlt: '周租',
         value: formatDayPrice(p7),
         label: '',
       },
       {
         text: '半月 (15天)',
-        iconSrc: '../../media-webp/photos/carpark/common/半月.webp',
+        iconSrc: 'https://static.mangov8.com/media-webp/photos/carpark/common/半月.webp',
         iconAlt: '半月租',
         value: formatDayPrice(p15),
         label: '',
       },
       {
         text: '整月 (30天)',
-        iconSrc: '../../media-webp/photos/carpark/common/月.webp',
+        iconSrc: 'https://static.mangov8.com/media-webp/photos/carpark/common/月.webp',
         iconAlt: '月租',
         value: formatDayPrice(p30),
         label: '',

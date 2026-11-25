@@ -9,7 +9,7 @@
     }
   }
 
-  /** 与服务页 carousel 顺序、文案一致；图标为 media-webp/photos/index/m2 下 webp */
+  /** 与服务页 carousel 顺序、文案一致。 */
   var M2A_VALUEADD_SERVICES = [
     { name: '司机配备', icon: '司机配备.webp' },
     { name: '商务接送', icon: '商务接送.webp' },
@@ -410,14 +410,7 @@
     return '';
   }
   function m2aM2IconUrl(file) {
-    var dir = m2aScriptM2DirUrl();
-    var rel = '../media-webp/photos/index/m2/' + file;
-    if (!dir) return rel;
-    try {
-      return new URL(rel, dir).href;
-    } catch (e) {
-      return dir + rel;
-    }
+    return 'https://static.mangov8.com/media-webp/photos/index/m2/' + file;
   }
   function m2aServicesPageUrl() {
     var dir = m2aScriptM2DirUrl();
@@ -1613,7 +1606,7 @@
     appendConsultMsg(
       'assistant',
       '您好，我是芒果超跑的AI客服，有什么问题您可以直接问我，或者联系我们的客服他们将给您最专业的回答，他们的联系方式是：13033333370，也可以扫描下方的二维码添加微信',
-      { qrSrc: '/media-webp/photos/index/logo/二维码.webp?v=' + m2AssetV(), qrAlt: '客服微信二维码' }
+      { qrSrc: 'https://static.mangov8.com/media-webp/photos/index/logo/二维码.webp?v=' + m2AssetV(), qrAlt: '客服微信二维码' }
     );
   }
   function openConsultModal() {

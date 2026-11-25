@@ -4,7 +4,7 @@
 
 规则：
 - 扫描 media-webp/photos/carpark/<车名>/ 下常见图片后缀；
-- 从 car.html 提取（不含「实车图赏」区块）../../media-webp/photos/carpark/<车名>/ 下出现过的文件名，按「去扩展名 stem」计为已使用；
+- 从 car.html 提取（不含「实车图赏」区块）/media-webp/photos/carpark/<车名>/ 下出现过的文件名，按「去扩展名 stem」计为已使用；
 - 实车图赏使用「未使用」的 stem 列表（始终排除 详情页-banner*、封面-thumb*、*透明图* 等；见 _is_gallery_banned_stem）；
 - 若全部文件都已在文中出现，则退化为：除 封面、详情页-banner、展览、封面-thumb 外按文件名排序取可用的图；
 - 个别车型可与横幅同构图但文件名不同：在 GALLERY_EXTRA_EXCLUDE_STEMS_BY_FOLDER 中按文件夹追加排除 stem（小写）；
@@ -16,6 +16,7 @@ import hashlib
 import os
 import re
 from pathlib import Path
+from urllib.parse import unquote
 
 REPO = Path(__file__).resolve().parents[2]
 MEDIA_CARPARK = REPO / "media" / "photos" / "carpark"
@@ -111,9 +112,9 @@ def natural_key(s: str):
 
 
 def collect_stems_from_html(html: str, folder: str) -> set[str]:
-    prefix = f"../../media-webp/photos/carpark/{folder}/"
+    prefix = f"/media-webp/photos/carpark/{folder}/"
     used: set[str] = set()
-    for m in re.finditer(re.escape(prefix) + r"([^\"\'\s<>]+)", html):
+    for m in re.finditer(re.escape(prefix) + r"([^\"\'\s<>]+)", unquote(html)):
         raw = m.group(1).split("?")[0].split("#")[0]
         stem, ext = os.path.splitext(raw)
         if ext.lower() in IMG_EXT:
@@ -202,7 +203,7 @@ def gallery_stems(
 
 
 def build_gallery_html(folder: str, display_name: str, stems: list[str], on_disk: dict[str, dict[str, str]]) -> str:
-    base = f"../../media-webp/photos/carpark/{folder}/"
+    base = f"https://static.mangov8.com/media-webp/photos/carpark/{folder}/"
     extra_excl = _extra_excluded_stems_for_folder(folder)
     stems = [s for s in stems if ".webp" in on_disk.get(s, {})]
     if not stems:

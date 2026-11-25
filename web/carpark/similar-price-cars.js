@@ -153,8 +153,8 @@ document.addEventListener('DOMContentLoaded', function () {
   function buildCarCardHtmlFromCatalog(car) {
     var folder = encodeURIComponent(normalizeCarFolderNameForAssets(car.car_name));
     var href = '../' + folder + '/car.html';
-    var webp = '../../media-webp/photos/carpark/' + folder + '/封面.webp';
-    var jpg = '../../media-webp/photos/carpark/' + folder + '/封面.webp';
+    var webp = 'https://static.mangov8.com/media-webp/photos/carpark/' + folder + '/封面.webp';
+    var jpg = 'https://static.mangov8.com/media-webp/photos/carpark/' + folder + '/封面.webp';
     var cat = escHtml(car.category);
     var name = escHtml(car.car_name);
     var badge = categoryBadgeClass(car.category);

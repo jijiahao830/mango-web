@@ -370,8 +370,8 @@
   function bannerCandidatesForCar(carName) {
     var folder = encodeURIComponent(normalizeCarFolderNameForAssets(carName));
     return [
-      '../../../media-webp/photos/carpark/' + folder + '/详情页-banner.webp',
-      '../../../media-webp/photos/carpark/' + folder + '/封面.webp',
+      'https://static.mangov8.com/media-webp/photos/carpark/' + folder + '/详情页-banner.webp',
+      'https://static.mangov8.com/media-webp/photos/carpark/' + folder + '/封面.webp',
     ];
   }
 

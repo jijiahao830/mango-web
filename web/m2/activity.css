@@ -17,7 +17,7 @@ body.m2-activity-page {
   flex-direction: column;
   /* 与套餐详情页 .m2p-section 同款底图（package.css） */
   background-color: #070c16;
-  background-image: url('../media-webp/photos/index/m2/背景图1.webp');
+  background-image: url('https://static.mangov8.com/media-webp/photos/index/m2/背景图1.webp');
   background-position: center;
   background-size: cover;
   background-repeat: no-repeat;

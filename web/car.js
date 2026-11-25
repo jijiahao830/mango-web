@@ -1280,7 +1280,7 @@ document.addEventListener('DOMContentLoaded', function() {
   function coverUrlsForCar(carName) {
     var normalizedName = normalizeCarFolderNameForAssets(carName);
     var folder = encodeURIComponent(normalizedName);
-    var baseCarpark = 'media-webp/photos/carpark/' + folder + '/';
+    var baseCarpark = 'https://static.mangov8.com/media-webp/photos/carpark/' + folder + '/';
     var basePhotos = 'media-webp/photos/' + folder + '/';
     return {
       primary: baseCarpark + '封面.webp',
@@ -2916,7 +2916,7 @@ document.addEventListener('DOMContentLoaded', function() {
   // 首次冷缓存时，mask 高光层可能先以矩形渲染；资源就绪后再显示高光层，避免“logo边框感”。
   (function markSplashMaskReady() {
     if (!splashScreen) return;
-    var src = 'media-webp/photos/index/logo/logo2.webp';
+    var src = 'https://static.mangov8.com/media-webp/photos/index/logo/logo2.webp';
     var probe = new Image();
     var done = false;
     function finish() {

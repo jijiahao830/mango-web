@@ -385,7 +385,7 @@
             var name = String(c.car_name || '').trim();
             var href = siblingBase(name) + 'car.html';
             var folderEnc = encodeURIComponent(name);
-            var photoDir = '../../media-webp/photos/carpark/' + folderEnc + '/';
+            var photoDir = 'https://static.mangov8.com/media-webp/photos/carpark/' + folderEnc + '/';
             var modelText = escHtml(modelFromCatalog(c));
             var alt = escHtml(name);
             var vc = apiVehicleClickFields(c);
@@ -407,7 +407,7 @@
               '<source srcset="' +
               escHtml(photoDir + '详情页-banner.webp') +
               '" type="image/webp">' +
-              '<img class="car-image car-image-photo" src="' +
+              '<img crossorigin="anonymous" class="car-image car-image-photo" src="' +
               escHtml(photoDir + '详情页-banner.webp') +
               '" alt="' +
               alt +

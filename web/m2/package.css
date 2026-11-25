@@ -61,7 +61,7 @@ body.m2-package {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  background: url('../media-webp/photos/index/m2/背景图1.webp') center / cover no-repeat;
+  background: url('https://static.mangov8.com/media-webp/photos/index/m2/背景图1.webp') center / cover no-repeat;
   opacity: 0.16;
   transition: opacity 0.8s ease-in-out;
 }
@@ -106,19 +106,19 @@ body.m2-package {
 }
 
 .m2-package--business .m2p-hero {
-  background: url('../media-webp/photos/index/m2/商务接待套餐.webp') center / cover no-repeat;
+  background: url('https://static.mangov8.com/media-webp/photos/index/m2/商务接待套餐.webp') center / cover no-repeat;
 }
 
 .m2-package--wedding .m2p-hero {
-  background: url('../media-webp/photos/index/m2/婚礼套餐.webp') center / cover no-repeat;
+  background: url('https://static.mangov8.com/media-webp/photos/index/m2/婚礼套餐.webp') center / cover no-repeat;
 }
 
 .m2-package--event .m2p-hero {
-  background: url('../media-webp/photos/index/m2/摆展套餐.webp') center / cover no-repeat;
+  background: url('https://static.mangov8.com/media-webp/photos/index/m2/摆展套餐.webp') center / cover no-repeat;
 }
 
 .m2-package--drive .m2p-hero {
-  background: url('../media-webp/photos/index/m2/自驾套餐.webp') center / cover no-repeat;
+  background: url('https://static.mangov8.com/media-webp/photos/index/m2/自驾套餐.webp') center / cover no-repeat;
 }
 
 .m2p-points {

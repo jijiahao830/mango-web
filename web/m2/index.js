@@ -34,6 +34,9 @@
 
   if (!categoryRoot || !brandRoot || !titleEl || !bgImageEl) return;
 
+  // 选车定位需要读取跨域车图的透明像素，必须先设置请求模式。
+  bgImageEl.crossOrigin = 'anonymous';
+
   var chooserEl = document.getElementById('m2Chooser');
   var viewport = window.visualViewport;
   if (chooserEl && viewport) {
@@ -182,9 +185,9 @@
   function bannerCandidatesForCar(carName) {
     var folder = encodeURIComponent(normalizeCarFolderNameForAssets(carName));
     return [
-      '../media-webp/photos/carpark/' + folder + '/详情页-banner.webp',
-      '../media-webp/photos/carpark/' + folder + '/封面.webp',
-      '../media-webp/photos/index/m2/选车.webp',
+      'https://static.mangov8.com/media-webp/photos/carpark/' + folder + '/详情页-banner.webp',
+      'https://static.mangov8.com/media-webp/photos/carpark/' + folder + '/封面.webp',
+      'https://static.mangov8.com/media-webp/photos/index/m2/选车.webp',
     ];
   }
 
@@ -1327,7 +1330,7 @@
 
   (function markSplashMaskReady() {
     if (!splashScreen) return;
-    var src = '../media-webp/photos/index/logo/logo2.webp';
+    var src = 'https://static.mangov8.com/media-webp/photos/index/logo/logo2.webp';
     var probe = new Image();
     var done = false;
     function finish() {

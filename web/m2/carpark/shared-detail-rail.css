@@ -660,7 +660,7 @@ body.m2d-page--fade .m2-car__pricing {
   top: auto;
   height: auto;
   min-height: 100dvh;
-  background: url('../../../media-webp/photos/index/m2/背景图1.webp') center / cover no-repeat;
+  background: url('https://static.mangov8.com/media-webp/photos/index/m2/背景图1.webp') center / cover no-repeat;
   display: block;
 }
 

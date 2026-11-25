@@ -335,7 +335,7 @@ function buildCarHtml(ctx) {
     '  <section class="m2-car__same-price" id="m2SamePriceSection">\n' +
     '    <div class="m2-same-price__vehicle-zone">\n' +
     '      <div class="m2-same-price__empty" id="m2SamePriceEmpty" hidden>\n' +
-    '        <img class="m2-same-price__empty-image" src="../../../media-webp/photos/index/m2/车辆搜索.webp" alt="暂无同价位车型">\n' +
+    '        <img class="m2-same-price__empty-image" src="https://static.mangov8.com/media-webp/photos/index/m2/车辆搜索.webp" alt="暂无同价位车型">\n' +
     '        <p class="m2-same-price__empty-title">暂无同价位其他车型</p>\n' +
     '        <p class="m2-same-price__empty-desc">如需更多选择，<br>可联系客服为您推荐相近预算车型</p>\n' +
     '        <a class="m2-same-price__contact-btn" href="tel:13033333370">联系客服</a>\n' +
@@ -368,7 +368,7 @@ function buildCarHtml(ctx) {
     '          <a class="m2-legal-foot__link" href="https://beian.miit.gov.cn/" target="_blank" rel="noopener noreferrer">滇ICP备2025055273号-3</a>\n' +
     '          <span class="m2-legal-foot__sep" aria-hidden="true">|</span>\n' +
     '          <a class="m2-legal-foot__link m2-legal-foot__mps" href="https://beian.mps.gov.cn/#/query/webSearch?code=53010002000314" rel="noreferrer" target="_blank">\n' +
-    '            <img class="m2-legal-foot__mps-icon" src="../../../media-webp/photos/index/m2/备案图标.webp" alt="" width="18" height="20" decoding="async" loading="lazy">\n' +
+    '            <img class="m2-legal-foot__mps-icon" src="https://static.mangov8.com/media-webp/photos/index/m2/备案图标.webp" alt="" width="18" height="20" decoding="async" loading="lazy">\n' +
     '            <span>滇公网安备53010002000314号</span>\n' +
     '          </a>\n' +
     '        </div>\n' +
@@ -407,7 +407,7 @@ function processFolder(folderName) {
   var cover = extractCover(html);
   if (!cover) {
     var enc = encodeURIComponent(folderName);
-    cover = '../../../media-webp/photos/carpark/' + folderName + '/封面.webp';
+    cover = 'https://static.mangov8.com/media-webp/photos/carpark/' + folderName + '/封面.webp';
   }
 
   var features = extractFeatures(html);
